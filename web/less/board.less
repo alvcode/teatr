@@ -1,0 +1,106 @@
+@blue: #2B333C;
+@s-blue: #415160;
+@icons: #BECFE0;
+@orange: #F97979;
+
+.border(@px: 1px, @value: solid, @color: red){
+    border: @px @value @color;
+}
+
+.flex(@direction: row, @wrap: nowrap, @align: space-around){
+    display: flex;
+    -webkit-flex-direction: @direction;
+    -ms-flex-direction: @direction;
+        flex-direction: @direction;
+    -webkit-flex-wrap: @wrap;
+    -ms-flex-wrap: @wrap;
+        flex-wrap: @wrap;
+    -webkit-justify-content: @align;
+         justify-content: @align;
+}
+
+
+/*==================================  STYLE BOARD  =================================*/
+/*.common-container{
+    width: 100%;
+    box-sizing: border-box;
+}*/
+
+.board--top-sidebar{
+    width: 100%;
+    height: 40px;
+    position: fixed;
+    top: 0;
+    background-color: @blue;
+    color: #fff;
+    line-height: 40px;
+    .flex(row, nowrap, flex-start);
+    
+    .board--top-sidebar--humburger{
+        width: 5%;
+        font-size: 20px;
+        text-align: center;
+        
+        &>i{
+           cursor: pointer; 
+           transition: all 0.2s;
+        }
+        &>i:hover{
+           transform: scale(1.1);
+        }
+    }
+    .board--top-sidebar--title{
+        padding: 0 15px;
+    }
+}
+.board-min-sidebar{
+    .board-content{
+        margin-left: 0;
+    }
+    .board--left-sidebar{
+        display: none;
+    }
+}
+.board-content{
+    margin-top: 40px;
+    margin-left: 196px;
+}
+.board--left-sidebar{
+    position: fixed;
+    top: 40px;
+    left: 0;
+    bottom: 0;
+    width: 196px;
+    background-color: @s-blue;
+    padding: 35px 7px 35px 7px;
+    text-align: center;
+    
+    
+    &>ul{
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+        
+        li{
+            border-top: 1px solid @blue;
+            margin-top: 8px;
+            padding-top: 8px;
+            
+            a{
+                font-size: 14px;
+                color: @icons;
+                
+                &>div:nth-of-type(1){
+                    font-size: 16px;
+                }
+            }
+            a:hover i{
+                transform: scale(1.1);
+            }
+        }
+        li.active a{
+            color: @orange;
+        }
+    }
+}
+
