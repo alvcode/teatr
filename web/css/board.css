@@ -36,6 +36,26 @@
 .board--top-sidebar .board--top-sidebar--title {
   padding: 0 15px;
 }
+.board--top-sidebar .board--top-sidebar--null {
+  width: 80%;
+}
+.board--top-sidebar .board--top-sidebar--account {
+  width: 25%;
+  text-align: right;
+  padding-right: 20px;
+  color: #F97979;
+  cursor: pointer;
+  position: relative;
+}
+.board--top-sidebar .board--top-sidebar--account .board--top-sidebar--account-more {
+  position: absolute;
+  /*display: none;*/
+  background-color: #2B333C;
+  bottom: -40px;
+  right: 0;
+  width: 100px;
+  text-align: center;
+}
 .board-min-sidebar .board-content {
   margin-left: 0;
 }
@@ -78,5 +98,19 @@
 }
 .board--left-sidebar > ul li.active a {
   color: #F97979;
+}
+@media (max-width: 480px) {
+  .board--top-sidebar .board--top-sidebar--title {
+    display: none;
+  }
+  .board--top-sidebar .board--top-sidebar--humburger {
+    width: 20%;
+  }
+  .board--top-sidebar .board--top-sidebar--null {
+    width: 10%;
+  }
+  .board--top-sidebar .board--top-sidebar--account {
+    width: 85%;
+  }
 }
 /*# sourceMappingURL=board.css.map */

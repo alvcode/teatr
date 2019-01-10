@@ -36,6 +36,13 @@ AppAsset::register($this);
             <div class="board--top-sidebar--humburger">
                 <i id="board-humburger" class="fas fa-bars"></i>
             </div>
+            <div class="board--top-sidebar--null"></div>
+            <div class="board--top-sidebar--account">
+                alvcode@ya.ru <i id="board--top-sidebar-angle" class="fas fa-angle-down"></i>
+                <div class="board--top-sidebar--account-more" hidden>
+                    <a href="/site/logout">Выйти</a>
+                </div>
+            </div>
         </div>
 
         <div class="board--left-sidebar">
