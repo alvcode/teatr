@@ -9,11 +9,13 @@ use Yii;
  *
  * @property int $id
  * @property string $email
- * @property string $username
+ * @property string $name
+ * @property string $surname
  * @property string $password_hash
  * @property string $auth_key
  * @property string $access_token
- * @property int $date
+ * @property string $date_register
+ * @property string $last_login
  */
 class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
 {
@@ -34,10 +36,18 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
     public function rules()
     {
         return [
-            [['email', 'username', 'password'], 'required'],
-            [['date'], 'integer'],
-            [['email', 'username', 'password_hash', 'auth_key', 'access_token'], 'string', 'max' => 255],
+            [['email', 'name', 'surname', 'password'], 'required'],
+            [['date_register', 'last_login'], 'datetime'],
+            [['email'], 'email'],
+            [['name', 'surname', 'password_hash', 'auth_key', 'access_token'], 'string', 'max' => 255],
         ];
+    }
+    
+    
+    public function last_login(){
+        Yii::$app->db->createCommand()->update('user', ['last_login' => date('Y-m-d H:i:s')], [
+                    'id' => $this->id,
+                ])->execute();
     }
     
     
@@ -51,7 +61,7 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
             if ($this->isNewRecord) {
                 $this->auth_key = \Yii::$app->getSecurity()->generateRandomString();
             }
-            $this->date = time();
+            $this->date_register = date('Y-m-d H:i:s');
             return true;
         }
 
@@ -118,14 +128,14 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
     }
     
     /**
-     * Finds user by username
+     * Finds user by email
      *
-     * @param string $username
+     * @param string $email
      * @return static|null
      */
-    public static function findByUsername($username)
+    public static function findByEmail($email)
     {
-       return static::findOne(['email' => $username]);
+       return static::findOne(['email' => $email]);
     }
     
 
@@ -136,12 +146,14 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
     {
         return [
             'id' => 'ID',
-            'email' => 'Email',
-            'username' => 'Username',
+            'email' => 'E-mail',
+            'name' => 'Имя пользователя',
+            'surname' => 'Фамилия пользователя',
+            'password' => 'Пароль',
             'password_hash' => 'Password Hash',
             'auth_key' => 'Auth Key',
             'access_token' => 'Access Token',
-            'date' => 'Date',
+            'date_register' => 'Дата регистрации',
         ];
     }
 }

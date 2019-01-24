@@ -20,17 +20,26 @@ class AppAsset extends AssetBundle
     public $basePath = '@webroot';
     public $baseUrl = '@web';
     public $css = [
+        'https://fonts.googleapis.com/css?family=Roboto:400,400i,700,700i&amp;subset=cyrillic',
         'css/site.css',
+        'css/bootstrap.min.css',
         'css/fontawesome/fontawesome-all.css',
+        'css/animate.css',
+        'css/croppie.css',
+        'https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css',
         'css/board.css',
         'css/style.css',
-        'https://fonts.googleapis.com/css?family=Roboto:400,400i,700,700i&amp;subset=cyrillic',
     ];
     public $js = [
+        'js/jquery_cookie_1.4.1.js',
+        'https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js',
+        'https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js',
+        'js/croppie.js',
+        'js/jquery.mask.js',
         'js/board.js',
     ];
     public $depends = [
         'yii\web\YiiAsset',
-        'yii\bootstrap\BootstrapAsset',
+//        'yii\bootstrap\BootstrapAsset',
     ];
 }

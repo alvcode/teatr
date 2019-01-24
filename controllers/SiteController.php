@@ -61,6 +61,10 @@ class SiteController extends Controller
      */
     public function actionIndex()
     {
+        if (!Yii::$app->getUser()->isGuest){
+            return $this->redirect('/panel/index/');
+        }
+        
         $model = new LoginForm();
         
         if ($model->load(Yii::$app->request->post()) && $model->login()) {

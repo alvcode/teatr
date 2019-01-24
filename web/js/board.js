@@ -2,7 +2,7 @@ if(document.getElementById('board-container') != undefined){
 
     var clientWidth = document.documentElement.clientWidth;
 
-    if(clientWidth <= 500){
+    if(clientWidth <= 700){
         document.getElementById('board-container').classList.add('board-min-sidebar');
     }
 
