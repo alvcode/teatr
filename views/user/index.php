@@ -16,7 +16,10 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="main--page-title">
                 <h1><?= Html::encode($this->title) ?></h1>
             </div>
-
+            <?php
+//            echo "<pre>";
+//            print_r($users);
+            ?>
             <div>
                 <button type="button" class="btn btn-outline-success btn-sm" data-toggle="modal" data-target="#newUserModal"><i class="fas fa-plus"></i> Новый пользователь</button>
             </div>
@@ -25,27 +28,38 @@ $this->params['breadcrumbs'][] = $this->title;
                 <table class="table table-sm table-striped">
                     <thead>
                         <tr>
-                            <th scope="col">#</th>
+                            <th scope="col">ID</th>
                             <th scope="col">Имя</th>
                             <th scope="col">Фамилия</th>
                             <th scope="col">E-mail</th>
+                            <th scope="col">Телефон</th>
                             <th scope="col">Роль</th>
                             <th scope="col">Создан</th>
                             <th scope="col">Последний визит</th>
-                            <th scope="col"></th>
+                            <th scope="col">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($users as $key => $value): ?>
                             <tr>
-                                <th scope="row">1</th>
+                                <th scope="row"><?= $value['id'] ?></th>
                                 <td><?= $value['name'] ?></td>
                                 <td><?= $value['surname'] ?></td>
                                 <td><?= $value['email'] ?></td>
-                                <td>-</td>
+                                <td>+<?= $value['number'][0] ?>(<?= $value['number'][1].$value['number'][2].$value['number'][3] ?>)<?= $value['number'][4].$value['number'][5].$value['number'][6] ?>-<?= $value['number'][7].$value['number'][8] ?>-<?= $$value['number'][9].$value['number'][10] ?></td>
+                                <td>
+                                    <span class="badge badge-success">
+                                        <?php if ($value->role): ?>
+                                            <?php echo $value->role->item_name ?>
+                                        <?php endif; ?>
+                                    </span>
+                                </td>
                                 <td><?= $value['date_register'] ?></td>
                                 <td>-</td>
-                                <td></td>
+                                <td>
+                                    <a class="btn btn-sm btn-success f-s10" href="/user/user-single?id=<?= $value['id'] ?>"><i class="fas fa-edit"></i></a>
+                                    <a class="btn btn-sm btn-danger f-s10" href="#"><i class="fas fa-times"></i></a>
+                                </td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -79,9 +93,20 @@ $this->params['breadcrumbs'][] = $this->title;
 
                 <?= $form->field($userModel, 'email', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])->textInput() ?>
 
+                <?=
+                        $form->field($userModel, 'number', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
+                        ->textInput(['class' => 'p--number form-control', 'inputmode' => 'numeric', 'pattern' => '\+7?[\(][0-9]{3}[\)]{0,1}\s?\d{3}[-]{0,1}\d{4}'])
+                ?>
+
                 <?= $form->field($userModel, 'password', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])->passwordInput() ?>
 
-                <?php ActiveForm::end(); ?>
+                <?=
+                $form->field($userModel, 'user_role')->dropDownList(\yii\helpers\ArrayHelper::map($roleList, 'name', 'description'), [
+                    'prompt' => 'Выберите роль',
+                ])->label("Роль")
+                ?>
+
+<?php ActiveForm::end(); ?>
             </div>
             <div class="modal-footer">
                 <button type="button" id="users--new-user-return" class="btn btn-sm btn-danger" data-dismiss="modal">Отмена</button>
@@ -93,6 +118,16 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <script>
     window.onload = function () {
+
+        // Маска ввода для номера телефона
+        $(".p--number").mask("+7(999) 999-9999", {clearIfNotMatch: true});
+        $(".p--number").click(function () {
+            if ($(this).val().length > 4) {
+                return false;
+            } else {
+                $(this).val("+7");
+            }
+        });
 
         $('#users--new-user-button').click(function () {
             var self = $(this);

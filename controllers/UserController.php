@@ -60,7 +60,12 @@ class UserController extends AccessController
         
         if(Yii::$app->request->isAjax){
             if($userModel->load(Yii::$app->request->post())){
+                $userModel->number = preg_replace("/[^0-9]/iu", '', $userModel->number);
                 if($userModel->save()){
+                    if($userModel->user_role) {
+                        $getRole = Yii::$app->authManager->getRole($userModel->user_role);
+                        Yii::$app->authManager->assign($getRole, $userModel->id);
+                    }
                     return 1;
                 }else{
                     return 0;
@@ -71,13 +76,22 @@ class UserController extends AccessController
         $getUsers = User::find();
         $pages = new Pagination(['totalCount' => $getUsers->count(), 'pageSize' => 30]);
         $users = $getUsers->offset($pages->offset)
-            ->limit($pages->limit)
+            ->limit($pages->limit)->with('role')
             ->all();
+        
+        $authAssignment = new \app\models\AuthAssignment();
+        $rolesList = AuthItem::find()->where(['type' => 1])->asArray()->all();
         
         return $this->render('index', [
             'users' => $users,
             'userModel' => $userModel,
+            'roleList' => $rolesList,
+            'authAssignment' => $authAssignment,
         ]);
+    }
+    
+    public function actionUserSingle($id){
+        return $this->render('user-single');
     }
     
     

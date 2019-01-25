@@ -99,50 +99,57 @@ $this->title = 'Управление ролями';
         </div>
     </div>
 
-
-    <div class="modal fade" id="assign-perm">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4>Присвоить новые разрешения</h4>
-                </div>
-                <div class="modal-body">
-                    <select class="form-control" size="15" id="assign-perm-select" multiple>
+    
+<div class="modal fade" id="assign-perm" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Присвоить новые разрешения</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <select class="form-control" size="15" id="assign-perm-select" multiple>
                         <?php foreach ($perm as $value): ?>
                             <option value="<?= $value['name'] ?>"><?= $value['description'] ?></option>
                         <?php endforeach; ?>
                     </select>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-danger btn-sm" data-dismiss="modal" aria-hidden="true">Закрыть</button>
-                    <button id="assign-perm-submit" class="btn btn-success btn-sm" data-dismiss="modal" aria-hidden="true">Присвоить</button>
-                </div>
-            </div><!-- /.modal-content -->
-        </div><!-- /.modal-dialog -->
-    </div><!-- /.modal -->
-
-    <div class="modal fade" id="assign-role">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                    <h4>Присвоить новые разрешения</h4>
-                </div>
-                <div class="modal-body">
-                    <select class="form-control" size="15" id="assign-role-select" multiple>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="users--new-user-return" class="btn btn-sm btn-danger" data-dismiss="modal">Отмена</button>
+                <button id="assign-perm-submit" type="button" class="btn btn-sm btn-success">Присвоить</button>
+            </div>
+        </div>
+    </div>
+</div>
+    
+    <!-- Modal new user -->
+<div class="modal fade" id="assign-role" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Присвоить роль</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+               <select class="form-control" size="15" id="assign-role-select" multiple>
                         <?php foreach ($roles as $value): ?>
                             <option value="<?= $value['name'] ?>"><?= $value['description'] ?></option>
                         <?php endforeach; ?>
                     </select>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-danger btn-sm" data-dismiss="modal" aria-hidden="true">Закрыть</button>
-                    <button id="assign-role-submit" class="btn btn-success btn-sm" data-dismiss="modal" aria-hidden="true">Присвоить</button>
-                </div>
-            </div><!-- /.modal-content -->
-        </div><!-- /.modal-dialog -->
-    </div><!-- /.modal -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="users--new-user-return" class="btn btn-sm btn-danger" data-dismiss="modal">Отмена</button>
+                <button id="assign-role-submit" type="button" class="btn btn-sm btn-success">Присвоить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 
 
     <script>

@@ -11,6 +11,7 @@ use Yii;
  * @property string $email
  * @property string $name
  * @property string $surname
+ * @property int $number
  * @property string $password_hash
  * @property string $auth_key
  * @property string $access_token
@@ -21,6 +22,7 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
 {
     
     public $password;
+    public $user_role;
     
     /**
      * {@inheritdoc}
@@ -40,6 +42,7 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
             [['date_register', 'last_login'], 'datetime'],
             [['email'], 'email'],
             [['name', 'surname', 'password_hash', 'auth_key', 'access_token'], 'string', 'max' => 255],
+            [['number', 'password', 'user_role'], 'string', 'max' => 32]
         ];
     }
     
@@ -138,6 +141,11 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
        return static::findOne(['email' => $email]);
     }
     
+    
+    public function getRole(){
+        return $this->hasOne(AuthAssignment::className(), ['user_id' => 'id']);
+    }
+    
 
     /**
      * {@inheritdoc}
@@ -149,6 +157,7 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
             'email' => 'E-mail',
             'name' => 'Имя пользователя',
             'surname' => 'Фамилия пользователя',
+            'number' => 'Номер телефона',
             'password' => 'Пароль',
             'password_hash' => 'Password Hash',
             'auth_key' => 'Auth Key',
