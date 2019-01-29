@@ -46,7 +46,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <td><?= $value['name'] ?></td>
                                 <td><?= $value['surname'] ?></td>
                                 <td><?= $value['email'] ?></td>
-                                <td>+<?= $value['number'][0] ?>(<?= $value['number'][1].$value['number'][2].$value['number'][3] ?>)<?= $value['number'][4].$value['number'][5].$value['number'][6] ?>-<?= $value['number'][7].$value['number'][8] ?>-<?= $$value['number'][9].$value['number'][10] ?></td>
+                                <td>+<?= $value['number'] ?></td>
                                 <td>
                                     <span class="badge badge-success">
                                         <?php if ($value->role): ?>

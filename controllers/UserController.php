@@ -91,7 +91,11 @@ class UserController extends AccessController
     }
     
     public function actionUserSingle($id){
-        return $this->render('user-single');
+        $getUser = User::find()->where(['id' => $id])->with('role')->asArray()->one();
+        
+        return $this->render('user-single', [
+            'user' => $getUser,
+        ]);
     }
     
     
