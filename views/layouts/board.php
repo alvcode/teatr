@@ -2,7 +2,7 @@
 
 /* @var $this \yii\web\View */
 /* @var $content string */
-
+//use Yii;
 use app\widgets\Alert;
 use yii\helpers\Html;
 use yii\widgets\Menu;
@@ -27,11 +27,11 @@ AppAsset::register($this);
 <body>
 <?php $this->beginBody() ?>
     
-    <div id="board-container">
+    <div id="board-container" class="<?= (isset($_COOKIE['screen_width']) && +$_COOKIE['screen_width'] <= 1000)?"board-min-sidebar":"" ?>">
         
         <div class="board--top-sidebar">
             <div class="board--top-sidebar--title">
-                <h4><b>Театриум</b></h4>
+                <h4><b>Копирка</b></h4>
             </div>
             <div class="board--top-sidebar--humburger">
                 <i id="board-humburger" class="fas fa-bars"></i>
@@ -72,6 +72,10 @@ AppAsset::register($this);
         </div>
     </div>
 
+<!--Блок уведомлений-->
+<div class="pop-up-notification"></div>
+    
+    
 <?php $this->endBody() ?>
 </body>
 </html>

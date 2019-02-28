@@ -16,10 +16,49 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="main--page-title">
                 <h1><?= Html::encode($this->title) ?></h1>
             </div>
+            
+            <?= $this->render('templates/_flash') ?>
+            
+            <?php
+                $form = ActiveForm::begin([
+                            'options' => ['id' => 'new-user-form']
+                ]);
+                ?>
+
+                <?= $form->field($user, 'name', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])->textInput() ?>
+
+                <?= $form->field($user, 'surname', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])->textInput() ?>
+
+                <?= $form->field($user, 'email', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])->textInput() ?>
+
+                <?=
+                    $form->field($user, 'number', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
+                        ->textInput(['class' => 'p--number form-control', 'inputmode' => 'numeric', 'pattern' => '\+7?[\(][0-9]{3}[\)]{0,1}\s?\d{3}[-]{0,1}\d{4}'])
+                ?>
+
+                <?= $form->field($user, 'password', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])->textInput() ?>
+
+                <?=
+                $form->field($user, 'user_role')->dropDownList(\yii\helpers\ArrayHelper::map($roleList, 'name', 'description'), [
+                    'prompt' => 'Выберите роль',
+                    'options' => [
+                        $roleUser ? $roleUser->name : "0" => ['Selected' => true]
+                    ]
+
+                ])->label("Роль")
+                ?>
+            
+                <div class="form-group">
+                    <div class="col-lg-offset-1 col-lg-11">
+                        <?= Html::submitButton('Сохранить', ['class' => 'btn btn-success btn-sm']) ?>
+                    </div>
+                </div>
+
+            <?php ActiveForm::end(); ?>
 
             <?php 
-            echo "<pre>";
-            print_r($user);
+//            echo "<pre>";
+//            print_r($user);
             
             ?>
             
@@ -31,7 +70,15 @@ $this->params['breadcrumbs'][] = $this->title;
 <script>
     window.onload = function () {
 
-
+    // Маска ввода для номера телефона
+    $(".p--number").mask("+7(999) 999-9999", {clearIfNotMatch: true});
+    $(".p--number").click(function () {
+        if ($(this).val().length > 4) {
+            return false;
+        } else {
+            $(this).val("+7");
+        }
+    });
 
     }
 </script>

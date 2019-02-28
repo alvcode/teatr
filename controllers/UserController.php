@@ -71,10 +71,36 @@ class UserController extends AccessController
                     return 0;
                 }
             }
+            
+            if(Yii::$app->request->post('trigger') == 'delete-user'){
+                $findUser = User::findOne(Yii::$app->request->post('id'));
+                if($findUser) $userId = $findUser->id;
+                if($findUser->delete()){
+                    // Не можем добавить foreign key для auth_assignment, т.к при удалении роли тогда будет стираться и юзер
+                    $getRolesOld = Yii::$app->authManager->getRolesByUser($userId);
+                    foreach($getRolesOld as $key=>$value){
+                        Yii::$app->authManager->revoke($value, $userId);
+                    }
+                    return 1;
+                }else{
+                    return 0;
+                }
+            }
+            
+            if(Yii::$app->request->post('trigger') == 'search-user'){
+                $findUser = User::find()->where(['like', 'name', '%' .Yii::$app->request->post('str') . '%', false])
+                        ->orWhere(['like', 'surname', '%' .Yii::$app->request->post('str') . '%', false])
+                        ->orWhere(['like', 'number', '%' .Yii::$app->request->post('str') . '%', false])
+                        ->with('role')->asArray()->all();
+                
+                return json_encode($findUser);
+            }
+            
+            
         }
         
         $getUsers = User::find();
-        $pages = new Pagination(['totalCount' => $getUsers->count(), 'pageSize' => 30]);
+        $pages = new Pagination(['totalCount' => $getUsers->count(), 'pageSize' => 150]);
         $users = $getUsers->offset($pages->offset)
             ->limit($pages->limit)->with('role')
             ->all();
@@ -91,10 +117,44 @@ class UserController extends AccessController
     }
     
     public function actionUserSingle($id){
-        $getUser = User::find()->where(['id' => $id])->with('role')->asArray()->one();
+        $getUser = User::find()->where(['id' => $id])->with('role')->one();
+        $rolesList = AuthItem::find()->where(['type' => 1])->asArray()->all();
+        
+        
+        if ($getUser->load(Yii::$app->request->post())) {
+//            $searchUser = User::find()->where(['login' => $getUser->login])->asArray()->one();
+//            if(empty($searchUser)){
+//                $numberPreg = preg_replace("/[^0-9]/iu", '', $getUser->number);
+                $getUser->number = preg_replace("/[^0-9]/iu", '', $getUser->number);
+
+                if($getUser->save()){
+                    if($getUser->user_role) {
+                        $getRolesOld = Yii::$app->authManager->getRolesByUser($getUser->id);
+                        foreach($getRolesOld as $key=>$value){
+                            Yii::$app->authManager->revoke($value, $getUser->id);
+                        }
+                        $getRole = Yii::$app->authManager->getRole($getUser->user_role);
+                        Yii::$app->authManager->assign($getRole, $getUser->id);
+                    }
+
+                    Yii::$app->session->setFlash('success', "Данные успешно изменены");
+                }else{
+                    Yii::$app->session->setFlash('error', "Что-то пошло не так. Обратитесь в поддержку");
+                }
+//            }
+//            else{
+//                 Yii::$app->session->setFlash('danger', "Такой пользователь уже существует");
+//            }
+        }
+
+        
+        $userRole = Yii::$app->authManager->getRolesByUser($getUser->id);
+        $userRole = array_shift($userRole);
         
         return $this->render('user-single', [
             'user' => $getUser,
+            'roleUser' => $userRole,
+            'roleList' => $rolesList,
         ]);
     }
     

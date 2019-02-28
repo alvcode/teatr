@@ -37,6 +37,7 @@ class AppAsset extends AssetBundle
         'js/croppie.js',
         'js/jquery.mask.js',
         'js/board.js',
+        'js/script.js',
     ];
     public $depends = [
         'yii\web\YiiAsset',

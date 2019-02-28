@@ -38,8 +38,9 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
     public function rules()
     {
         return [
-            [['email', 'name', 'surname', 'password'], 'required'],
-            [['date_register', 'last_login'], 'datetime'],
+            [['email', 'name', 'surname'], 'required'],
+            [['password'], 'trim'],
+//            [['date_register', 'last_login'], 'datetime'],
             [['email'], 'email'],
             [['name', 'surname', 'password_hash', 'auth_key', 'access_token'], 'string', 'max' => 255],
             [['number', 'password', 'user_role'], 'string', 'max' => 32]
@@ -63,12 +64,11 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
 
             if ($this->isNewRecord) {
                 $this->auth_key = \Yii::$app->getSecurity()->generateRandomString();
+                 $this->date_register = date('Y-m-d H:i:s');
             }
-            $this->date_register = date('Y-m-d H:i:s');
-            return true;
         }
-
-        return false;
+        return true;
+//        return false;
     }
     
     /**
