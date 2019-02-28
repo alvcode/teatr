@@ -5,6 +5,7 @@
 
 use yii\helpers\Html;
 use yii\bootstrap\ActiveForm;
+use app\components\Formatt;
 
 $this->title = 'Сотрудники';
 $this->params['breadcrumbs'][] = $this->title;
@@ -63,6 +64,7 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
             
             <div class="mrg-top45 table-responsive-sm">
+                <h4>Список сотрудников:</h4>
                 <table class="table table-sm table-striped">
                     <thead>
                         <tr>
@@ -92,8 +94,8 @@ $this->params['breadcrumbs'][] = $this->title;
                                         <?php endif; ?>
                                     </span>
                                 </td>
-                                <td><?= $value['date_register'] ?></td>
-                                <td>-</td>
+                                <td><?= Formatt::dateMysqlToForm($value['date_register']) ? Formatt::dateMysqlToForm($value['date_register']) : "-" ?></td>
+                                <td><?= Formatt::dateMysqlToForm($value['last_login']) ? Formatt::dateMysqlToForm($value['last_login']) : "-" ?></td>
                                 <td>
                                     <a class="btn btn-sm btn-success f-s10" href="/user/user-single?id=<?= $value['id'] ?>"><i class="fas fa-edit"></i></a>
                                     <div class="btn btn-sm btn-danger f-s10 delete-user"><i class="fas fa-times"></i></div>

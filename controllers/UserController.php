@@ -13,6 +13,7 @@ use app\models\User;
 use yii\data\Pagination;
 use app\models\AuthItem;
 use app\models\AuthItemChild;
+use app\models\ProffCategories;
 
 class UserController extends AccessController
 {
@@ -242,6 +243,32 @@ class UserController extends AccessController
             'perm' => $perm,
         ]);
         
+    }
+    
+    /**
+     * Управление профессиями
+     */
+    public function actionProfession()
+    {
+        $categoryModel = new ProffCategories();
+        
+        $categoryAll = ProffCategories::find()->with('professions')->asArray()->all();
+        
+        if ($categoryModel->load(Yii::$app->request->post())) {
+            if($categoryModel->save()){
+                Yii::$app->session->setFlash('success', "Категория успешно добавлена");
+            }else{
+                Yii::$app->session->setFlash('error', "Что-то пошло не так, обратитесь к разработчику");
+            }
+            return $this->redirect('/user/profession/');
+        }else{
+            
+        }
+        
+        return $this->render('profession', [
+            'addCategory' => $categoryModel,
+            'prof' => $categoryAll,
+        ]);
     }
 
 }

@@ -17,6 +17,17 @@ $this->params['breadcrumbs'][] = $this->title;
                 <h1><?= Html::encode($this->title) ?></h1>
             </div>
             
+            <div class="row">
+                <div class="col-12">
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                          <li class="breadcrumb-item text-info"><a href="/user/">Сотрудники</a></li>
+                          <li class="breadcrumb-item active" aria-current="page"><?= $user->name ?> <?= $user->surname ?></li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+            
             <?= $this->render('templates/_flash') ?>
             
             <?php
@@ -36,7 +47,8 @@ $this->params['breadcrumbs'][] = $this->title;
                         ->textInput(['class' => 'p--number form-control', 'inputmode' => 'numeric', 'pattern' => '\+7?[\(][0-9]{3}[\)]{0,1}\s?\d{3}[-]{0,1}\d{4}'])
                 ?>
 
-                <?= $form->field($user, 'password', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])->textInput() ?>
+                <?= $form->field($user, 'password', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])->textInput()
+                        ->label("Пароль (если требуется сменить)") ?>
 
                 <?=
                 $form->field($user, 'user_role')->dropDownList(\yii\helpers\ArrayHelper::map($roleList, 'name', 'description'), [
