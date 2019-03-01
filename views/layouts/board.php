@@ -77,7 +77,11 @@ AppAsset::register($this);
 
 <!--Блок уведомлений-->
 <div class="pop-up-notification"></div>
-    
+
+<!--Preloader-->
+<div class="preloader-container">
+    <img src="/img/loader.gif">
+</div>
     
 <?php $this->endBody() ?>
 </body>

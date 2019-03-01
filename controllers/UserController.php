@@ -14,6 +14,7 @@ use yii\data\Pagination;
 use app\models\AuthItem;
 use app\models\AuthItemChild;
 use app\models\ProffCategories;
+use app\models\Profession;
 
 class UserController extends AccessController
 {
@@ -251,8 +252,24 @@ class UserController extends AccessController
     public function actionProfession()
     {
         $categoryModel = new ProffCategories();
+        $professionModel = new Profession();
         
         $categoryAll = ProffCategories::find()->with('professions')->asArray()->all();
+        
+        
+        if(Yii::$app->request->isAjax){
+            if(Yii::$app->request->post('trigger') == 'add-profession'){
+                $aProffModel = new Profession();
+                $aProffModel->name = Yii::$app->request->post('professionName');
+                $aProffModel->proff_cat_id = Yii::$app->request->post('catId');
+                if($aProffModel->validate() && $aProffModel->save()){
+                    return 1;
+                }else{
+                    return 0;
+                }
+            }
+        }
+        
         
         if ($categoryModel->load(Yii::$app->request->post())) {
             if($categoryModel->save()){
@@ -267,6 +284,7 @@ class UserController extends AccessController
         
         return $this->render('profession', [
             'addCategory' => $categoryModel,
+            'addProfession' => $professionModel,
             'prof' => $categoryAll,
         ]);
     }
