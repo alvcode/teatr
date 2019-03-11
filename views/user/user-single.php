@@ -60,6 +60,12 @@ $this->params['breadcrumbs'][] = $this->title;
                 ])->label("Роль")
                 ?>
             
+                <?=
+                $form->field($profModel, 'prof_id', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])->dropDownList(\yii\helpers\ArrayHelper::map($categories, 'id', 'name'), [
+                    'prompt' => 'Должность',
+                ])->label("Должность")
+                ?>
+            
                 <div class="form-group">
                     <div class="col-lg-offset-1 col-lg-11">
                         <?= Html::submitButton('Сохранить', ['class' => 'btn btn-success btn-sm']) ?>

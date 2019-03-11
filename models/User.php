@@ -17,6 +17,7 @@ use Yii;
  * @property string $access_token
  * @property string $date_register
  * @property string $last_login
+ * @property int $is_active
  */
 class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
 {
@@ -31,6 +32,19 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
     {
         return 'user';
     }
+    
+    
+    public function init(){
+        parent::init();
+        Yii::$app->user->on(Yii\web\User::EVENT_AFTER_LOGIN, [$this, 'statistics']);
+    }
+
+    public function statistics(){
+        Yii::$app->db->createCommand()->update('user', ['last_login' => Yii::$app->formatter->asDate('now', 'php:Y-m-d H:i:s')], [
+                    'id' => $this->id,
+                ])->execute();
+    }
+    
 
     /**
      * {@inheritdoc}
@@ -65,6 +79,7 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
             if ($this->isNewRecord) {
                 $this->auth_key = \Yii::$app->getSecurity()->generateRandomString();
                  $this->date_register = date('Y-m-d H:i:s');
+                 $this->is_active = 1;
             }
         }
         return true;
@@ -144,6 +159,10 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
     
     public function getRole(){
         return $this->hasOne(AuthAssignment::className(), ['user_id' => 'id']);
+    }
+    
+    public function getUserProfession(){
+        return $this->hasOne(UserProfession::className(), ['user_id' => 'id'])->with('prof');
     }
     
 

@@ -31,16 +31,18 @@ AppAsset::register($this);
         
         <div class="board--top-sidebar">
             <div class="board--top-sidebar--title">
-                <h4><b>Копирка</b></h4>
+                <h4><b>Театриум</b></h4>
             </div>
             <div class="board--top-sidebar--humburger">
                 <i id="board-humburger" class="fas fa-bars"></i>
             </div>
             <div class="board--top-sidebar--null"></div>
             <div class="board--top-sidebar--account">
-                alvcode@ya.ru <i id="board--top-sidebar-angle" class="fas fa-angle-down"></i>
+                <?= Yii::$app->user->identity->email; ?> <i id="board--top-sidebar-angle" class="fas fa-angle-down"></i>
                 <div class="board--top-sidebar--account-more" hidden>
-                    <a href="/site/logout">Выйти</a>
+                    <?= Html::a("Выйти", ['/site/logout'], [
+                        'data' => ['method' => 'post'],
+                    ]);?>
                 </div>
             </div>
         </div>

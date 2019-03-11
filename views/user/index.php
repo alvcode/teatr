@@ -74,6 +74,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <th scope="col">E-mail</th>
                             <th scope="col">Телефон</th>
                             <th scope="col">Роль</th>
+                            <th scope="col">Должность</th>
                             <th scope="col">Создан</th>
                             <th scope="col">Последний визит</th>
                             <th scope="col">Action</th>
@@ -94,6 +95,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                         <?php endif; ?>
                                     </span>
                                 </td>
+                                <td><?= $value['userProfession']['prof']['name'] ?></td>
                                 <td><?= Formatt::dateMysqlToForm($value['date_register']) ? Formatt::dateMysqlToForm($value['date_register']) : "-" ?></td>
                                 <td><?= Formatt::dateMysqlToForm($value['last_login']) ? Formatt::dateMysqlToForm($value['last_login']) : "-" ?></td>
                                 <td>
@@ -145,6 +147,12 @@ $this->params['breadcrumbs'][] = $this->title;
                     'prompt' => 'Выберите роль',
                 ])->label("Роль")
                 ?>
+                
+                <?=
+                $form->field($profModel, 'prof_id', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])->dropDownList(\yii\helpers\ArrayHelper::map($categories, 'id', 'name'), [
+                    'prompt' => 'Должность',
+                ])->label("Должность")
+                ?>
 
 <?php ActiveForm::end(); ?>
             </div>
@@ -155,6 +163,28 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
     </div>
 </div>
+
+<!-- Modal delete user -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Подтвердить удаление?</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Пользователь будет навсегда удален из системы. Продолжить?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Отмена</button>
+                <button id="delete-user-submit" type="button" class="btn btn-sm btn-success">Продолжить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script>
     window.onload = function () {
@@ -190,6 +220,10 @@ $this->params['breadcrumbs'][] = $this->title;
                     }
                     self.prop('disabled', false);
                 },
+                error: function () {
+                    showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                    stopPreloader();
+                }
             });
         });
 
@@ -198,13 +232,17 @@ $this->params['breadcrumbs'][] = $this->title;
         });
         
         // Удаление юзера
+        var userForDelete = false;
         $('.delete-user').click(function(){
-            var userId = this.parentNode.parentNode.dataset.user;
-            var self = $(this);
-            self.prop('disabled', true);
+            userForDelete = this.parentNode.parentNode.dataset.user;
+            $('#deleteUserModal').modal('show');
+        });
+
+        $('#delete-user-submit').click(function(){
+            goPreloader();
             var data = {
                 trigger: 'delete-user',
-                id: userId,
+                id: userForDelete,
             };
             data[csrfParam] = csrfToken;
             $.ajax({
@@ -215,16 +253,21 @@ $this->params['breadcrumbs'][] = $this->title;
                     if (data == 1) {
                         var userRows = document.getElementsByClassName('user-row');
                         for(var i = 0; i < userRows.length; i++){
-                            if(userRows[i].dataset.user == userId){
+                            if(userRows[i].dataset.user == userForDelete){
                                 userRows[i].remove();
                             }
                         }
+                        $('#deleteUserModal').modal('hide');
                         showNotifications('Пользователь успешно удален', 3000, NOTIF_GREEN);
                     } else if (data == 0) {
-                        showNotifications(NOTIF_TEXT_ERROR, 3000, NOTIF_GREEN);
+                        showNotifications(NOTIF_TEXT_ERROR, 3000, NOTIF_RED);
                     }
-                    self.prop('disabled', false);
+                    stopPreloader();
                 },
+                error: function () {
+                    showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                    stopPreloader();
+                }
             });
         });
         
@@ -288,6 +331,10 @@ $this->params['breadcrumbs'][] = $this->title;
                     }
                     stopPreloader();
                 },
+                error: function () {
+                    showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                    stopPreloader();
+                }
             });
         });
 

@@ -15,6 +15,7 @@ use app\models\AuthItem;
 use app\models\AuthItemChild;
 use app\models\ProffCategories;
 use app\models\Profession;
+use app\models\UserProfession;
 
 class UserController extends AccessController
 {
@@ -59,11 +60,16 @@ class UserController extends AccessController
      */
     public function actionIndex(){
         $userModel = new User();
+        $userProfModel = new UserProfession();
         
         if(Yii::$app->request->isAjax){
             if($userModel->load(Yii::$app->request->post())){
                 $userModel->number = preg_replace("/[^0-9]/iu", '', $userModel->number);
                 if($userModel->save()){
+                    if($userProfModel->load(Yii::$app->request->post())){
+                        $userProfModel->user_id = $userModel->id;
+                        $userProfModel->save();
+                    }
                     if($userModel->user_role) {
                         $getRole = Yii::$app->authManager->getRole($userModel->user_role);
                         Yii::$app->authManager->assign($getRole, $userModel->id);
@@ -76,13 +82,9 @@ class UserController extends AccessController
             
             if(Yii::$app->request->post('trigger') == 'delete-user'){
                 $findUser = User::findOne(Yii::$app->request->post('id'));
-                if($findUser) $userId = $findUser->id;
-                if($findUser->delete()){
-                    // Не можем добавить foreign key для auth_assignment, т.к при удалении роли тогда будет стираться и юзер
-                    $getRolesOld = Yii::$app->authManager->getRolesByUser($userId);
-                    foreach($getRolesOld as $key=>$value){
-                        Yii::$app->authManager->revoke($value, $userId);
-                    }
+                if(Yii::$app->db->createCommand()->update('user', ['is_active' => 0], [
+                    'id' => $findUser->id,
+                ])->execute()){
                     return 1;
                 }else{
                     return 0;
@@ -93,27 +95,41 @@ class UserController extends AccessController
                 $findUser = User::find()->where(['like', 'name', '%' .Yii::$app->request->post('str') . '%', false])
                         ->orWhere(['like', 'surname', '%' .Yii::$app->request->post('str') . '%', false])
                         ->orWhere(['like', 'number', '%' .Yii::$app->request->post('str') . '%', false])
-                        ->with('role')->asArray()->all();
+                        ->andWhere(['is_active' => 1])
+                        ->with('role')->limit('8')->asArray()->all();
                 
                 return json_encode($findUser);
             }
             
-            
         }
         
-        $getUsers = User::find();
+        $getUsers = User::find()->where(['is_active' => 1]);
         $pages = new Pagination(['totalCount' => $getUsers->count(), 'pageSize' => 150]);
         $users = $getUsers->offset($pages->offset)
-            ->limit($pages->limit)->with('role')
+            ->limit($pages->limit)->with('role')->with('userProfession')
             ->all();
         
         $authAssignment = new \app\models\AuthAssignment();
         $rolesList = AuthItem::find()->where(['type' => 1])->asArray()->all();
         
+        $categoryAll = ProffCategories::find()->with('professions')->asArray()->all();
+        $categories = [];
+        foreach($categoryAll as $key => $value){
+            if($value['professions']){
+                foreach($value['professions'] as $keyP => $valueP){
+                    $countArr = count($categories);
+                    $categories[$countArr]['id'] = $valueP['id'];
+                    $categories[$countArr]['name'] = $valueP['name'] ." (".$value['name'] .")";
+                }
+            }
+        }
+        
         return $this->render('index', [
             'users' => $users,
             'userModel' => $userModel,
             'roleList' => $rolesList,
+            'categories' => $categories,
+            'profModel' => $userProfModel,
             'authAssignment' => $authAssignment,
         ]);
     }
@@ -121,15 +137,20 @@ class UserController extends AccessController
     public function actionUserSingle($id){
         $getUser = User::find()->where(['id' => $id])->with('role')->one();
         $rolesList = AuthItem::find()->where(['type' => 1])->asArray()->all();
+        $userProfession = UserProfession::find()->where(['user_id' => $id])->one();
+        if(!$userProfession){
+            $userProfession = new UserProfession();
+        }
         
         
         if ($getUser->load(Yii::$app->request->post())) {
-//            $searchUser = User::find()->where(['login' => $getUser->login])->asArray()->one();
-//            if(empty($searchUser)){
-//                $numberPreg = preg_replace("/[^0-9]/iu", '', $getUser->number);
                 $getUser->number = preg_replace("/[^0-9]/iu", '', $getUser->number);
 
                 if($getUser->save()){
+                    if($userProfession->load(Yii::$app->request->post())){
+                        $userProfession->user_id = $getUser->id;
+                        $userProfession->save();
+                    }
                     if($getUser->user_role) {
                         $getRolesOld = Yii::$app->authManager->getRolesByUser($getUser->id);
                         foreach($getRolesOld as $key=>$value){
@@ -143,20 +164,30 @@ class UserController extends AccessController
                 }else{
                     Yii::$app->session->setFlash('error', "Что-то пошло не так. Обратитесь в поддержку");
                 }
-//            }
-//            else{
-//                 Yii::$app->session->setFlash('danger', "Такой пользователь уже существует");
-//            }
         }
 
         
         $userRole = Yii::$app->authManager->getRolesByUser($getUser->id);
         $userRole = array_shift($userRole);
         
+        $categoryAll = ProffCategories::find()->with('professions')->asArray()->all();
+        $categories = [];
+        foreach($categoryAll as $key => $value){
+            if($value['professions']){
+                foreach($value['professions'] as $keyP => $valueP){
+                    $countArr = count($categories);
+                    $categories[$countArr]['id'] = $valueP['id'];
+                    $categories[$countArr]['name'] = $valueP['name'] ." (".$value['name'] .")";
+                }
+            }
+        }
+        
         return $this->render('user-single', [
             'user' => $getUser,
             'roleUser' => $userRole,
             'roleList' => $rolesList,
+            'categories' => $categories,
+            'profModel' => $userProfession,
         ]);
     }
     
@@ -263,6 +294,36 @@ class UserController extends AccessController
                 $aProffModel->name = Yii::$app->request->post('professionName');
                 $aProffModel->proff_cat_id = Yii::$app->request->post('catId');
                 if($aProffModel->validate() && $aProffModel->save()){
+                    return json_encode($aProffModel->id);
+                }else{
+                    return 0;
+                }
+            }
+            
+            if(Yii::$app->request->post('trigger') == 'rename-profession'){
+                $proffModel = Profession::findOne(Yii::$app->request->post('profId'));
+                $proffModel->name = Yii::$app->request->post('professionName');
+                if($proffModel->save()){
+                    return 1;
+                }else{
+                    return 0;
+                }
+            }
+            
+            if(Yii::$app->request->post('trigger') == 'remove-profession'){
+                $searchUserProf = UserProfession::find()->where(['prof_id' => Yii::$app->request->post('profId')])->all();
+                if($searchUserProf){
+                    return 2;
+                }else{
+                    Yii::$app->db->createCommand()->delete('profession', ['id' => Yii::$app->request->post('profId')])->execute();
+                    return 1;
+                }
+            }
+            
+            if(Yii::$app->request->post('trigger') == 'rename-category'){
+                $catModel = ProffCategories::findOne(Yii::$app->request->post('catId'));
+                $catModel->name = Yii::$app->request->post('categoryName');
+                if($catModel->save()){
                     return 1;
                 }else{
                     return 0;
