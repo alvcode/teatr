@@ -287,7 +287,6 @@ class UserController extends AccessController
         
         $categoryAll = ProffCategories::find()->with('professions')->asArray()->all();
         
-        
         if(Yii::$app->request->isAjax){
             if(Yii::$app->request->post('trigger') == 'add-profession'){
                 $aProffModel = new Profession();

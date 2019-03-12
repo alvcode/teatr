@@ -62,9 +62,21 @@ class PanelController extends AccessController
         
         $roomModel = new Room();
         
+        if(Yii::$app->request->isAjax){
+            if(Yii::$app->request->post('trigger') == 'rename-room'){
+                $roomModel = Room::findOne(Yii::$app->request->post('roomId'));
+                $roomModel->name = Yii::$app->request->post('roomName');
+                if($roomModel->save()){
+                    return 1;
+                }else{
+                    return 0;
+                }
+            }
+        }
+        
         if($roomModel->load(Yii::$app->request->post())){
             if($roomModel->save()){
-                Yii::$app->session->setFlash('success', "Категория успешно добавлена");
+                Yii::$app->session->setFlash('success', "Зал успешно добавлен");
             }else{
                 Yii::$app->session->setFlash('error', "Что-то пошло не так, обратитесь к разработчику");
             }
