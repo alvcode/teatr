@@ -329,6 +329,23 @@ class UserController extends AccessController
                     return 0;
                 }
             }
+            
+            if(Yii::$app->request->post('trigger') == 'delete-category'){
+                $getProfessions = Profession::find()->where(['proff_cat_id' => Yii::$app->request->post('catId')])->asArray()->all();
+                if($getProfessions){
+                    $profIds = \yii\helpers\ArrayHelper::getColumn($getProfessions, 'id');
+                    $searchUserProf = UserProfession::find()->where(['prof_id' => $profIds])->all();
+                    if($searchUserProf){
+                        return 2;
+                    }else{
+                        Yii::$app->db->createCommand()->delete('proff_categories', ['id' => Yii::$app->request->post('catId')])->execute();
+                        return 1;
+                    }
+                }else{
+                    Yii::$app->db->createCommand()->delete('proff_categories', ['id' => Yii::$app->request->post('catId')])->execute();
+                    return 1;
+                }
+            }
         }
         
         

@@ -41,6 +41,9 @@ $this->title = 'Управление ролями';
             </div>
         </div>
     </div>
+    
+    <?= $this->render('../templates/_flash') ?>
+    
     <div class="row">
         <div class="col-lg-6">
             <form method="post" id="add-role-form" action="">

@@ -17,7 +17,10 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="main--page-title">
                 <h1><?= Html::encode($this->title) ?></h1>
             </div>
+            
+            <?= $this->render('../templates/_flash') ?>
             <?php
+            
 //            echo "<pre>";
 //            print_r($users);
             ?>

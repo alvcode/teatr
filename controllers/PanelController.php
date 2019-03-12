@@ -9,6 +9,7 @@ use yii\web\Response;
 use yii\filters\VerbFilter;
 use app\models\LoginForm;
 use app\models\ContactForm;
+use app\models\Room;
 
 class PanelController extends AccessController
 {
@@ -54,6 +55,29 @@ class PanelController extends AccessController
     public function actionIndex(){
         
         return $this->render('index');
+    }
+    
+    
+    public function actionRoomEvent(){
+        
+        $roomModel = new Room();
+        
+        if($roomModel->load(Yii::$app->request->post())){
+            if($roomModel->save()){
+                Yii::$app->session->setFlash('success', "Категория успешно добавлена");
+            }else{
+                Yii::$app->session->setFlash('error', "Что-то пошло не так, обратитесь к разработчику");
+            }
+            return $this->redirect('/panel/room-event/');
+        }
+        
+        
+        $rooms = Room::find()->asArray()->all();
+        
+        return $this->render('room_event', [
+            'roomModel' => $roomModel,
+            'rooms' => $rooms,
+        ]);
     }
 
 }

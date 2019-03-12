@@ -18,8 +18,11 @@ $this->params['breadcrumbs'][] = $this->title;
                 <h1><?= Html::encode($this->title) ?></h1>
             </div>
             
+            <?= $this->render('../templates/_flash') ?>
+            
             <div class="row">
                 <div class="col-lg-6">
+                    <?php /* print_r(yii\helpers\ArrayHelper::getColumn($prof, 'name')) */ ?>
                     <h4><b>Добавить службу</b></h4>
                     <?php $form = ActiveForm::begin() ?>
                     <?= $form->field($addCategory, 'name', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
@@ -344,6 +347,30 @@ window.onload = function () {
     
     $('#delete-cat-submit').click(function(){
         // Запрос на удаление категории с проверкой на присвоение кому-либо
+        var data = {
+                trigger: 'delete-category',
+                catId: actionCat,
+            };
+        data[csrfParam] = csrfToken;
+        $.ajax({
+             type: "POST",
+             url: '/user/profession',
+             data: data,
+             success: function(data){
+                if(data == 1){
+                    $('.cat-list[data-category='+ actionCat +']').parent().remove();
+                    $('#deleteCatModal').modal('hide');
+                    showNotifications("Категория успешно удалена", 3000, NOTIF_GREEN);
+                 }else if(data == 2){
+                    showNotifications("Похоже, что какая-либо из профессий присвоена сотруднику(ам)", 7000, NOTIF_RED);
+                 }
+                 stopPreloader();
+             },
+             error: function () {
+                showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                stopPreloader();
+            }
+         });
     });
 
 }

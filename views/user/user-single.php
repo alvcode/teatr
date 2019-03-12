@@ -28,7 +28,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div>
             </div>
             
-            <?= $this->render('templates/_flash') ?>
+            <?= $this->render('../templates/_flash') ?>
             
             <?php
                 $form = ActiveForm::begin([
