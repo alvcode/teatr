@@ -5,20 +5,20 @@ namespace app\models;
 use Yii;
 
 /**
- * This is the model class for table "room".
+ * This is the model class for table "events".
  *
  * @property int $id
  * @property string $name
  * @property int $is_active
  */
-class Room extends \yii\db\ActiveRecord
+class Events extends \yii\db\ActiveRecord
 {
     /**
      * {@inheritdoc}
      */
     public static function tableName()
     {
-        return 'room';
+        return 'events';
     }
 
     /**
@@ -29,7 +29,7 @@ class Room extends \yii\db\ActiveRecord
         return [
             [['name', 'is_active'], 'required'],
             [['is_active'], 'integer'],
-            [['name'], 'string', 'max' => 45],
+            [['name'], 'string', 'max' => 65],
         ];
     }
 
@@ -40,7 +40,8 @@ class Room extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'name' => 'Название зала',
+            'name' => 'Name',
+            'is_active' => 'Is Active',
         ];
     }
 }

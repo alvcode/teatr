@@ -132,29 +132,45 @@ $this->params['breadcrumbs'][] = $this->title;
                 ]);
                 ?>
 
-                <?= $form->field($userModel, 'name', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])->textInput() ?>
+                <?= $form->field($userModel, 'name', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
+                        ->textInput(['class' => 'form-control form-control-sm']) ?>
 
-                <?= $form->field($userModel, 'surname', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])->textInput() ?>
+                <?= $form->field($userModel, 'surname', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
+                        ->textInput(['class' => 'form-control form-control-sm']) ?>
 
-                <?= $form->field($userModel, 'email', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])->textInput() ?>
+                <?= $form->field($userModel, 'email', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
+                        ->textInput(['class' => 'form-control form-control-sm']) ?>
 
                 <?=
                         $form->field($userModel, 'number', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
-                        ->textInput(['class' => 'p--number form-control', 'inputmode' => 'numeric', 'pattern' => '\+7?[\(][0-9]{3}[\)]{0,1}\s?\d{3}[-]{0,1}\d{4}'])
+                        ->textInput(['class' => 'p--number form-control form-control-sm', 'inputmode' => 'numeric', 'pattern' => '\+7?[\(][0-9]{3}[\)]{0,1}\s?\d{3}[-]{0,1}\d{4}'])
                 ?>
 
-                <?= $form->field($userModel, 'password', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])->textInput() ?>
+                <?= $form->field($userModel, 'password', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
+                        ->textInput(['class' => 'form-control form-control-sm']) ?>
 
                 <?=
                 $form->field($userModel, 'user_role')->dropDownList(\yii\helpers\ArrayHelper::map($roleList, 'name', 'description'), [
                     'prompt' => 'Выберите роль',
+                    'class' => 'form-control form-control-sm',
                 ])->label("Роль")
                 ?>
                 
                 <?=
                 $form->field($profModel, 'prof_id', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])->dropDownList(\yii\helpers\ArrayHelper::map($categories, 'id', 'name'), [
                     'prompt' => 'Должность',
+                    'class' => 'form-control form-control-sm'
                 ])->label("Должность")
+                ?>
+                
+                <?=
+                $form->field($userModel, 'timesheet', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
+                        ->dropDownList([
+                            '0' => 'Не задано',
+                            '1' => 'Учитывать часы',
+                            '2' => 'Учитывать выходы',
+                            '3' => 'Дети (часы)'
+                        ], ['class' => 'form-control form-control-sm'])->label("Метод расчета табеля")
                 ?>
 
 <?php ActiveForm::end(); ?>

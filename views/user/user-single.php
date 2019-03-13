@@ -66,6 +66,16 @@ $this->params['breadcrumbs'][] = $this->title;
                 ])->label("Должность")
                 ?>
             
+                <?=
+                $form->field($user, 'timesheet', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
+                    ->dropDownList([
+                        '0' => 'Не задано',
+                        '1' => 'Учитывать часы',
+                        '2' => 'Учитывать выходы',
+                        '3' => 'Дети (часы)'
+                    ], ['class' => 'form-control form-control-sm'])->label("Метод расчета табеля")
+                ?>
+            
                 <div class="form-group">
                     <div class="col-lg-offset-1 col-lg-11">
                         <?= Html::submitButton('Сохранить', ['class' => 'btn btn-success btn-sm']) ?>

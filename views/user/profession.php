@@ -269,6 +269,7 @@ window.onload = function () {
     });
     
     $('#delete-prof-submit').click(function(){
+        goPreloader();
         var data = {
             trigger: 'remove-profession',
             profId: actionProf,
