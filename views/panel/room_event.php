@@ -28,6 +28,10 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?= $form->field($eventTypeModel, 'name', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
                         ->textInput(['class' => 'form-control form-control-sm'])
                         ->label("Новый тип мероприятия <span class='text-danger'>*</span>") ?>
+                    
+                    <?= $form->field($eventTypeModel, 'timesheet_hour')->checkbox() ?>
+                    
+                    <?= $form->field($eventTypeModel, 'timesheet_count')->checkbox() ?>
 
                     <div class="form-group">
                         <div class="col-lg-offset-1 col-lg-11">
@@ -51,15 +55,22 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?php /* echo "<pre>"; print_r($eventType); */ ?>
                     <div class="mrg-top45">
                         <ul class="list-group mrg-top30">
-                            <li class="list-group-item active">
-                                Типы мероприятий
+                            <li class="list-group-item">
+                                <b>Типы мероприятий</b>
                             </li>
                             <li class="list-group-item">
                                 <ul class="list-group proff-list">
                                     <?php foreach ($eventType as $key => $value): ?>
-                                        <li data-eventtype="<?= $value['id'] ?>" class="list-group-item d-flex justify-content-between align-items-center event-type-li">
-                                            <div class="proff-name"><?= $value['name'] ?></div>
+                                        <li data-timesheet-count="<?= $value['timesheet_count'] ?>" data-timesheet-hour="<?= $value['timesheet_hour'] ?>" data-eventtype="<?= $value['id'] ?>" class="list-group-item d-flex justify-content-between align-items-center event-type-li">
+                                            <div class="proff-name">
+                                                <?= $value['name'] ?>
+                                                <span class="small">
+                                                    <?= $value['timesheet_hour']?"(табель по часам)":"" ?>
+                                                    <?= $value['timesheet_count']?"(табель по выходам)":"" ?>
+                                                </span>
+                                            </div>
                                             <div>
+                                                <span class="badge badge-info badge-pill edit-event-type cursor-pointer">Ред.</span>
                                                 <span class="badge badge-danger badge-pill delete-event-type cursor-pointer">Удалить</span>
                                             </div>
                                         </li>
@@ -71,8 +82,8 @@ $this->params['breadcrumbs'][] = $this->title;
                     
                     <div class="mrg-top45">
                         <ul class="list-group mrg-top30">
-                            <li class="list-group-item active">
-                                Спектакли
+                            <li class="list-group-item">
+                                <b>Спектакли</b>
                             </li>
                             <li class="list-group-item">
                                 <ul class="list-group proff-list">
@@ -186,6 +197,35 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="modal-footer">
                 <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Отмена</button>
                 <button id="delete-event-submit" type="button" class="btn btn-sm btn-success">Продолжить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal timesheet event -->
+<div class="modal fade" id="timesheetEventModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Изменить настройку расчета табеля</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <h4>Тип мероприятия: <span>Спектакль</span></h4>
+                <div class="form-group">
+                    <div class="checkbox">
+                    <label>
+                        <input type="checkbox">
+                        Участвует в расчете табелей по часам
+                    </label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Отмена</button>
+                <button id="timesheet-event-submit" type="button" class="btn btn-sm btn-success">Применить</button>
             </div>
         </div>
     </div>
@@ -341,6 +381,10 @@ $('#delete-event-submit').click(function(){
            stopPreloader();
        }
     });
+});
+
+$('.edit-event-type').click(function(){
+    $('#timesheetEventModal').modal('show');
 });
 
     

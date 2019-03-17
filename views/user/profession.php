@@ -66,8 +66,8 @@ $this->params['breadcrumbs'][] = $this->title;
                         <br><br>
                         <?php foreach ($prof as $key => $value): ?>
                         <ul class="list-group mrg-top30">
-                            <li class="list-group-item d-flex justify-content-between align-items-center cat-list active" data-category="<?= $value['id'] ?>">
-                                <div class="cat-name"><?= $value['name'] ?></div>
+                            <li class="list-group-item d-flex justify-content-between align-items-center cat-list" data-category="<?= $value['id'] ?>">
+                                <div class="cat-name"><b><?= $value['name'] ?></b></div>
                                 <div>
                                     <span class="badge badge-info badge-pill edit-cat-name cursor-pointer">Изменить</span>
                                     <span class="badge badge-danger badge-pill delete-cat cursor-pointer">Удалить</span>
