@@ -365,5 +365,20 @@ class UserController extends AccessController
             'prof' => $categoryAll,
         ]);
     }
+    
+    /**
+     * Логин под выбранным пользователем
+     */
+    public function actionLoginAs($id)
+    {
+        if(!Yii::$app->user->isGuest){
+            Yii::$app->user->logout();
+        }
+        $getUser = User::findOne(['id' => $id]);
+        if($getUser->loginAs()){
+            return Yii::$app->getResponse()->redirect('/panel')->send();
+        }
+
+    }
 
 }

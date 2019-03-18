@@ -106,6 +106,17 @@ class PanelController extends AccessController
                     return 0;
                 }
             }
+            
+            if(Yii::$app->request->post('trigger') == 'edit-timesheet'){
+                $eventTypeModel = EventType::findOne(Yii::$app->request->post('eventTypeId'));
+                $eventTypeModel->timesheet_hour = Yii::$app->request->post('timesheetHour');
+                $eventTypeModel->timesheet_count = Yii::$app->request->post('timesheetCount');
+                if($eventTypeModel->save()){
+                    return 1;
+                }else{
+                    return 0;
+                }
+            }
         }
         
         if($roomModel->load(Yii::$app->request->post())){

@@ -102,6 +102,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <td><?= Formatt::dateMysqlToForm($value['date_register']) ? Formatt::dateMysqlToForm($value['date_register']) : "-" ?></td>
                                 <td><?= Formatt::dateMysqlToForm($value['last_login']) ? Formatt::dateMysqlToForm($value['last_login']) : "-" ?></td>
                                 <td>
+                                    <a href="/user/login-as?id=<?= $value['id']  ?>" class="btn btn-sm btn-info"><i class="fas fa-sign-out-alt"></i></a>
                                     <a class="btn btn-sm btn-success f-s10" href="/user/user-single?id=<?= $value['id'] ?>"><i class="fas fa-edit"></i></a>
                                     <div class="btn btn-sm btn-danger f-s10 delete-user"><i class="fas fa-times"></i></div>
                                 </td>

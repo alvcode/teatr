@@ -62,7 +62,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <ul class="list-group proff-list">
                                     <?php foreach ($eventType as $key => $value): ?>
                                         <li data-timesheet-count="<?= $value['timesheet_count'] ?>" data-timesheet-hour="<?= $value['timesheet_hour'] ?>" data-eventtype="<?= $value['id'] ?>" class="list-group-item d-flex justify-content-between align-items-center event-type-li">
-                                            <div class="proff-name">
+                                            <div class="event-type-name">
                                                 <?= $value['name'] ?>
                                                 <span class="small">
                                                     <?= $value['timesheet_hour']?"(табель по часам)":"" ?>
@@ -213,12 +213,20 @@ $this->params['breadcrumbs'][] = $this->title;
                 </button>
             </div>
             <div class="modal-body">
-                <h4>Тип мероприятия: <span>Спектакль</span></h4>
+                <h4>Тип мероприятия: <span id="timesheet-edit-title">Спектакль</span></h4>
                 <div class="form-group">
                     <div class="checkbox">
                     <label>
-                        <input type="checkbox">
+                        <input id="timesheet-hour-edit" type="checkbox">
                         Участвует в расчете табелей по часам
+                    </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="checkbox">
+                    <label>
+                        <input id="timesheet-count-edit" type="checkbox">
+                        Участвует в расчете табелей по выходам
                     </label>
                     </div>
                 </div>
@@ -383,8 +391,58 @@ $('#delete-event-submit').click(function(){
     });
 });
 
+var eventTypeTimesheet = false;
 $('.edit-event-type').click(function(){
+    $('#timesheet-hour-edit, #timesheet-count-edit').removeAttr('checked');
+    eventTypeTimesheet = this.parentNode.parentNode.dataset.eventtype;
+    var nameNode = this.parentNode.parentNode.getElementsByClassName('event-type-name')[0];
+    var dupNode = nameNode.cloneNode(true);
+    dupNode.getElementsByTagName('span')[0].remove();
+    $('#timesheet-edit-title').html(dupNode.innerHTML.trim());
+    var timesheetHour = this.parentNode.parentNode.dataset.timesheetHour;
+    var timesheetCount = this.parentNode.parentNode.dataset.timesheetCount;
+    if(timesheetHour === '1'){
+        $('#timesheet-hour-edit').attr('checked', 'true');
+    }
+    if(timesheetCount === '1'){
+        $('#timesheet-count-edit').attr('checked', 'true');
+    }
     $('#timesheetEventModal').modal('show');
+});
+
+$('#timesheet-event-submit').click(function(){
+    goPreloader();
+    var timesheetHourVal = $('#timesheet-hour-edit').prop('checked')?'1':'0';
+    var timesheetCountVal = $('#timesheet-count-edit').prop('checked')?'1':'0';
+    var data = {
+        trigger: 'edit-timesheet',
+        eventTypeId: eventTypeTimesheet,
+        timesheetHour: timesheetHourVal,
+        timesheetCount: timesheetCountVal,
+    };
+    data[csrfParam] = csrfToken;
+    $.ajax({
+        type: "POST",
+        url: '/panel/room-event',
+        data: data,
+        success: function(data){
+           if(data == 1){
+               var elemLi = $('li[data-eventtype='+ eventTypeTimesheet +']');
+               elemLi.attr('data-timesheet-hour', timesheetHourVal);
+               elemLi.attr('data-timesheet-count', timesheetCountVal);
+               elemLi.find('.event-type-name').find('.small').html((timesheetHourVal == '0'?"":"(табель по часам)") + (timesheetCountVal == '0'?"":"(табель по выходам)"));
+              $('#timesheetEventModal').modal('hide');
+               showNotifications("Настройка расчета табелей успешно выполнена", 3000, NOTIF_GREEN);
+            }else if(data == 0){
+               showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+            }
+            stopPreloader();
+        },
+        error: function () {
+           showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+           stopPreloader();
+       }
+    });
 });
 
     

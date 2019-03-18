@@ -87,6 +87,11 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
 //        return false;
     }
     
+    public function loginAs()
+    {
+        return Yii::$app->user->login($this, 0);
+    }
+    
     /**
      * Finds an identity by the given ID.
      *
