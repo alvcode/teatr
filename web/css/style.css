@@ -126,7 +126,7 @@ a:hover {
   font-size: 14px;
 }
 .one--schedule-controls {
-  width: 200px;
+  width: 260px;
   font-size: 22px;
   display: flex;
   -webkit-flex-direction: row;
@@ -139,6 +139,7 @@ a:hover {
   justify-content: space-around;
 }
 .one--schedule-controls .name {
+  width: 180px;
   font-weight: 700;
   color: #F97979;
   text-decoration: underline;

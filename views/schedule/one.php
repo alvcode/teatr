@@ -64,7 +64,17 @@ $this->params['breadcrumbs'][] = $this->title;
 
         renderCalendar(nowDate.getFullYear(), nowDate.getMonth());
         
+        $('#month-right').click(function(){
+            nowDate.setMonth(nowDate.getMonth() + 1);
+            renderCalendar(nowDate.getFullYear(), nowDate.getMonth());
+        });
+        $('#month-left').click(function(){
+            nowDate.setMonth(nowDate.getMonth() - 1);
+            renderCalendar(nowDate.getFullYear(), nowDate.getMonth());
+        });
+        
         function renderCalendar(year, month){
+            $('#one--schedule-items').empty();
             var date = new Date(year, month, 1);
             var dayCount = dayInMonth(year, month);
             document.getElementById('control-name').innerHTML = monthName[date.getMonth()] +", "+date.getFullYear();
@@ -90,7 +100,7 @@ $this->params['breadcrumbs'][] = $this->title;
             
             for(var i = 0; i < rooms.length; i++){
                 var createRoom = document.createElement('div');
-                createRoom.className = 'room';
+                createRoom.className = 'room room-cell';
                 createRoom.dataset.room = rooms[i].dataset.room;
                 createContainer.append(createRoom);
             }
@@ -110,6 +120,16 @@ $this->params['breadcrumbs'][] = $this->title;
                 date.setDate(date.getDate() + 1);
             }
         }
+        
+        
+        $('body').on('dblclick', '.room-cell', function(){
+            alert('ok');
+        });
+        
+        
+        
+        
+        
         
         function normalizeDate(date) {
             var splitDate = date.split(".");
