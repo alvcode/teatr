@@ -102,7 +102,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <td><?= Formatt::dateMysqlToForm($value['date_register']) ? Formatt::dateMysqlToForm($value['date_register']) : "-" ?></td>
                                 <td><?= Formatt::dateMysqlToForm($value['last_login']) ? Formatt::dateMysqlToForm($value['last_login']) : "-" ?></td>
                                 <td>
-                                    <a href="/user/login-as?id=<?= $value['id']  ?>" class="btn btn-sm btn-info"><i class="fas fa-sign-out-alt"></i></a>
+                                    <a href="/user/login-as?id=<?= $value['id']  ?>" class="btn btn-sm btn-info f-s10"><i class="fas fa-sign-out-alt"></i></a>
                                     <a class="btn btn-sm btn-success f-s10" href="/user/user-single?id=<?= $value['id'] ?>"><i class="fas fa-edit"></i></a>
                                     <div class="btn btn-sm btn-danger f-s10 delete-user"><i class="fas fa-times"></i></div>
                                 </td>
@@ -222,7 +222,8 @@ $this->params['breadcrumbs'][] = $this->title;
             }
         });
 
-        $('#users--new-user-button').click(function () {
+        $('#users--new-user-button').click(function (e) {
+            e.preventDefault();
             var self = $(this);
             self.prop('disabled', true);
             var data = $('#new-user-form').serialize();
@@ -236,7 +237,7 @@ $this->params['breadcrumbs'][] = $this->title;
 //                    $('#newUserModal').modal('hide');
 //                    $('#new-user-form')[0].reset();
                     } else if (data == 0) {
-
+                        showNotifications("Кажется форма не прошла валидацию, проверьте, все ли было заполнено", 7000, NOTIF_RED);
                     }
                     self.prop('disabled', false);
                 },
@@ -253,11 +254,11 @@ $this->params['breadcrumbs'][] = $this->title;
         
         // Удаление юзера
         var userForDelete = false;
-        $('.delete-user').click(function(){
+        $('body').on('click', '.delete-user', function(){
             userForDelete = this.parentNode.parentNode.dataset.user;
             $('#deleteUserModal').modal('show');
         });
-
+        
         $('#delete-user-submit').click(function(){
             goPreloader();
             var data = {
@@ -328,8 +329,30 @@ $this->params['breadcrumbs'][] = $this->title;
                             item1.innerHTML = result[key].id;
                             item2.innerHTML = result[key].name;
                             item3.innerHTML = result[key].surname;
-
-
+                            item4.innerHTML = result[key].email;
+                            item5.innerHTML = '+' +result[key].number;
+                            item6.innerHTML = "<span class='badge badge-success'>"+ result[key].role.item_name +"</span>";
+                            item7.innerHTML = result[key].date_register;
+                            item8.innerHTML = result[key].last_login;
+                            
+                            var createLoginAs = document.createElement('a');
+                            createLoginAs.setAttribute('href', '/user/login-as?id=' +result[key].id);
+                            createLoginAs.className = 'btn btn-sm btn-info f-s10';
+                            createLoginAs.innerHTML = '<i class="fas fa-sign-out-alt"></i> ';
+                            
+                            var createEdit = document.createElement('a');
+                            createEdit.className = 'btn btn-sm btn-success f-s10';
+                            createEdit.setAttribute('href', '/user/user-single?id=' +result[key].id);
+                            createEdit.innerHTML = '<i class="fas fa-edit"></i> ';
+                            
+                            var createDelete = document.createElement('div');
+                            createDelete.className = 'btn btn-sm btn-danger f-s10 delete-user';
+                            createDelete.innerHTML = '<i class="fas fa-times"></i> ';
+                            
+                            item9.appendChild(createLoginAs);
+                            item9.appendChild(createEdit);
+                            item9.appendChild(createDelete);
+                            
                             createTR.appendChild(item1);
                             createTR.appendChild(item2);
                             createTR.appendChild(item3);

@@ -299,7 +299,7 @@ window.onload = function () {
     var actionCat = false;
     $('.edit-cat-name').click(function(){
         actionCat = this.parentNode.parentNode.dataset.category;
-        var catName = this.parentNode.parentNode.getElementsByClassName('cat-name')[0].innerHTML;
+        var catName = this.parentNode.parentNode.getElementsByClassName('cat-name')[0].querySelector('b').innerHTML;
         var catNameObj = this.parentNode.parentNode.getElementsByClassName('cat-name')[0];
         var createInput = document.createElement('input');
         createInput.value = catName;

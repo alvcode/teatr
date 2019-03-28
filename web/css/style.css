@@ -64,4 +64,83 @@ a:hover {
   margin: auto;
   width: 40px;
 }
+#one--schedule-content {
+  overflow: auto;
+}
+.one--title-row {
+  display: flex;
+  -webkit-flex-direction: row;
+  -ms-flex-direction: row;
+  flex-direction: row;
+  -webkit-flex-wrap: nowrap;
+  -ms-flex-wrap: nowrap;
+  flex-wrap: nowrap;
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  box-sizing: border-box;
+}
+.one--title-row .date {
+  min-width: 150px;
+  border: 1px solid #000;
+}
+.one--title-row .room {
+  width: 750px;
+  min-width: 300px;
+  border-top: 1px solid #000;
+  border-right: 1px solid #000;
+  border-bottom: 1px solid #000;
+}
+.one--date-row {
+  display: flex;
+  -webkit-flex-direction: row;
+  -ms-flex-direction: row;
+  flex-direction: row;
+  -webkit-flex-wrap: nowrap;
+  -ms-flex-wrap: nowrap;
+  flex-wrap: nowrap;
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
+  /*font-size: 18px;*/
+  /*font-weight: 700;*/
+  text-align: center;
+  box-sizing: border-box;
+}
+.one--date-row .date {
+  min-width: 150px;
+  border-left: 1px solid #000;
+  border-bottom: 1px solid #000;
+  border-right: 1px solid #000;
+  font-size: 17px;
+  padding: 4px;
+}
+.one--date-row .room {
+  width: 750px;
+  min-width: 300px;
+  padding: 8px;
+  /*        border-top: 1px solid #000;*/
+  border-right: 1px solid #000;
+  border-bottom: 1px solid #000;
+  font-size: 14px;
+}
+.one--schedule-controls {
+  width: 200px;
+  font-size: 22px;
+  display: flex;
+  -webkit-flex-direction: row;
+  -ms-flex-direction: row;
+  flex-direction: row;
+  -webkit-flex-wrap: nowrap;
+  -ms-flex-wrap: nowrap;
+  flex-wrap: nowrap;
+  -webkit-justify-content: space-around;
+  justify-content: space-around;
+}
+.one--schedule-controls .name {
+  font-weight: 700;
+  color: #F97979;
+  text-decoration: underline;
+}
 /*# sourceMappingURL=style.css.map */
