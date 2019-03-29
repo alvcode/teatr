@@ -20,7 +20,6 @@ $this->params['breadcrumbs'][] = $this->title;
 
             <?= $this->render('../templates/_flash') ?>
 
-
         </div>
     </div>
     <div class="one--schedule-container">
@@ -43,11 +42,93 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 
 
+<!-- Modal add event -->
+<div class="modal fade" id="addEventModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Добавить мероприятие</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-striped">
+                        <tbody>
+                            <tr>
+                                <th scope="row">Дата</th>
+                                <td id="add--date"></td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Время начала</th>
+                                <td>
+                                    <div class="form-group">
+                                        <input type="text" class="form-control form-control-sm" id="add--time_from">
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">
+                                    Время окончания
+                                    <i class="fas fa-exclamation-circle my-tooltip" data-toggle="tooltip" data-placement="right" title="Можно не указывать, если окончание мероприятия неизвестно, но тогда не будут работать подсказки, предупреждающие о пересечениях времени."></i>
+                                </th>
+                                <td>
+                                    <div class="form-group">
+                                        <input type="text" class="form-control form-control-sm" id="add--time_to">
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Тип мероприятия</th>
+                                <td id="add--event_type">
+                                    <div class="form-group">
+                                        <select class="form-control form-control-sm">
+                                            <?php foreach ($eventType as $key => $value):  ?>
+                                                <option value="<?= $value['id'] ?>"><?= $value['name'] ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th scope="row">Мероприятие</th>
+                                <td id="add--event">
+                                    <div class="form-group">
+                                        <select class="form-control form-control-sm">
+                                            <?php foreach ($events as $key => $value):  ?>
+                                                <option value="<?= $value['id'] ?>"><?= $value['name'] ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Отмена</button>
+                <button id="add-event-submit" type="button" class="btn btn-sm btn-success">Добавить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 <script>
     window.onload = function () {
 
         var csrfParam = $('meta[name="csrf-param"]').attr("content");
         var csrfToken = $('meta[name="csrf-token"]').attr("content");
+        $('#add--time_from').bootstrapMaterialDatePicker({
+                date: false,
+                shortTime: false,
+                format: 'HH:mm'
+        });
+        $('#add--time_to').bootstrapMaterialDatePicker({
+                date: false,
+                shortTime: false,
+                format: 'HH:mm'
+        });
         
         var rooms = document.querySelector('.one--title-row').getElementsByClassName('room');
 
@@ -83,7 +164,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 date = new Date(year, month, i);
                 document.getElementById('one--schedule-items').append(returnScheduleRow(date.getFullYear(), date.getMonth(), date.getDate(), date.getDay(), rooms));
             }
-        }
+            return true;
+        };
         
         function returnScheduleRow(year, month, day, week, rooms){
             var createContainer = document.createElement('div');
@@ -95,6 +177,9 @@ $this->params['breadcrumbs'][] = $this->title;
             var createDate = document.createElement('div');
             createDate.className = 'date';
             createDate.innerHTML = normalizeDate(day+"."+month+"."+year) + "<br>" +weekdayName[week];
+            if(week == 6 || week == 0){
+                createDate.style.color = 'red';
+            }
             
             createContainer.append(createDate);
             
@@ -105,7 +190,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 createContainer.append(createRoom);
             }
             return createContainer;
-        }
+        };
 
 
         function dayInMonth(year, month) {
@@ -119,11 +204,18 @@ $this->params['breadcrumbs'][] = $this->title;
                 }
                 date.setDate(date.getDate() + 1);
             }
-        }
+        };
         
-        
+        var addNowDate = {};
+        var addNowRoom = false;
         $('body').on('dblclick', '.room-cell', function(){
-            alert('ok');
+            addNowDate.day = this.parentNode.dataset.day;
+            addNowDate.month = this.parentNode.dataset.month;
+            addNowDate.year = this.parentNode.dataset.year;
+            addNowRoom = this.dataset.room;
+            
+            $('#add--date').html(normalizeDate(addNowDate.day +"."+addNowDate.month+"."+addNowDate.year));
+            $('#addEventModal').modal('show');
         });
         
         

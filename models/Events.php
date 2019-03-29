@@ -9,7 +9,9 @@ use Yii;
  *
  * @property int $id
  * @property string $name
+ * @property string $other_name
  * @property int $is_active
+ * @property int $category_id
  */
 class Events extends \yii\db\ActiveRecord
 {
@@ -27,9 +29,9 @@ class Events extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['name', 'is_active'], 'required'],
-            [['is_active'], 'integer'],
-            [['name'], 'string', 'max' => 65],
+            [['name', 'is_active', 'category_id'], 'required'],
+            [['is_active', 'category_id'], 'integer'],
+            [['name', 'other_name'], 'string', 'max' => 65],
         ];
     }
 
@@ -40,8 +42,10 @@ class Events extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'name' => 'Name',
+            'name' => 'Название',
+            'other_name' => 'Дополнительное название',
             'is_active' => 'Is Active',
+            'category_id' => 'Категория спектакля',
         ];
     }
 }

@@ -12,6 +12,7 @@ use app\models\ContactForm;
 use app\models\Room;
 use app\models\EventType;
 use app\models\Events;
+use app\models\EventCategories;
 
 class PanelController extends AccessController
 {
@@ -147,6 +148,7 @@ class PanelController extends AccessController
         $rooms = Room::find()->where(['is_active' => '1'])->asArray()->all();
         $eventType = EventType::find()->where(['is_active' => '1'])->asArray()->all();
         $events = Events::find()->where(['is_active' => '1'])->asArray()->all();
+        $eventCategories = EventCategories::find()->asArray()->all();
         
         return $this->render('room_event', [
             'roomModel' => $roomModel,
@@ -155,6 +157,7 @@ class PanelController extends AccessController
             'rooms' => $rooms,
             'eventType' => $eventType,
             'events' => $events,
+            'eventCategories' => $eventCategories,
         ]);
     }
 

@@ -22,7 +22,7 @@ $this->params['breadcrumbs'][] = $this->title;
             
             <div class="row">
                 <div class="col-lg-6">
-                    <h4><b>Добавить мероприятия</b></h4>
+                    <h4><b>Добавить тип мероприятия</b></h4>
                     
                     <?php $form = ActiveForm::begin() ?>
                     <?= $form->field($eventTypeModel, 'name', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
@@ -40,10 +40,24 @@ $this->params['breadcrumbs'][] = $this->title;
                     </div>
                     <?php ActiveForm::end() ?>
                     <br>
+                    <h4><b>Добавить спектакль</b></h4>
                     <?php $form = ActiveForm::begin() ?>
+                    
+                    <?= $form->field($eventsModel, 'category_id', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
+                            ->dropDownList(
+                                yii\helpers\ArrayHelper::map($eventCategories,
+                                'id',
+                                'name'), ['class' => 'form-control form-control-sm']
+                            )
+                    ?>
+                    
                     <?= $form->field($eventsModel, 'name', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
                         ->textInput(['class' => 'form-control form-control-sm'])
                         ->label("Новый спектакль <span class='text-danger'>*</span>") ?>
+                    
+                    <?= $form->field($eventsModel, 'other_name', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
+                        ->textInput(['class' => 'form-control form-control-sm'])
+                        ->hint('Неофициальное название спектакля, если оно должно отображаться в расписании', ['class' => 'hint-block']) ?>
 
                     <div class="form-group">
                         <div class="col-lg-offset-1 col-lg-11">
@@ -89,7 +103,9 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <ul class="list-group proff-list">
                                     <?php foreach ($events as $key => $value): ?>
                                         <li data-event="<?= $value['id'] ?>" class="list-group-item d-flex justify-content-between align-items-center event-li">
-                                            <div class="proff-name"><?= $value['name'] ?></div>
+                                            <div class="proff-name">
+                                                <?= $value['name'] ?> <?= $value['other_name'] !== null?"(" .$value['other_name'] .")":"" ?>
+                                            </div>
                                             <div>
                                                 <span class="badge badge-danger badge-pill delete-event cursor-pointer">Удалить</span>
                                             </div>

@@ -8,6 +8,9 @@ use yii\web\Controller;
 use yii\web\Response;
 use yii\filters\VerbFilter;
 use app\models\Room;
+use app\models\EventType;
+use app\models\Events;
+use app\models\EventCategories;
 
 class ScheduleController extends AccessController
 {
@@ -48,9 +51,15 @@ class ScheduleController extends AccessController
      */
     public function actionOne(){
         $rooms = Room::find()->where(['is_active' => 1])->asArray()->all();
+        $eventType = EventType::find()->where(['is_active' => 1])->asArray()->all();
+        $events = Events::find()->where(['is_active' => 1])->asArray()->all();
+//        $eventCategories = EventCategories::find()->asArray()->all();
         
         return $this->render('one', [
             'rooms' => $rooms,
+            'eventType' => $eventType,
+            'events' => $events,
+//            'eventCategories' => $eventCategories,
         ]);
     }
     

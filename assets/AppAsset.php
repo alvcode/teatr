@@ -28,6 +28,7 @@ class AppAsset extends AssetBundle
         'css/croppie.css',
         'https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css',
         'css/board.css',
+        'css/bootstrap-material-datetimepicker.css',
         'css/style.css',
     ];
     public $js = [
@@ -37,6 +38,8 @@ class AppAsset extends AssetBundle
         'js/croppie.js',
         'js/jquery.mask.js',
         'js/board.js',
+        'js/moment.js',
+        'js/bootstrap-material-datetimepicker.js',
         'js/script.js',
     ];
     public $depends = [
