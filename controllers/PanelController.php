@@ -147,7 +147,7 @@ class PanelController extends AccessController
         
         $rooms = Room::find()->where(['is_active' => '1'])->asArray()->all();
         $eventType = EventType::find()->where(['is_active' => '1'])->asArray()->all();
-        $events = Events::find()->where(['is_active' => '1'])->asArray()->all();
+        $events = EventCategories::find()->with('events')->asArray()->all();
         $eventCategories = EventCategories::find()->asArray()->all();
         
         return $this->render('room_event', [

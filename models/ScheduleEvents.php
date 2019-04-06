@@ -10,6 +10,7 @@ use Yii;
  * @property int $id
  * @property int $event_type_id
  * @property int $event_id
+ * @property int $room_id
  * @property string $date
  * @property int $time_from
  * @property int $time_to
@@ -30,8 +31,8 @@ class ScheduleEvents extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['event_type_id', 'event_id', 'date', 'time_from'], 'required'],
-            [['event_type_id', 'event_id', 'time_from', 'time_to'], 'integer'],
+            [['event_type_id', 'event_id', 'date', 'time_from', 'room_id'], 'required'],
+            [['event_type_id', 'event_id', 'time_from', 'time_to', 'room_id'], 'integer'],
             [['date'], 'safe'],
         ];
     }

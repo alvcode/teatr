@@ -34,6 +34,11 @@ class Events extends \yii\db\ActiveRecord
             [['name', 'other_name'], 'string', 'max' => 65],
         ];
     }
+    
+    public function getCategory()
+    {
+        return $this->hasOne(EventCategories::className(), ['id' => 'category_id']);
+    }
 
     /**
      * {@inheritdoc}

@@ -69,6 +69,9 @@ class UserController extends AccessController
                     if($userModel->user_role) {
                         $getRole = Yii::$app->authManager->getRole($userModel->user_role);
                         Yii::$app->authManager->assign($getRole, $userModel->id);
+                    }else{
+                        $getRole = Yii::$app->authManager->getRole('user');
+                        Yii::$app->authManager->assign($getRole, $userModel->id);
                     }
                     return 1;
                 }else{

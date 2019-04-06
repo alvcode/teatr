@@ -53,7 +53,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     
                     <?= $form->field($eventsModel, 'name', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
                         ->textInput(['class' => 'form-control form-control-sm'])
-                        ->label("Новый спектакль <span class='text-danger'>*</span>") ?>
+                        ->label("Название <span class='text-danger'>*</span>") ?>
                     
                     <?= $form->field($eventsModel, 'other_name', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
                         ->textInput(['class' => 'form-control form-control-sm'])
@@ -93,7 +93,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             </li>
                         </ul>
                     </div>
-                    
+                    <?php // echo "<pre>"; print_r($events);  ?>
                     <div class="mrg-top45">
                         <ul class="list-group mrg-top30">
                             <li class="list-group-item">
@@ -102,15 +102,26 @@ $this->params['breadcrumbs'][] = $this->title;
                             <li class="list-group-item">
                                 <ul class="list-group proff-list">
                                     <?php foreach ($events as $key => $value): ?>
-                                        <li data-event="<?= $value['id'] ?>" class="list-group-item d-flex justify-content-between align-items-center event-li">
+                                    <li class="list-group-item">
+                                        <b><?= $value['name'] ?></b>
+                                    </li>
+                                    <?php if($value['events']): ?>
+                                    <li class="list-group-item">
+                                        <ul class="list-group proff-list">
+                                        <?php foreach ($events[$key]['events'] as $keyE => $valueE): ?>
+                                        <li data-event="<?= $valueE['id'] ?>" class="list-group-item d-flex justify-content-between align-items-center event-li">
                                             <div class="proff-name">
-                                                <?= $value['name'] ?> <?= $value['other_name'] !== null?"(" .$value['other_name'] .")":"" ?>
+                                                <?= $valueE['name'] ?> <?= $valueE['other_name'] !== null?"(" .$valueE['other_name'] .")":"" ?>
                                             </div>
                                             <div>
                                                 <span class="badge badge-danger badge-pill delete-event cursor-pointer">Удалить</span>
                                             </div>
                                         </li>
-                                    <?php endforeach; ?>
+                                        <?php endforeach; ?>
+                                        </ul>
+                                    </li>
+                                    <?php endif; ?>
+                                        <?php endforeach; ?>
                                 </ul>
                             </li>
                         </ul>

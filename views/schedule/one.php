@@ -41,6 +41,8 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 </div>
 
+<?php // echo "<pre>";print_r($events); ?>
+
 
 <!-- Modal add event -->
 <div class="modal fade" id="addEventModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -82,7 +84,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <th scope="row">Тип мероприятия</th>
                                 <td id="add--event_type">
                                     <div class="form-group">
-                                        <select class="form-control form-control-sm">
+                                        <select id="select-event-type" class="form-control form-control-sm">
                                             <?php foreach ($eventType as $key => $value):  ?>
                                                 <option value="<?= $value['id'] ?>"><?= $value['name'] ?></option>
                                             <?php endforeach; ?>
@@ -94,9 +96,16 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <th scope="row">Мероприятие</th>
                                 <td id="add--event">
                                     <div class="form-group">
-                                        <select class="form-control form-control-sm">
-                                            <?php foreach ($events as $key => $value):  ?>
+                                        <select id="select-event-category" class="form-control form-control-sm">
+                                            <?php foreach ($eventCategories as $key => $value):  ?>
                                                 <option value="<?= $value['id'] ?>"><?= $value['name'] ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <select id="select-event" class="form-control form-control-sm">
+                                            <?php foreach ($events as $key => $value):  ?>
+                                                <option data-category="<?= $value['category_id'] ?>" value="<?= $value['id'] ?>"><?= $value['name'] ?></option>
                                             <?php endforeach; ?>
                                         </select>
                                     </div>
@@ -119,6 +128,10 @@ $this->params['breadcrumbs'][] = $this->title;
 
         var csrfParam = $('meta[name="csrf-param"]').attr("content");
         var csrfToken = $('meta[name="csrf-token"]').attr("content");
+        
+        var addNowDate = {}; // Выбранная дата
+        var addNowRoom = false; // выбранный зал
+        
         $('#add--time_from').bootstrapMaterialDatePicker({
                 date: false,
                 shortTime: false,
@@ -206,8 +219,6 @@ $this->params['breadcrumbs'][] = $this->title;
             }
         };
         
-        var addNowDate = {};
-        var addNowRoom = false;
         $('body').on('dblclick', '.room-cell', function(){
             addNowDate.day = this.parentNode.dataset.day;
             addNowDate.month = this.parentNode.dataset.month;
@@ -218,11 +229,82 @@ $this->params['breadcrumbs'][] = $this->title;
             $('#addEventModal').modal('show');
         });
         
+        // Отображаем только те спектакли, категория которых выбрана
+        function eventCatSort(){
+            var eventCategory = $('#select-event-category').val();
+            var events = document.getElementById('select-event');
+            var z = 0;
+            for(var i = 0; i < events.options.length; i++){
+                if(events.options[i].dataset.category == eventCategory){
+                    events.options[i].style.display = 'block';
+                    if(z === 0){
+                       events.options[i].selected = true;
+                       z++;
+                    }
+                }else{
+                    events.options[i].style.display = 'none';
+                }
+            }
+        }
+        eventCatSort();
+        
+        $('#select-event-category').change(function(){
+            eventCatSort();
+        });
+        
+        $('#add-event-submit').click(function(){
+            var timeFrom = $('#add--time_from').val();
+            var timeTo = $('#add--time_to').val();
+            var eventType = $('#select-event-type').val();
+            var event = $('#select-event').val();
+            var data = {
+                trigger: 'add-schedule',
+                date: addNowDate,
+                room: addNowRoom,
+                timeFrom: timeFrom,
+                timeTo: timeTo,
+                eventType: eventType,
+                event: event
+            };
+            data[csrfParam] = csrfToken;
+            $.ajax({
+                type: "POST",
+                url: '/schedule/one',
+                data: data,
+                success: function (data) {
+                    console.log(JSON.parse(data));
+                },
+                error: function () {
+                    showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+//                    stopPreloader();
+                }
+            });
+        });
+        
+        function addEventInCalendar(params){
+            var dateRows = document.getElementsByClassName('one--date-row');
+            for(var i = 0; i < dateRows.length; i++){
+                if(params.date.day == dateRows[i].dataset.day && params.date.month == (+dateRows[i].dataset.month +1) && params.date.year == dateRows[i].dataset.year){
+                    alert('YES');
+                }
+            }
+        }
+        var paramTest = {
+            date: {
+                day: 5,
+                month: 4,
+                year: 2019,
+            }
+        };
+        addEventInCalendar(paramTest);
         
         
         
-        
-        
+        /**
+         * Переводит дату формата 3.6.2019 в 3.07.2019
+         * @param {string} date
+         * @returns {String}
+         */
         function normalizeDate(date) {
             var splitDate = date.split(".");
             return splitDate[0] + "." + (+splitDate[1] >= 0 && +splitDate[1] < 9 ? "0" + (+splitDate[1] + 1) : (+splitDate[1] + 1)) + "." + splitDate[2];

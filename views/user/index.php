@@ -148,19 +148,21 @@ $this->params['breadcrumbs'][] = $this->title;
                 ?>
 
                 <?= $form->field($userModel, 'password', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
-                        ->textInput(['class' => 'form-control form-control-sm']) ?>
+                        ->textInput(['class' => 'form-control form-control-sm', 'id' => 'new-password']) ?>
 
                 <?=
                 $form->field($userModel, 'user_role')->dropDownList(\yii\helpers\ArrayHelper::map($roleList, 'name', 'description'), [
                     'prompt' => 'Выберите роль',
                     'class' => 'form-control form-control-sm',
+                    'id' => 'new-role',
                 ])->label("Роль")
                 ?>
                 
                 <?=
                 $form->field($profModel, 'prof_id', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])->dropDownList(\yii\helpers\ArrayHelper::map($categories, 'id', 'name'), [
                     'prompt' => 'Должность',
-                    'class' => 'form-control form-control-sm'
+                    'class' => 'form-control form-control-sm',
+                    'id' => 'new-prof',
                 ])->label("Должность")
                 ?>
                 
@@ -171,7 +173,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             '1' => 'Учитывать часы',
                             '2' => 'Учитывать выходы',
                             '3' => 'Дети (часы)'
-                        ], ['class' => 'form-control form-control-sm'])->label("Метод расчета табеля")
+                        ], ['class' => 'form-control form-control-sm', 'id' => 'new-timesheet'])->label("Метод расчета табеля")
                 ?>
 
 <?php ActiveForm::end(); ?>
@@ -224,6 +226,22 @@ $this->params['breadcrumbs'][] = $this->title;
 
         $('#users--new-user-button').click(function (e) {
             e.preventDefault();
+            if(!$('#new-password').val()){
+                showNotifications("Не заполнен пароль", 3000, NOTIF_RED);
+                return false;
+            }
+            if(!$('#new-role').val()){
+                showNotifications("Не выбрана роль пользователя", 3000, NOTIF_RED);
+                return false;
+            }
+            if(!$('#new-prof').val()){
+                showNotifications("Не выбрана профессия", 3000, NOTIF_RED);
+                return false;
+            }
+//            if(!$('#new-timesheet').val()){
+//                showNotifications("Не выбран метод расчета табеля", 3000, NOTIF_RED);
+//                return false;
+//            }
             var self = $(this);
             self.prop('disabled', true);
             var data = $('#new-user-form').serialize();
@@ -234,8 +252,6 @@ $this->params['breadcrumbs'][] = $this->title;
                 success: function (data) {
                     if (data == 1) {
                         window.location.reload();
-//                    $('#newUserModal').modal('hide');
-//                    $('#new-user-form')[0].reset();
                     } else if (data == 0) {
                         showNotifications("Кажется форма не прошла валидацию, проверьте, все ли было заполнено", 7000, NOTIF_RED);
                     }
@@ -243,6 +259,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 },
                 error: function () {
                     showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                    self.prop('disabled', false);
                     stopPreloader();
                 }
             });

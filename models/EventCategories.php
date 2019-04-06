@@ -30,6 +30,11 @@ class EventCategories extends \yii\db\ActiveRecord
             [['name'], 'string', 'max' => 45],
         ];
     }
+    
+    public function getEvents()
+    {
+        return $this->hasMany(Events::className(), ['category_id' => 'id'])->where(['is_active' => '1']);
+    }
 
     /**
      * {@inheritdoc}
