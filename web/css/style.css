@@ -144,4 +144,20 @@ a:hover {
   color: #F97979;
   text-decoration: underline;
 }
+.event-cell {
+  width: 90%;
+  margin: 6px auto 0 auto;
+}
+.event-cell > span {
+  display: inline-block;
+  margin: 0 5px;
+}
+.event-cell .type {
+  font-size: 14px;
+  color: #F97979;
+  font-weight: 700;
+}
+.event-cell .name {
+  font-size: 13px;
+}
 /*# sourceMappingURL=style.css.map */

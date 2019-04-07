@@ -105,7 +105,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     <div class="form-group">
                                         <select id="select-event" class="form-control form-control-sm">
                                             <?php foreach ($events as $key => $value):  ?>
-                                                <option data-category="<?= $value['category_id'] ?>" value="<?= $value['id'] ?>"><?= $value['name'] ?></option>
+                                                <option data-category="<?= $value['category_id'] ?>" data-other-name="<?= $value['other_name'] ?>" value="<?= $value['id'] ?>"><?= $value['name'] ?></option>
                                             <?php endforeach; ?>
                                         </select>
                                     </div>
@@ -161,10 +161,12 @@ $this->params['breadcrumbs'][] = $this->title;
         $('#month-right').click(function(){
             nowDate.setMonth(nowDate.getMonth() + 1);
             renderCalendar(nowDate.getFullYear(), nowDate.getMonth());
+            loadSchedule(nowDate.getMonth(), nowDate.getFullYear());
         });
         $('#month-left').click(function(){
             nowDate.setMonth(nowDate.getMonth() - 1);
             renderCalendar(nowDate.getFullYear(), nowDate.getMonth());
+            loadSchedule(nowDate.getMonth(), nowDate.getFullYear());
         });
         
         function renderCalendar(year, month){
@@ -257,6 +259,11 @@ $this->params['breadcrumbs'][] = $this->title;
             var timeTo = $('#add--time_to').val();
             var eventType = $('#select-event-type').val();
             var event = $('#select-event').val();
+            if(!timeFrom || timeFrom == ''){
+                showNotifications("Не выбрано время начала мероприятия", 3000, NOTIF_RED);
+                return false;
+            }
+            goPreloader();
             var data = {
                 trigger: 'add-schedule',
                 date: addNowDate,
@@ -272,33 +279,114 @@ $this->params['breadcrumbs'][] = $this->title;
                 url: '/schedule/one',
                 data: data,
                 success: function (data) {
-                    console.log(JSON.parse(data));
+                    if(JSON.parse(data) == 1){
+                        var cellData = {
+                            date: addNowDate,
+                            room: addNowRoom,
+                            eventType: $('#select-event-type').find(':selected').html(),
+                            eventName: $('#select-event').find(':selected').html(),
+                            eventOtherName: $('#select-event').find(':selected').attr('data-other-name'),
+                            timeFrom: timeToMinute(timeFrom),
+                            timeTo: (timeTo && timeTo != ''?timeToMinute(timeTo):'')
+                        };
+                        addEventInCalendar(cellData);
+                        $('#addEventModal').modal('hide');
+                    }else{
+                        showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                    }
+                    stopPreloader();
                 },
                 error: function () {
                     showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
-//                    stopPreloader();
+                    stopPreloader();
                 }
             });
         });
         
+        /**
+         * Добавляет мероприятие в календарь
+         * @param {object} params
+         */
         function addEventInCalendar(params){
             var dateRows = document.getElementsByClassName('one--date-row');
             for(var i = 0; i < dateRows.length; i++){
-                if(params.date.day == dateRows[i].dataset.day && params.date.month == (+dateRows[i].dataset.month +1) && params.date.year == dateRows[i].dataset.year){
-                    alert('YES');
+                if(params.date.day == dateRows[i].dataset.day && params.date.month == dateRows[i].dataset.month && params.date.year == dateRows[i].dataset.year){
+                    var roomsCell = dateRows[i].getElementsByClassName('room-cell');
+                    for(var z = 0; z < roomsCell.length; z++){
+                        if(roomsCell[z].dataset.room == params.room){
+                            var createContainer = document.createElement('div');
+                            createContainer.className = 'event-cell';
+                            createContainer.dataset.timeFrom = params.timeFrom;
+                            if(params.timeTo && params.timeTo != ''){
+                                createContainer.dataset.timeTo = params.timeTo;
+                            }
+                            var createBudgie = document.createElement('span');
+                            createBudgie.className = 'badge badge-pill badge-info';
+                            createBudgie.innerHTML = minuteToTime(params.timeFrom)+(params.timeTo && params.timeTo != ''?" - "+minuteToTime(params.timeTo):"");
+                            
+                            var createEventType = document.createElement('span');
+                            createEventType.className = 'type';
+                            createEventType.innerHTML = "(" +params.eventType +")";
+                            
+                            var createEventName = document.createElement('span');
+                            createEventName.className = 'name';
+                            createEventName.innerHTML = params.eventName +(params.eventOtherName && params.eventOtherName != ''?" (" +params.eventOtherName +")":"");
+                            
+                            createContainer.append(createBudgie);
+                            createContainer.append(createEventType);
+                            createContainer.append(createEventName);
+                            roomsCell[z].append(createContainer);
+                        }
+                    }
                 }
             }
         }
-        var paramTest = {
-            date: {
-                day: 5,
-                month: 4,
-                year: 2019,
-            }
-        };
-        addEventInCalendar(paramTest);
         
-        
+        /**
+         * Загружает расписание на месяц и рендерит в нужные ячейки
+         * @param {int} month
+         * @param {int} year
+         */
+        function loadSchedule(month, year){
+            goPreloader();
+            var data = {
+                trigger: 'load-schedule',
+                month: (month) + 1,
+                year: year,
+            };
+            data[csrfParam] = csrfToken;
+            $.ajax({
+                type: "POST",
+                url: '/schedule/one',
+                data: data,
+                success: function (data) {
+                    var result = JSON.parse(data);
+                    for(var key in result){
+                        var dateT = new Date(result[key].date);
+                        var cellData = {
+                            date: {
+                                day: dateT.getDate(),
+                                month: dateT.getMonth(),
+                                year: dateT.getFullYear()
+                            },
+                            room: result[key].room_id,
+                            eventType: result[key].eventType.name,
+                            eventName: result[key].event.name,
+                            eventOtherName: (result[key].event.other_name !== null?result[key].event.other_name:''),
+                            timeFrom: result[key].time_from,
+                            timeTo: (result[key].time_to !== null?result[key].time_to:''),
+                        };
+                        addEventInCalendar(cellData);
+                    }
+                    stopPreloader();
+                },
+                error: function () {
+                    showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                    stopPreloader();
+                }
+            });
+        }
+        loadSchedule(nowDate.getMonth(), nowDate.getFullYear());
         
         /**
          * Переводит дату формата 3.6.2019 в 3.07.2019
@@ -308,6 +396,43 @@ $this->params['breadcrumbs'][] = $this->title;
         function normalizeDate(date) {
             var splitDate = date.split(".");
             return splitDate[0] + "." + (+splitDate[1] >= 0 && +splitDate[1] < 9 ? "0" + (+splitDate[1] + 1) : (+splitDate[1] + 1)) + "." + splitDate[2];
+        }
+        
+        /**
+         * Переводит минуты во время
+         * @param {int} minute
+         * @returns {String}
+         */
+        function minuteToTime(minute) {
+            if (minute == 0) {
+                return "0:0";
+            } else {
+                return normalizeTime(returnFloor(minute / 60) + ":" + minute % 60);
+            }
+        }
+        
+        /**
+         * Переводит время в минуты
+         * @param {string} time
+         * @returns {Number}
+         */
+        function timeToMinute(time) {
+            return +time.split(":")[0] * 60 + +time.split(":")[1];
+        }
+        
+        /**
+         * Преобразует время формата 8:0 в 8:00
+         * @param {string} time
+         * @returns {String}
+         */
+        function normalizeTime(time) {
+            var splitTime = time.split(":");
+            return (+splitTime[0] >= 0 && +splitTime[0] < 10 ? "0" + +splitTime[0] : +splitTime[0]) + ":" + (+splitTime[1] >= 0 && +splitTime[1] < 10 ? "0" + +splitTime[1] : +splitTime[1]);
+        }
+        
+        // Округляет в меньшую сторону
+        function returnFloor(val) {
+            return Math.floor(val);
         }
         
 

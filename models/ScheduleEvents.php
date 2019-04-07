@@ -36,6 +36,17 @@ class ScheduleEvents extends \yii\db\ActiveRecord
             [['date'], 'safe'],
         ];
     }
+    
+    
+    public function getEventType()
+    {
+        return $this->hasOne(EventType::className(), ['id' => 'event_type_id']);
+    }
+    
+    public function getEvent()
+    {
+        return $this->hasOne(Events::className(), ['id' => 'event_id']);
+    }
 
     /**
      * {@inheritdoc}

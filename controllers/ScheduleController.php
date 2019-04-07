@@ -69,6 +69,14 @@ class ScheduleController extends AccessController
                     return 0;
                 }
             }
+            
+            if(Yii::$app->request->post('trigger') == 'load-schedule'){
+                $schedule = ScheduleEvents::find()
+                        ->where(['=', 'year(date)', Yii::$app->request->post('year')])
+                        ->andWhere(['=', 'month(date)', Yii::$app->request->post('month')])
+                        ->with('eventType')->with('event')->asArray()->all();
+                return json_encode($schedule);
+            }
         }
         
         $rooms = Room::find()->where(['is_active' => 1])->asArray()->all();
