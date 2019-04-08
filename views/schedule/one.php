@@ -122,6 +122,27 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 </div>
 
+<!-- Modal edit event -->
+<div class="modal fade" id="editEventModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Изменить мероприятие</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                        
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Отмена</button>
+                <button id="edit-event-submit" type="button" class="btn btn-sm btn-success">Применить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script>
     window.onload = function () {
@@ -221,7 +242,10 @@ $this->params['breadcrumbs'][] = $this->title;
             }
         };
         
-        $('body').on('dblclick', '.room-cell', function(){
+        $('body').on('dblclick', '.room-cell', function(e){
+            if(!e.target.classList.contains('room-cell')){
+                return false;
+            }
             addNowDate.day = this.parentNode.dataset.day;
             addNowDate.month = this.parentNode.dataset.month;
             addNowDate.year = this.parentNode.dataset.year;
@@ -315,7 +339,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     for(var z = 0; z < roomsCell.length; z++){
                         if(roomsCell[z].dataset.room == params.room){
                             var createContainer = document.createElement('div');
-                            createContainer.className = 'event-cell';
+                            createContainer.className = 'event-cell noselect';
                             createContainer.dataset.timeFrom = params.timeFrom;
                             if(params.timeTo && params.timeTo != ''){
                                 createContainer.dataset.timeTo = params.timeTo;
@@ -335,6 +359,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             createContainer.append(createBudgie);
                             createContainer.append(createEventType);
                             createContainer.append(createEventName);
+                            createContainer.append(returnHR());
                             roomsCell[z].append(createContainer);
                         }
                     }
@@ -388,6 +413,11 @@ $this->params['breadcrumbs'][] = $this->title;
         }
         loadSchedule(nowDate.getMonth(), nowDate.getFullYear());
         
+        $('body').on('click', '.event-cell', function(e){
+            $('#editEventModal').modal('show');
+        });
+        
+        
         /**
          * Переводит дату формата 3.6.2019 в 3.07.2019
          * @param {string} date
@@ -433,6 +463,11 @@ $this->params['breadcrumbs'][] = $this->title;
         // Округляет в меньшую сторону
         function returnFloor(val) {
             return Math.floor(val);
+        }
+        
+        function returnHR() {
+            var createBR = document.createElement('hr');
+            return createBR;
         }
         
 
