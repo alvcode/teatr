@@ -68,7 +68,7 @@ AppAsset::register($this);
                     ['label' => 'Управление правами', 'url' => ['user/rbac'],
                         'template' => '<a href="{url}"><div><i class="fas fa-users"></i></i></div><div>{label}</div></a>',
                     ],
-                    ['label' => 'Настройки', 'url' => ['users/index'],
+                    ['label' => 'Настройки', 'url' => ['setting/index'],
                         'template' => '<a href="{url}"><div><i class="fas fa-cog"></i></i></div><div>{label}</div></a>',
                     ],
                 ],
