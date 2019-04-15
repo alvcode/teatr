@@ -152,6 +152,7 @@ $this->params['breadcrumbs'][] = $this->title;
         
         var addNowDate = {}; // Выбранная дата
         var addNowRoom = false; // выбранный зал
+        var scheduleData = false; // Все загруженные записи
         
         $('#add--time_from').bootstrapMaterialDatePicker({
                 date: false,
@@ -308,6 +309,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             date: addNowDate,
                             room: addNowRoom,
                             eventType: $('#select-event-type').find(':selected').html(),
+                            eventTypeId: $('#select-event-type').val(),
                             eventName: $('#select-event').find(':selected').html(),
                             eventOtherName: $('#select-event').find(':selected').attr('data-other-name'),
                             timeFrom: timeToMinute(timeFrom),
@@ -340,6 +342,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         if(roomsCell[z].dataset.room == params.room){
                             var createContainer = document.createElement('div');
                             createContainer.className = 'event-cell noselect';
+                            createContainer.dataset.id = params.id;
                             createContainer.dataset.timeFrom = params.timeFrom;
                             if(params.timeTo && params.timeTo != ''){
                                 createContainer.dataset.timeTo = params.timeTo;
@@ -350,6 +353,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             
                             var createEventType = document.createElement('span');
                             createEventType.className = 'type';
+                            createEventType.dataset.id = params.eventTypeId;
                             createEventType.innerHTML = "(" +params.eventType +")";
                             
                             var createEventName = document.createElement('span');
@@ -386,9 +390,11 @@ $this->params['breadcrumbs'][] = $this->title;
                 data: data,
                 success: function (data) {
                     var result = JSON.parse(data);
+                    scheduleData = result;
                     for(var key in result){
                         var dateT = new Date(result[key].date);
                         var cellData = {
+                            id: result[key].id,
                             date: {
                                 day: dateT.getDate(),
                                 month: dateT.getMonth(),
@@ -396,12 +402,14 @@ $this->params['breadcrumbs'][] = $this->title;
                             },
                             room: result[key].room_id,
                             eventType: result[key].eventType.name,
+                            eventTypeId: result[key].eventType.id,
                             eventName: result[key].event.name,
                             eventOtherName: (result[key].event.other_name !== null?result[key].event.other_name:''),
                             timeFrom: result[key].time_from,
                             timeTo: (result[key].time_to !== null?result[key].time_to:''),
                         };
                         addEventInCalendar(cellData);
+        
                     }
                     stopPreloader();
                 },
@@ -417,6 +425,38 @@ $this->params['breadcrumbs'][] = $this->title;
             $('#editEventModal').modal('show');
         });
         
+        $("#one--schedule-items").on("DOMNodeInserted", ".event-cell", function() { $(this).draggable({helper: "clone",}); });
+        $("#one--schedule-items").on("DOMNodeInserted", ".room-cell", function() { $('.room-cell').droppable({
+          classes: {
+//            "ui-droppable-hover": "ui-state-hover"
+          },
+          drop: function(event, ui) {
+//              console.log(ui.draggable[0].dataset.id);
+              for(var key in scheduleData){
+                  if(scheduleData[key].id == ui.draggable[0].dataset.id){
+                      var cellData = {
+                          // Сюда вставить ID вернувшийся после добавления
+                        id: scheduleData[key].id,
+                        date: {
+                            day: event.target.parentNode.dataset.day,
+                            month: event.target.parentNode.dataset.month,
+                            year: event.target.parentNode.dataset.year
+                        },
+                        room: event.target.dataset.room,
+                        eventType: scheduleData[key].eventType.name,
+                        eventTypeId: scheduleData[key].eventType.id,
+                        eventName: scheduleData[key].event.name,
+                        eventOtherName: (scheduleData[key].event.other_name !== null?scheduleData[key].event.other_name:''),
+                        timeFrom: scheduleData[key].time_from,
+                        timeTo: (scheduleData[key].time_to !== null?scheduleData[key].time_to:''),
+                    };
+                  }
+              }
+              console.log(cellData);
+                addEventInCalendar(cellData);
+          }
+        }); });
+
         
         /**
          * Переводит дату формата 3.6.2019 в 3.07.2019

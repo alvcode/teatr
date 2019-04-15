@@ -144,10 +144,14 @@ a:hover {
   color: #F97979;
   text-decoration: underline;
 }
-.event-cell {
+.room-cell .event-cell {
   width: 85%;
+  max-width: 400px;
+}
+.event-cell {
   margin: 6px auto 0 auto;
   cursor: pointer;
+  display: inline-block;
 }
 .event-cell > span {
   display: inline-block;
