@@ -56,63 +56,63 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
             <div class="modal-body">
                 <table class="table table-striped">
-                        <tbody>
-                            <tr>
-                                <th scope="row">Дата</th>
-                                <td id="add--date"></td>
-                            </tr>
-                            <tr>
-                                <th scope="row">Время начала</th>
-                                <td>
-                                    <div class="form-group">
-                                        <input type="text" class="form-control form-control-sm" id="add--time_from">
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th scope="row">
-                                    Время окончания
-                                    <i class="fas fa-exclamation-circle my-tooltip" data-toggle="tooltip" data-placement="right" title="Можно не указывать, если окончание мероприятия неизвестно, но тогда не будут работать подсказки, предупреждающие о пересечениях времени."></i>
-                                </th>
-                                <td>
-                                    <div class="form-group">
-                                        <input type="text" class="form-control form-control-sm" id="add--time_to">
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th scope="row">Тип мероприятия</th>
-                                <td id="add--event_type">
-                                    <div class="form-group">
-                                        <select id="select-event-type" class="form-control form-control-sm">
-                                            <?php foreach ($eventType as $key => $value):  ?>
-                                                <option value="<?= $value['id'] ?>"><?= $value['name'] ?></option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th scope="row">Мероприятие</th>
-                                <td id="add--event">
-                                    <div class="form-group">
-                                        <select id="select-event-category" class="form-control form-control-sm">
-                                            <?php foreach ($eventCategories as $key => $value):  ?>
-                                                <option value="<?= $value['id'] ?>"><?= $value['name'] ?></option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <select id="select-event" class="form-control form-control-sm">
-                                            <?php foreach ($events as $key => $value):  ?>
-                                                <option data-category="<?= $value['category_id'] ?>" data-other-name="<?= $value['other_name'] ?>" value="<?= $value['id'] ?>"><?= $value['name'] ?></option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <tbody>
+                        <tr>
+                            <th scope="row">Дата</th>
+                            <td id="add--date"></td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Время начала</th>
+                            <td>
+                                <div class="form-group">
+                                    <input type="text" class="form-control form-control-sm" id="add--time_from">
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                Время окончания
+                                <i class="fas fa-exclamation-circle my-tooltip" data-toggle="tooltip" data-placement="right" title="Можно не указывать, если окончание мероприятия неизвестно, но тогда не будут работать подсказки, предупреждающие о пересечениях времени."></i>
+                            </th>
+                            <td>
+                                <div class="form-group">
+                                    <input type="text" class="form-control form-control-sm" id="add--time_to">
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Тип мероприятия</th>
+                            <td id="add--event_type">
+                                <div class="form-group">
+                                    <select id="select-event-type" class="form-control form-control-sm">
+                                        <?php foreach ($eventType as $key => $value): ?>
+                                            <option value="<?= $value['id'] ?>"><?= $value['name'] ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Мероприятие</th>
+                            <td id="add--event">
+                                <div class="form-group">
+                                    <select id="select-event-category" class="form-control form-control-sm">
+                                        <?php foreach ($eventCategories as $key => $value): ?>
+                                            <option value="<?= $value['id'] ?>"><?= $value['name'] ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <select id="select-event" class="form-control form-control-sm">
+                                        <?php foreach ($events as $key => $value): ?>
+                                            <option data-category="<?= $value['category_id'] ?>" data-other-name="<?= $value['other_name'] ?>" value="<?= $value['id'] ?>"><?= $value['name'] ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Отмена</button>
@@ -133,7 +133,34 @@ $this->params['breadcrumbs'][] = $this->title;
                 </button>
             </div>
             <div class="modal-body">
-                        
+                <table class="table table-striped">
+                    <tbody>
+                        <tr>
+                            <th scope="row">Информация</th>
+                            <td id="edit--meta"></td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Время начала</th>
+                            <td>
+                                <div class="form-group">
+                                    <input type="text" class="form-control form-control-sm" id="edit--time_from">
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                Время окончания
+                                <i class="fas fa-exclamation-circle my-tooltip" data-toggle="tooltip" data-placement="right" title="Можно не указывать, если окончание мероприятия неизвестно, но тогда не будут работать подсказки, предупреждающие о пересечениях времени."></i>
+                            </th>
+                            <td>
+                                <div class="form-group">
+                                    <input type="text" class="form-control form-control-sm" id="edit--time_to">
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="btn btn-sm btn-danger" id="delete-event">Удалить мероприятие</div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Отмена</button>
@@ -150,21 +177,33 @@ $this->params['breadcrumbs'][] = $this->title;
         var csrfParam = $('meta[name="csrf-param"]').attr("content");
         var csrfToken = $('meta[name="csrf-token"]').attr("content");
         
+        Object.defineProperty(Array.prototype, 'remove', {
+            value: function (value) {
+                return this.splice(value, 1);
+//                var idx = this.indexOf(value);
+//                if (idx != -1) {
+//                    // Второй параметр - число элементов, которые необходимо удалить
+//                    return this.splice(idx, 1);
+//                }
+                return false;
+            }
+        });
+
         var addNowDate = {}; // Выбранная дата
         var addNowRoom = false; // выбранный зал
         var scheduleData = false; // Все загруженные записи
-        
-        $('#add--time_from').bootstrapMaterialDatePicker({
-                date: false,
-                shortTime: false,
-                format: 'HH:mm'
+
+        $('#add--time_from, #edit--time_from').bootstrapMaterialDatePicker({
+            date: false,
+            shortTime: false,
+            format: 'HH:mm'
         });
-        $('#add--time_to').bootstrapMaterialDatePicker({
-                date: false,
-                shortTime: false,
-                format: 'HH:mm'
+        $('#add--time_to, #edit--time_to').bootstrapMaterialDatePicker({
+            date: false,
+            shortTime: false,
+            format: 'HH:mm'
         });
-        
+
         var rooms = document.querySelector('.one--title-row').getElementsByClassName('room');
 
 
@@ -179,55 +218,57 @@ $this->params['breadcrumbs'][] = $this->title;
         var weekNumber = ['1', '2', '3', '4', '5', '6', '0'];
 
         renderCalendar(nowDate.getFullYear(), nowDate.getMonth());
-        
-        $('#month-right').click(function(){
+
+        $('#month-right').click(function () {
             nowDate.setMonth(nowDate.getMonth() + 1);
             renderCalendar(nowDate.getFullYear(), nowDate.getMonth());
             loadSchedule(nowDate.getMonth(), nowDate.getFullYear());
         });
-        $('#month-left').click(function(){
+        $('#month-left').click(function () {
             nowDate.setMonth(nowDate.getMonth() - 1);
             renderCalendar(nowDate.getFullYear(), nowDate.getMonth());
             loadSchedule(nowDate.getMonth(), nowDate.getFullYear());
         });
-        
-        function renderCalendar(year, month){
+
+        function renderCalendar(year, month) {
             $('#one--schedule-items').empty();
             var date = new Date(year, month, 1);
             var dayCount = dayInMonth(year, month);
-            document.getElementById('control-name').innerHTML = monthName[date.getMonth()] +", "+date.getFullYear();
-            
-            for(var i = 1; i <= dayCount; i++){
+            document.getElementById('control-name').innerHTML = monthName[date.getMonth()] + ", " + date.getFullYear();
+
+            for (var i = 1; i <= dayCount; i++) {
                 date = new Date(year, month, i);
                 document.getElementById('one--schedule-items').append(returnScheduleRow(date.getFullYear(), date.getMonth(), date.getDate(), date.getDay(), rooms));
             }
             return true;
-        };
-        
-        function returnScheduleRow(year, month, day, week, rooms){
+        }
+        ;
+
+        function returnScheduleRow(year, month, day, week, rooms) {
             var createContainer = document.createElement('div');
             createContainer.dataset.day = day;
             createContainer.dataset.month = month;
             createContainer.dataset.year = year;
             createContainer.className = 'one--date-row';
-            
+
             var createDate = document.createElement('div');
             createDate.className = 'date';
-            createDate.innerHTML = normalizeDate(day+"."+month+"."+year) + "<br>" +weekdayName[week];
-            if(week == 6 || week == 0){
+            createDate.innerHTML = normalizeDate(day + "." + month + "." + year) + "<br>" + weekdayName[week];
+            if (week == 6 || week == 0) {
                 createDate.style.color = 'red';
             }
-            
+
             createContainer.append(createDate);
-            
-            for(var i = 0; i < rooms.length; i++){
+
+            for (var i = 0; i < rooms.length; i++) {
                 var createRoom = document.createElement('div');
                 createRoom.className = 'room room-cell';
                 createRoom.dataset.room = rooms[i].dataset.room;
                 createContainer.append(createRoom);
             }
             return createContainer;
-        };
+        }
+        ;
 
 
         function dayInMonth(year, month) {
@@ -241,50 +282,52 @@ $this->params['breadcrumbs'][] = $this->title;
                 }
                 date.setDate(date.getDate() + 1);
             }
-        };
-        
-        $('body').on('dblclick', '.room-cell', function(e){
-            if(!e.target.classList.contains('room-cell')){
+        }
+        ;
+
+        $('body').on('dblclick', '.room-cell', function (e) {
+            if (!e.target.classList.contains('room-cell')) {
                 return false;
             }
             addNowDate.day = this.parentNode.dataset.day;
             addNowDate.month = this.parentNode.dataset.month;
             addNowDate.year = this.parentNode.dataset.year;
             addNowRoom = this.dataset.room;
-            
-            $('#add--date').html(normalizeDate(addNowDate.day +"."+addNowDate.month+"."+addNowDate.year));
+
+            $('#add--date').html(normalizeDate(addNowDate.day + "." + addNowDate.month + "." + addNowDate.year));
             $('#addEventModal').modal('show');
         });
-        
+
         // Отображаем только те спектакли, категория которых выбрана
-        function eventCatSort(){
+        function eventCatSort() {
             var eventCategory = $('#select-event-category').val();
             var events = document.getElementById('select-event');
             var z = 0;
-            for(var i = 0; i < events.options.length; i++){
-                if(events.options[i].dataset.category == eventCategory){
+            for (var i = 0; i < events.options.length; i++) {
+                if (events.options[i].dataset.category == eventCategory) {
                     events.options[i].style.display = 'block';
-                    if(z === 0){
-                       events.options[i].selected = true;
-                       z++;
+                    if (z === 0) {
+                        events.options[i].selected = true;
+                        z++;
                     }
-                }else{
+                } else {
                     events.options[i].style.display = 'none';
                 }
             }
         }
         eventCatSort();
-        
-        $('#select-event-category').change(function(){
+
+        $('#select-event-category').change(function () {
             eventCatSort();
         });
-        
-        $('#add-event-submit').click(function(){
+
+        // Добавляем мероприятие через стандартное добавление
+        $('#add-event-submit').click(function () {
             var timeFrom = $('#add--time_from').val();
             var timeTo = $('#add--time_to').val();
             var eventType = $('#select-event-type').val();
             var event = $('#select-event').val();
-            if(!timeFrom || timeFrom == ''){
+            if (!timeFrom || timeFrom == '') {
                 showNotifications("Не выбрано время начала мероприятия", 3000, NOTIF_RED);
                 return false;
             }
@@ -304,20 +347,28 @@ $this->params['breadcrumbs'][] = $this->title;
                 url: '/schedule/one',
                 data: data,
                 success: function (data) {
-                    if(JSON.parse(data) == 1){
+                    if (JSON.parse(data) != 0) {
+                        var result = JSON.parse(data);
+                        scheduleData[scheduleData.length] = result;
+                        var dateT = new Date(result.date);
                         var cellData = {
-                            date: addNowDate,
-                            room: addNowRoom,
-                            eventType: $('#select-event-type').find(':selected').html(),
-                            eventTypeId: $('#select-event-type').val(),
-                            eventName: $('#select-event').find(':selected').html(),
-                            eventOtherName: $('#select-event').find(':selected').attr('data-other-name'),
-                            timeFrom: timeToMinute(timeFrom),
-                            timeTo: (timeTo && timeTo != ''?timeToMinute(timeTo):'')
+                            id: result.id,
+                            date: {
+                                day: dateT.getDate(),
+                                month: dateT.getMonth(),
+                                year: dateT.getFullYear()
+                            },
+                            room: result.room_id,
+                            eventType: result.eventType.name,
+                            eventTypeId: result.eventType.id,
+                            eventName: result.event.name,
+                            eventOtherName: (result.event.other_name !== null ? result.event.other_name : ''),
+                            timeFrom: result.time_from,
+                            timeTo: (result.time_to !== null ? result.time_to : ''),
                         };
                         addEventInCalendar(cellData);
                         $('#addEventModal').modal('hide');
-                    }else{
+                    } else {
                         showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
                     }
                     stopPreloader();
@@ -328,38 +379,38 @@ $this->params['breadcrumbs'][] = $this->title;
                 }
             });
         });
-        
+
         /**
          * Добавляет мероприятие в календарь
          * @param {object} params
          */
-        function addEventInCalendar(params){
+        function addEventInCalendar(params) {
             var dateRows = document.getElementsByClassName('one--date-row');
-            for(var i = 0; i < dateRows.length; i++){
-                if(params.date.day == dateRows[i].dataset.day && params.date.month == dateRows[i].dataset.month && params.date.year == dateRows[i].dataset.year){
+            for (var i = 0; i < dateRows.length; i++) {
+                if (params.date.day == dateRows[i].dataset.day && params.date.month == dateRows[i].dataset.month && params.date.year == dateRows[i].dataset.year) {
                     var roomsCell = dateRows[i].getElementsByClassName('room-cell');
-                    for(var z = 0; z < roomsCell.length; z++){
-                        if(roomsCell[z].dataset.room == params.room){
+                    for (var z = 0; z < roomsCell.length; z++) {
+                        if (roomsCell[z].dataset.room == params.room) {
                             var createContainer = document.createElement('div');
                             createContainer.className = 'event-cell noselect';
                             createContainer.dataset.id = params.id;
                             createContainer.dataset.timeFrom = params.timeFrom;
-                            if(params.timeTo && params.timeTo != ''){
+                            if (params.timeTo && params.timeTo != '') {
                                 createContainer.dataset.timeTo = params.timeTo;
                             }
                             var createBudgie = document.createElement('span');
                             createBudgie.className = 'badge badge-pill badge-info';
-                            createBudgie.innerHTML = minuteToTime(params.timeFrom)+(params.timeTo && params.timeTo != ''?" - "+minuteToTime(params.timeTo):"");
-                            
+                            createBudgie.innerHTML = minuteToTime(params.timeFrom) + (params.timeTo && params.timeTo != '' ? " - " + minuteToTime(params.timeTo) : "");
+
                             var createEventType = document.createElement('span');
                             createEventType.className = 'type';
                             createEventType.dataset.id = params.eventTypeId;
-                            createEventType.innerHTML = "(" +params.eventType +")";
-                            
+                            createEventType.innerHTML = "(" + params.eventType + ")";
+
                             var createEventName = document.createElement('span');
                             createEventName.className = 'name';
-                            createEventName.innerHTML = params.eventName +(params.eventOtherName && params.eventOtherName != ''?" (" +params.eventOtherName +")":"");
-                            
+                            createEventName.innerHTML = params.eventName + (params.eventOtherName && params.eventOtherName != '' ? " (" + params.eventOtherName + ")" : "");
+
                             createContainer.append(createBudgie);
                             createContainer.append(createEventType);
                             createContainer.append(createEventName);
@@ -371,12 +422,37 @@ $this->params['breadcrumbs'][] = $this->title;
             }
         }
         
+        // Удаление из календаря
+        function deleteEventInCalendar(eventId) {
+            var eventCell = document.getElementsByClassName('event-cell');
+            for(var i = 0; i < eventCell.length; i++){
+                if(eventId == eventCell[i].dataset.id){
+                    eventCell[i].remove();
+                    break;
+                }
+            }
+            removeInScheduleData(eventId);
+            return true;
+        }
+        
+        // Удаление из массива данных
+        function removeInScheduleData(eventId){
+            for(var key in scheduleData){
+                if(scheduleData[key].id == eventId){
+                    scheduleData.remove(key);
+                    break;
+                }
+            }
+            console.log(scheduleData);
+            return true;
+        }
+
         /**
          * Загружает расписание на месяц и рендерит в нужные ячейки
          * @param {int} month
          * @param {int} year
          */
-        function loadSchedule(month, year){
+        function loadSchedule(month, year) {
             goPreloader();
             var data = {
                 trigger: 'load-schedule',
@@ -389,27 +465,27 @@ $this->params['breadcrumbs'][] = $this->title;
                 url: '/schedule/one',
                 data: data,
                 success: function (data) {
-                    var result = JSON.parse(data);
-                    scheduleData = result;
-                    for(var key in result){
-                        var dateT = new Date(result[key].date);
+                    scheduleData = JSON.parse(data);
+                    console.log(scheduleData);
+                    for (var key in scheduleData) {
+                        var dateT = new Date(scheduleData[key].date);
                         var cellData = {
-                            id: result[key].id,
+                            id: scheduleData[key].id,
                             date: {
                                 day: dateT.getDate(),
                                 month: dateT.getMonth(),
                                 year: dateT.getFullYear()
                             },
-                            room: result[key].room_id,
-                            eventType: result[key].eventType.name,
-                            eventTypeId: result[key].eventType.id,
-                            eventName: result[key].event.name,
-                            eventOtherName: (result[key].event.other_name !== null?result[key].event.other_name:''),
-                            timeFrom: result[key].time_from,
-                            timeTo: (result[key].time_to !== null?result[key].time_to:''),
+                            room: scheduleData[key].room_id,
+                            eventType: scheduleData[key].eventType.name,
+                            eventTypeId: scheduleData[key].eventType.id,
+                            eventName: scheduleData[key].event.name,
+                            eventOtherName: (scheduleData[key].event.other_name !== null ? scheduleData[key].event.other_name : ''),
+                            timeFrom: scheduleData[key].time_from,
+                            timeTo: (scheduleData[key].time_to !== null ? scheduleData[key].time_to : ''),
                         };
                         addEventInCalendar(cellData);
-        
+
                     }
                     stopPreloader();
                 },
@@ -421,43 +497,127 @@ $this->params['breadcrumbs'][] = $this->title;
         }
         loadSchedule(nowDate.getMonth(), nowDate.getFullYear());
         
-        $('body').on('click', '.event-cell', function(e){
+        // Редактирование мероприятия
+        var editEventId = false;
+        $('body').on('click', '.event-cell', function (e) {
+            editEventId = this.dataset.id;
+            for(var key in scheduleData){
+                if (scheduleData[key].id == editEventId) {
+                    $('#edit--time_from').val(normalizeTime(minuteToTime(scheduleData[key].time_from)));
+                    if(scheduleData[key].time_to){
+                        $('#edit--time_to').val(normalizeTime(minuteToTime(scheduleData[key].time_to)));
+                    }
+                    var dateT = new Date(scheduleData[key].date);
+                    $('#edit--meta').html(normalizeDate(dateT.getDate()+"."+dateT.getMonth()+"."+dateT.getFullYear()) +
+                            " / " +scheduleData[key].event.name +" (" +scheduleData[key].eventType.name +")");
+                }
+            }
+            
             $('#editEventModal').modal('show');
         });
         
-        $("#one--schedule-items").on("DOMNodeInserted", ".event-cell", function() { $(this).draggable({helper: "clone",}); });
-        $("#one--schedule-items").on("DOMNodeInserted", ".room-cell", function() { $('.room-cell').droppable({
-          classes: {
-//            "ui-droppable-hover": "ui-state-hover"
-          },
-          drop: function(event, ui) {
-//              console.log(ui.draggable[0].dataset.id);
-              for(var key in scheduleData){
-                  if(scheduleData[key].id == ui.draggable[0].dataset.id){
-                      var cellData = {
-                          // Сюда вставить ID вернувшийся после добавления
-                        id: scheduleData[key].id,
-                        date: {
-                            day: event.target.parentNode.dataset.day,
-                            month: event.target.parentNode.dataset.month,
-                            year: event.target.parentNode.dataset.year
-                        },
-                        room: event.target.dataset.room,
-                        eventType: scheduleData[key].eventType.name,
-                        eventTypeId: scheduleData[key].eventType.id,
-                        eventName: scheduleData[key].event.name,
-                        eventOtherName: (scheduleData[key].event.other_name !== null?scheduleData[key].event.other_name:''),
-                        timeFrom: scheduleData[key].time_from,
-                        timeTo: (scheduleData[key].time_to !== null?scheduleData[key].time_to:''),
-                    };
-                  }
-              }
-              console.log(cellData);
-                addEventInCalendar(cellData);
-          }
-        }); });
+        // Удаляет мероприятие
+        $('#delete-event').click(function(){
+            var isDelete = confirm("Уверены, что хотите удалить мероприятие?");
+            if(isDelete){
+                goPreloader();
+                var data = {
+                    trigger: 'delete-event',
+                    id: editEventId
+                };
+                data[csrfParam] = csrfToken;
+                $.ajax({
+                    type: "POST",
+                    url: '/schedule/one',
+                    data: data,
+                    success: function (data) {
+                        console.log(data);
+                        if(data == 1){
+                            deleteEventInCalendar(editEventId);
+                            $('#editEventModal').modal('hide');
+                        }else if(data == 0){
+                            showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                        }
+                        stopPreloader();
+                    },
+                    error: function () {
+                        showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                        stopPreloader();
+                    }
+                });
+            }
+        });
 
-        
+        $("#one--schedule-items").on("DOMNodeInserted", ".event-cell", function () {
+            $(this).draggable({helper: "clone", delay: 200, });
+        });
+        $("#one--schedule-items").on("DOMNodeInserted", ".room-cell", function () {
+            $('.room-cell').droppable({
+                classes: {
+//            "ui-droppable-hover": "ui-state-hover"
+                },
+                drop: function (event, ui) {
+//              console.log(ui.draggable[0].dataset.id);
+                    for (var key in scheduleData) {
+                        if (scheduleData[key].id == ui.draggable[0].dataset.id) {
+                            goPreloader();
+                            var data = {
+                                trigger: 'add-schedule',
+                                date: {
+                                    day: event.target.parentNode.dataset.day,
+                                    month: event.target.parentNode.dataset.month,
+                                    year: event.target.parentNode.dataset.year
+                                },
+                                room: event.target.dataset.room,
+                                timeFrom: normalizeTime(minuteToTime(scheduleData[key].time_from)),
+                                timeTo: (scheduleData[key].time_to !== null ? normalizeTime(minuteToTime(scheduleData[key].time_to)) : ''),
+                                eventType: scheduleData[key].eventType.id,
+                                event: scheduleData[key].event.id
+                            };
+                            data[csrfParam] = csrfToken;
+                            $.ajax({
+                                type: "POST",
+                                url: '/schedule/one',
+                                data: data,
+                                success: function (data) {
+                                    if (JSON.parse(data) != 0) {
+                                        var result = JSON.parse(data);
+                                        scheduleData[scheduleData.length] = result;
+                                        var dateT = new Date(result.date);
+                                        var cellData = {
+                                            id: result.id,
+                                            date: {
+                                                day: dateT.getDate(),
+                                                month: dateT.getMonth(),
+                                                year: dateT.getFullYear()
+                                            },
+                                            room: result.room_id,
+                                            eventType: result.eventType.name,
+                                            eventTypeId: result.eventType.id,
+                                            eventName: result.event.name,
+                                            eventOtherName: (result.event.other_name !== null ? result.event.other_name : ''),
+                                            timeFrom: result.time_from,
+                                            timeTo: (result.time_to !== null ? result.time_to : ''),
+                                        };
+                                        addEventInCalendar(cellData);
+                                        $('#addEventModal').modal('hide');
+                                    } else {
+                                        showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                                    }
+                                    stopPreloader();
+                                },
+                                error: function () {
+                                    showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                                    stopPreloader();
+                                }
+                            });
+                        }
+                    }
+                }
+            });
+        });
+
+
         /**
          * Переводит дату формата 3.6.2019 в 3.07.2019
          * @param {string} date
@@ -467,7 +627,7 @@ $this->params['breadcrumbs'][] = $this->title;
             var splitDate = date.split(".");
             return splitDate[0] + "." + (+splitDate[1] >= 0 && +splitDate[1] < 9 ? "0" + (+splitDate[1] + 1) : (+splitDate[1] + 1)) + "." + splitDate[2];
         }
-        
+
         /**
          * Переводит минуты во время
          * @param {int} minute
@@ -480,7 +640,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 return normalizeTime(returnFloor(minute / 60) + ":" + minute % 60);
             }
         }
-        
+
         /**
          * Переводит время в минуты
          * @param {string} time
@@ -489,7 +649,7 @@ $this->params['breadcrumbs'][] = $this->title;
         function timeToMinute(time) {
             return +time.split(":")[0] * 60 + +time.split(":")[1];
         }
-        
+
         /**
          * Преобразует время формата 8:0 в 8:00
          * @param {string} time
@@ -499,17 +659,17 @@ $this->params['breadcrumbs'][] = $this->title;
             var splitTime = time.split(":");
             return (+splitTime[0] >= 0 && +splitTime[0] < 10 ? "0" + +splitTime[0] : +splitTime[0]) + ":" + (+splitTime[1] >= 0 && +splitTime[1] < 10 ? "0" + +splitTime[1] : +splitTime[1]);
         }
-        
+
         // Округляет в меньшую сторону
         function returnFloor(val) {
             return Math.floor(val);
         }
-        
+
         function returnHR() {
             var createBR = document.createElement('hr');
             return createBR;
         }
-        
+
 
     }
 </script>

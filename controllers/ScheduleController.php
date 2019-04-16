@@ -65,7 +65,10 @@ class ScheduleController extends AccessController
                     $scheduleEvent->time_to = \app\components\Formatt::timeToMinute(Yii::$app->request->post('timeTo'));
                 }
                 if($scheduleEvent->validate() && $scheduleEvent->save()){
-                    return 1;
+                    $record = ScheduleEvents::find()
+                        ->where(['id' => $scheduleEvent->id])
+                        ->with('eventType')->with('event')->asArray()->one();
+                return json_encode($record);
                 }else{
                     return 0;
                 }
@@ -78,7 +81,16 @@ class ScheduleController extends AccessController
                         ->with('eventType')->with('event')->asArray()->all();
                 return json_encode($schedule);
             }
+            
+            if(Yii::$app->request->post('trigger') == 'delete-event'){
+                $findEvent = ScheduleEvents::findOne(Yii::$app->request->post('id'));
+                if(!$findEvent) return 0;
+                if($findEvent->delete()) return 1;
+            }
+            
+            return 0;
         }
+        
         $roomConfig = Config::getConfig('schedule_one_rooms');
         $rooms = Room::find()->where(['is_active' => 1, 'id' => $roomConfig])->asArray()->all();
         $eventType = EventType::find()->where(['is_active' => 1])->asArray()->all();
