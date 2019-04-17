@@ -64,8 +64,11 @@ $this->params['breadcrumbs'][] = $this->title;
                         <tr>
                             <th scope="row">Время начала</th>
                             <td>
-                                <div class="form-group">
+                                <div class="input-group mb-3">
                                     <input type="text" class="form-control form-control-sm" id="add--time_from">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-sm btn-outline-danger clean-input" type="button" id="button-addon2"><i class="fas fa-times"></i></button>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -75,8 +78,11 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <i class="fas fa-exclamation-circle my-tooltip" data-toggle="tooltip" data-placement="right" title="Можно не указывать, если окончание мероприятия неизвестно, но тогда не будут работать подсказки, предупреждающие о пересечениях времени."></i>
                             </th>
                             <td>
-                                <div class="form-group">
+                                <div class="input-group mb-3">
                                     <input type="text" class="form-control form-control-sm" id="add--time_to">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-sm btn-outline-danger clean-input" type="button" id="button-addon2"><i class="fas fa-times"></i></button>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -142,8 +148,11 @@ $this->params['breadcrumbs'][] = $this->title;
                         <tr>
                             <th scope="row">Время начала</th>
                             <td>
-                                <div class="form-group">
+                                <div class="input-group mb-3">
                                     <input type="text" class="form-control form-control-sm" id="edit--time_from">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-sm btn-outline-danger clean-input" type="button" id="button-addon2"><i class="fas fa-times"></i></button>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -153,8 +162,11 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <i class="fas fa-exclamation-circle my-tooltip" data-toggle="tooltip" data-placement="right" title="Можно не указывать, если окончание мероприятия неизвестно, но тогда не будут работать подсказки, предупреждающие о пересечениях времени."></i>
                             </th>
                             <td>
-                                <div class="form-group">
+                                <div class="input-group mb-3">
                                     <input type="text" class="form-control form-control-sm" id="edit--time_to">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-sm btn-outline-danger clean-input" type="button" id="button-addon2"><i class="fas fa-times"></i></button>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
@@ -516,6 +528,36 @@ $this->params['breadcrumbs'][] = $this->title;
             $('#editEventModal').modal('show');
         });
         
+        $('#edit-event-submit').click(function(){
+            var newTimeFrom = $('#edit--time_from').val();
+            var newTimeTo = $('#edit--time_to').val();
+            if(!newTimeFrom){
+                showNotifications('Кажется вы не указали время начала мероприятия', 7000, NOTIF_RED);
+                return false;
+            }
+            goPreloader();
+            var data = {
+                trigger: 'edit-event',
+                id: editEventId,
+                timeFrom: newTimeFrom,
+                timeTo: newTimeTo
+            };
+            data[csrfParam] = csrfToken;
+            $.ajax({
+                type: "POST",
+                url: '/schedule/one',
+                data: data,
+                success: function (data) {
+                    console.log(data);
+                    stopPreloader();
+                },
+                error: function () {
+                    showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                    stopPreloader();
+                }
+            });
+        });
+        
         // Удаляет мероприятие
         $('#delete-event').click(function(){
             var isDelete = confirm("Уверены, что хотите удалить мероприятие?");
@@ -615,6 +657,10 @@ $this->params['breadcrumbs'][] = $this->title;
                     }
                 }
             });
+        });
+        
+        $('.clean-input').click(function(){
+            this.parentNode.parentNode.querySelector('input').value = '';
         });
 
 
