@@ -362,23 +362,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     if (JSON.parse(data) != 0) {
                         var result = JSON.parse(data);
                         scheduleData[scheduleData.length] = result;
-                        var dateT = new Date(result.date);
-                        var cellData = {
-                            id: result.id,
-                            date: {
-                                day: dateT.getDate(),
-                                month: dateT.getMonth(),
-                                year: dateT.getFullYear()
-                            },
-                            room: result.room_id,
-                            eventType: result.eventType.name,
-                            eventTypeId: result.eventType.id,
-                            eventName: result.event.name,
-                            eventOtherName: (result.event.other_name !== null ? result.event.other_name : ''),
-                            timeFrom: result.time_from,
-                            timeTo: (result.time_to !== null ? result.time_to : ''),
-                        };
-                        addEventInCalendar(cellData);
+                        addEventInCalendar(generateCellData(result));
                         $('#addEventModal').modal('hide');
                     } else {
                         showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
@@ -391,6 +375,32 @@ $this->params['breadcrumbs'][] = $this->title;
                 }
             });
         });
+        
+        /**
+         * Генерирует объект с параметрами для добавления в расписание.
+         * 
+         * @param {object} result
+         * @returns {object}
+         */
+        function generateCellData(result){
+            var dateT = new Date(result.date);
+            var cellData = {
+                id: result.id,
+                date: {
+                    day: dateT.getDate(),
+                    month: dateT.getMonth(),
+                    year: dateT.getFullYear()
+                },
+                room: result.room_id,
+                eventType: result.eventType.name,
+                eventTypeId: result.eventType.id,
+                eventName: result.event.name,
+                eventOtherName: (result.event.other_name !== null ? result.event.other_name : ''),
+                timeFrom: result.time_from,
+                timeTo: (result.time_to !== null ? result.time_to : ''),
+            };
+            return cellData;
+        };
 
         /**
          * Добавляет мероприятие в календарь
@@ -549,6 +559,15 @@ $this->params['breadcrumbs'][] = $this->title;
                 data: data,
                 success: function (data) {
                     console.log(data);
+                    if(data != 0){
+                        var result = JSON.parse(data);
+                        deleteEventInCalendar(editEventId);
+                        scheduleData[scheduleData.length] = result;
+                        addEventInCalendar(generateCellData(result));
+                        $('#editEventModal').modal('hide');
+                    }else{
+                        showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                    }
                     stopPreloader();
                 },
                 error: function () {
