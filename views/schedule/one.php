@@ -188,7 +188,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
         var csrfParam = $('meta[name="csrf-param"]').attr("content");
         var csrfToken = $('meta[name="csrf-token"]').attr("content");
-        
+
         Object.defineProperty(Array.prototype, 'remove', {
             value: function (value) {
                 return this.splice(value, 1);
@@ -343,6 +343,10 @@ $this->params['breadcrumbs'][] = $this->title;
                 showNotifications("Не выбрано время начала мероприятия", 3000, NOTIF_RED);
                 return false;
             }
+            if (!checkTimesInterval(timeToMinute(timeFrom), timeToMinute(timeTo), addNowDate, addNowRoom)) {
+                showNotifications("Добавляемое мероприятие пересекается с другими в этот день", 3000, NOTIF_RED);
+                return false;
+            }
             goPreloader();
             var data = {
                 trigger: 'add-schedule',
@@ -375,14 +379,54 @@ $this->params['breadcrumbs'][] = $this->title;
                 }
             });
         });
-        
+
+        /**
+         * Проверяет, не пересекается ли время мероприятия с другими мероприятиями
+         * @returns {boolean}
+         */
+        function checkTimesInterval(timeFrom, timeTo, date, room) {
+            var dateRows = document.getElementsByClassName('one--date-row');
+            for (var i = 0; i < dateRows.length; i++) {
+                if (date.day == dateRows[i].dataset.day && date.month == dateRows[i].dataset.month && date.year == dateRows[i].dataset.year) {
+                    var roomsCell = dateRows[i].getElementsByClassName('room-cell');
+                    for (var z = 0; z < roomsCell.length; z++) {
+                        if (roomsCell[z].dataset.room == room) {
+                            var eventsCell = roomsCell[z].getElementsByClassName('event-cell');
+                            if (eventsCell.length) {
+                                for (var k = 0; k < eventsCell.length; k++) {
+                                    if (eventsCell[k].dataset.timeFrom == timeFrom) {
+                                        return false;
+                                    }
+                                    if (eventsCell[k].dataset.timeTo !== undefined && timeTo
+                                            && ((timeFrom >= eventsCell[k].dataset.timeFrom && timeFrom < eventsCell[k].dataset.timeTo)
+                                                    || (timeTo > eventsCell[k].dataset.timeFrom && timeTo <= eventsCell[k].dataset.timeTo))) {
+                                        return false;
+                                    }
+                                    if (eventsCell[k].dataset.timeTo === undefined && timeTo
+                                            && (eventsCell[k].dataset.timeFrom > timeFrom && eventsCell[k].dataset.timeFrom < timeTo)) {
+                                        return false;
+                                    }
+                                    if (eventsCell[k].dataset.timeTo !== undefined && !timeTo
+                                            && (timeFrom > eventsCell[k].dataset.timeFrom && timeFrom < eventsCell[k].dataset.timeTo)) {
+                                        return false;
+                                    }
+
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+
         /**
          * Генерирует объект с параметрами для добавления в расписание.
          * 
          * @param {object} result
          * @returns {object}
          */
-        function generateCellData(result){
+        function generateCellData(result) {
             var dateT = new Date(result.date);
             var cellData = {
                 id: result.id,
@@ -400,7 +444,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 timeTo: (result.time_to !== null ? result.time_to : ''),
             };
             return cellData;
-        };
+        }
+        ;
 
         /**
          * Добавляет мероприятие в календарь
@@ -437,18 +482,45 @@ $this->params['breadcrumbs'][] = $this->title;
                             createContainer.append(createEventType);
                             createContainer.append(createEventName);
                             createContainer.append(returnHR());
-                            roomsCell[z].append(createContainer);
+
+                            var eventsCell = roomsCell[z].getElementsByClassName('event-cell');
+                            if (!eventsCell.length) {
+                                roomsCell[z].append(createContainer);
+                                return true;
+                            } else {
+                                var p = false;
+                                for (var k = 0; k < eventsCell.length; k++) {
+                                    if(!p && +params.timeFrom < +eventsCell[k].dataset.timeFrom){
+                                        roomsCell[z].insertBefore(createContainer, eventsCell[k]);
+                                        return true;
+                                            }
+                                    if (p && +params.timeFrom < +eventsCell[k].dataset.timeFrom &&
+                                            +params.timeFrom > +p.dataset.timeFrom) {
+                                        roomsCell[z].insertBefore(createContainer, eventsCell[k]);
+                                        return true;
+                                    }
+                                    p = eventsCell[k];
+                                }
+                                if (p && +params.timeFrom > +p.dataset.timeFrom) {
+                                    roomsCell[z].append(createContainer);
+                                    return true;
+                                } else if (p && +params.timeFrom < +p.dataset.timeFrom) {
+                                    roomsCell[z].insertBefore(createContainer, p);
+                                    return true;
+                                }
+                            }
+
                         }
                     }
                 }
             }
         }
-        
+
         // Удаление из календаря
         function deleteEventInCalendar(eventId) {
             var eventCell = document.getElementsByClassName('event-cell');
-            for(var i = 0; i < eventCell.length; i++){
-                if(eventId == eventCell[i].dataset.id){
+            for (var i = 0; i < eventCell.length; i++) {
+                if (eventId == eventCell[i].dataset.id) {
                     eventCell[i].remove();
                     break;
                 }
@@ -456,11 +528,11 @@ $this->params['breadcrumbs'][] = $this->title;
             removeInScheduleData(eventId);
             return true;
         }
-        
+
         // Удаление из массива данных
-        function removeInScheduleData(eventId){
-            for(var key in scheduleData){
-                if(scheduleData[key].id == eventId){
+        function removeInScheduleData(eventId) {
+            for (var key in scheduleData) {
+                if (scheduleData[key].id == eventId) {
                     scheduleData.remove(key);
                     break;
                 }
@@ -518,33 +590,37 @@ $this->params['breadcrumbs'][] = $this->title;
             });
         }
         loadSchedule(nowDate.getMonth(), nowDate.getFullYear());
-        
+
         // Редактирование мероприятия
         var editEventId = false;
         $('body').on('click', '.event-cell', function (e) {
             editEventId = this.dataset.id;
-            for(var key in scheduleData){
+            for (var key in scheduleData) {
                 if (scheduleData[key].id == editEventId) {
                     $('#edit--time_from').val(normalizeTime(minuteToTime(scheduleData[key].time_from)));
-                    if(scheduleData[key].time_to){
+                    if (scheduleData[key].time_to) {
                         $('#edit--time_to').val(normalizeTime(minuteToTime(scheduleData[key].time_to)));
                     }
                     var dateT = new Date(scheduleData[key].date);
-                    $('#edit--meta').html(normalizeDate(dateT.getDate()+"."+dateT.getMonth()+"."+dateT.getFullYear()) +
-                            " / " +scheduleData[key].event.name +" (" +scheduleData[key].eventType.name +")");
+                    $('#edit--meta').html(normalizeDate(dateT.getDate() + "." + dateT.getMonth() + "." + dateT.getFullYear()) +
+                            " / " + scheduleData[key].event.name + " (" + scheduleData[key].eventType.name + ")");
                 }
             }
-            
+
             $('#editEventModal').modal('show');
         });
-        
-        $('#edit-event-submit').click(function(){
+
+        $('#edit-event-submit').click(function () {
             var newTimeFrom = $('#edit--time_from').val();
             var newTimeTo = $('#edit--time_to').val();
-            if(!newTimeFrom){
+            if (!newTimeFrom) {
                 showNotifications('Кажется вы не указали время начала мероприятия', 7000, NOTIF_RED);
                 return false;
             }
+//            if (!checkTimesInterval(timeToMinute(newTimeFrom), timeToMinute(newTimeTo), addNowDate, addNowRoom)) {
+//                showNotifications("Добавляемое мероприятие пересекается с другими в этот день", 3000, NOTIF_RED);
+//                return false;
+//            }
             goPreloader();
             var data = {
                 trigger: 'edit-event',
@@ -559,13 +635,13 @@ $this->params['breadcrumbs'][] = $this->title;
                 data: data,
                 success: function (data) {
                     console.log(data);
-                    if(data != 0){
+                    if (data != 0) {
                         var result = JSON.parse(data);
                         deleteEventInCalendar(editEventId);
                         scheduleData[scheduleData.length] = result;
                         addEventInCalendar(generateCellData(result));
                         $('#editEventModal').modal('hide');
-                    }else{
+                    } else {
                         showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
                     }
                     stopPreloader();
@@ -576,11 +652,11 @@ $this->params['breadcrumbs'][] = $this->title;
                 }
             });
         });
-        
+
         // Удаляет мероприятие
-        $('#delete-event').click(function(){
+        $('#delete-event').click(function () {
             var isDelete = confirm("Уверены, что хотите удалить мероприятие?");
-            if(isDelete){
+            if (isDelete) {
                 goPreloader();
                 var data = {
                     trigger: 'delete-event',
@@ -593,10 +669,10 @@ $this->params['breadcrumbs'][] = $this->title;
                     data: data,
                     success: function (data) {
                         console.log(data);
-                        if(data == 1){
+                        if (data == 1) {
                             deleteEventInCalendar(editEventId);
                             $('#editEventModal').modal('hide');
-                        }else if(data == 0){
+                        } else if (data == 0) {
                             showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
                         }
                         stopPreloader();
@@ -618,24 +694,28 @@ $this->params['breadcrumbs'][] = $this->title;
 //            "ui-droppable-hover": "ui-state-hover"
                 },
                 drop: function (event, ui) {
-//              console.log(ui.draggable[0].dataset.id);
                     for (var key in scheduleData) {
                         if (scheduleData[key].id == ui.draggable[0].dataset.id) {
-                            goPreloader();
+                            var dateObj = {
+                                day: event.target.parentNode.dataset.day,
+                                month: event.target.parentNode.dataset.month,
+                                year: event.target.parentNode.dataset.year
+                            };
                             var data = {
                                 trigger: 'add-schedule',
-                                date: {
-                                    day: event.target.parentNode.dataset.day,
-                                    month: event.target.parentNode.dataset.month,
-                                    year: event.target.parentNode.dataset.year
-                                },
+                                date: dateObj,
                                 room: event.target.dataset.room,
                                 timeFrom: normalizeTime(minuteToTime(scheduleData[key].time_from)),
                                 timeTo: (scheduleData[key].time_to !== null ? normalizeTime(minuteToTime(scheduleData[key].time_to)) : ''),
                                 eventType: scheduleData[key].eventType.id,
                                 event: scheduleData[key].event.id
                             };
+                            if (!checkTimesInterval(scheduleData[key].time_from, scheduleData[key].time_to, dateObj, event.target.dataset.room)) {
+                                showNotifications("Добавляемое мероприятие пересекается с другими в этот день", 3000, NOTIF_RED);
+                                return false;
+                            }
                             data[csrfParam] = csrfToken;
+                            goPreloader();
                             $.ajax({
                                 type: "POST",
                                 url: '/schedule/one',
@@ -677,8 +757,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 }
             });
         });
-        
-        $('.clean-input').click(function(){
+
+        $('.clean-input').click(function () {
             this.parentNode.parentNode.querySelector('input').value = '';
         });
 
@@ -712,6 +792,8 @@ $this->params['breadcrumbs'][] = $this->title;
          * @returns {Number}
          */
         function timeToMinute(time) {
+            if (!time)
+                return false;
             return +time.split(":")[0] * 60 + +time.split(":")[1];
         }
 
