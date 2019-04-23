@@ -382,9 +382,11 @@ $this->params['breadcrumbs'][] = $this->title;
 
         /**
          * Проверяет, не пересекается ли время мероприятия с другими мероприятиями
+         * @param {integer} exclude - id мероприятия, которое не должно учавствовать в проверке (используем при изменении, т.к тогда эта же запись будет участвовать и не пропускать)
          * @returns {boolean}
          */
-        function checkTimesInterval(timeFrom, timeTo, date, room) {
+        function checkTimesInterval(timeFrom, timeTo, date, room, exclude) {
+            if(!exclude) exclude = 0;
             var dateRows = document.getElementsByClassName('one--date-row');
             for (var i = 0; i < dateRows.length; i++) {
                 if (date.day == dateRows[i].dataset.day && date.month == dateRows[i].dataset.month && date.year == dateRows[i].dataset.year) {
@@ -394,23 +396,25 @@ $this->params['breadcrumbs'][] = $this->title;
                             var eventsCell = roomsCell[z].getElementsByClassName('event-cell');
                             if (eventsCell.length) {
                                 for (var k = 0; k < eventsCell.length; k++) {
-                                    if (eventsCell[k].dataset.timeFrom == timeFrom) {
-                                        return false;
-                                    }
-                                    if (eventsCell[k].dataset.timeTo !== undefined && timeTo
-                                            && ((timeFrom >= eventsCell[k].dataset.timeFrom && timeFrom < eventsCell[k].dataset.timeTo)
-                                                    || (timeTo > eventsCell[k].dataset.timeFrom && timeTo <= eventsCell[k].dataset.timeTo))) {
-                                        return false;
-                                    }
-                                    if (eventsCell[k].dataset.timeTo === undefined && timeTo
-                                            && (eventsCell[k].dataset.timeFrom > timeFrom && eventsCell[k].dataset.timeFrom < timeTo)) {
-                                        return false;
-                                    }
-                                    if (eventsCell[k].dataset.timeTo !== undefined && !timeTo
-                                            && (timeFrom > eventsCell[k].dataset.timeFrom && timeFrom < eventsCell[k].dataset.timeTo)) {
-                                        return false;
-                                    }
+                                    if(+exclude != +eventsCell[k].dataset.id){
+                                        if (+eventsCell[k].dataset.timeFrom == +timeFrom) {
+                                            return false;
+                                        }
+                                        if (eventsCell[k].dataset.timeTo !== undefined && timeTo
+                                                && ((+timeFrom >= +eventsCell[k].dataset.timeFrom && +timeFrom < +eventsCell[k].dataset.timeTo)
+                                                        || (+timeTo > +eventsCell[k].dataset.timeFrom && +timeTo <= +eventsCell[k].dataset.timeTo))) {
+                                            return false;
+                                        }
+                                        if (eventsCell[k].dataset.timeTo === undefined && timeTo
+                                                && (+eventsCell[k].dataset.timeFrom > +timeFrom && +eventsCell[k].dataset.timeFrom < +timeTo)) {
+                                            return false;
+                                        }
+                                        if (eventsCell[k].dataset.timeTo !== undefined && !timeTo
+                                                && (+timeFrom > +eventsCell[k].dataset.timeFrom && +timeFrom < +eventsCell[k].dataset.timeTo)) {
+                                            return false;
+                                        }
 
+                                    }
                                 }
                             }
                         }
@@ -593,6 +597,8 @@ $this->params['breadcrumbs'][] = $this->title;
 
         // Редактирование мероприятия
         var editEventId = false;
+        var editEventDate = false;
+        var editEventRoom = false;
         $('body').on('click', '.event-cell', function (e) {
             editEventId = this.dataset.id;
             for (var key in scheduleData) {
@@ -602,6 +608,9 @@ $this->params['breadcrumbs'][] = $this->title;
                         $('#edit--time_to').val(normalizeTime(minuteToTime(scheduleData[key].time_to)));
                     }
                     var dateT = new Date(scheduleData[key].date);
+                    editEventDate = {day: dateT.getDate(), month: dateT.getMonth(), year: dateT.getFullYear()};
+                    editEventRoom = scheduleData[key].room_id;
+                    
                     $('#edit--meta').html(normalizeDate(dateT.getDate() + "." + dateT.getMonth() + "." + dateT.getFullYear()) +
                             " / " + scheduleData[key].event.name + " (" + scheduleData[key].eventType.name + ")");
                 }
@@ -617,10 +626,10 @@ $this->params['breadcrumbs'][] = $this->title;
                 showNotifications('Кажется вы не указали время начала мероприятия', 7000, NOTIF_RED);
                 return false;
             }
-//            if (!checkTimesInterval(timeToMinute(newTimeFrom), timeToMinute(newTimeTo), addNowDate, addNowRoom)) {
-//                showNotifications("Добавляемое мероприятие пересекается с другими в этот день", 3000, NOTIF_RED);
-//                return false;
-//            }
+            if (!checkTimesInterval(timeToMinute(newTimeFrom), timeToMinute(newTimeTo), editEventDate, editEventRoom, editEventId)) {
+                showNotifications("Добавляемое мероприятие пересекается с другими в этот день", 3000, NOTIF_RED);
+                return false;
+            }
             goPreloader();
             var data = {
                 trigger: 'edit-event',
