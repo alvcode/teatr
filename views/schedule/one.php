@@ -188,6 +188,25 @@ $this->params['breadcrumbs'][] = $this->title;
 
         var csrfParam = $('meta[name="csrf-param"]').attr("content");
         var csrfToken = $('meta[name="csrf-token"]').attr("content");
+        
+        if($(window).width() > 1150){
+            var fixedTop = $('.one--title-row').clone();
+            fixedTop.appendTo('#one--schedule-content');
+            fixedTop.css({'width': fixedTop.width(), 'display': 'none'});
+            fixedTop.addClass('one--fixed-top');
+
+            $( window ).scroll(function() {
+                if($(window).scrollTop() > 300){
+                    $('.one--fixed-top').slideDown(200);
+                }else{
+                    $('.one--fixed-top').slideUp(200);
+                }
+            });
+
+            $(window).resize(function() {
+                $('.one--fixed-top').css({'width': $('.one--title-row:not(.one--fixed-top)').width()});
+            });
+        }
 
         Object.defineProperty(Array.prototype, 'remove', {
             value: function (value) {
@@ -541,7 +560,6 @@ $this->params['breadcrumbs'][] = $this->title;
                     break;
                 }
             }
-            console.log(scheduleData);
             return true;
         }
 
@@ -564,7 +582,6 @@ $this->params['breadcrumbs'][] = $this->title;
                 data: data,
                 success: function (data) {
                     scheduleData = JSON.parse(data);
-                    console.log(scheduleData);
                     for (var key in scheduleData) {
                         var dateT = new Date(scheduleData[key].date);
                         var cellData = {
@@ -643,7 +660,6 @@ $this->params['breadcrumbs'][] = $this->title;
                 url: '/schedule/one',
                 data: data,
                 success: function (data) {
-                    console.log(data);
                     if (data != 0) {
                         var result = JSON.parse(data);
                         deleteEventInCalendar(editEventId);
@@ -677,7 +693,6 @@ $this->params['breadcrumbs'][] = $this->title;
                     url: '/schedule/one',
                     data: data,
                     success: function (data) {
-                        console.log(data);
                         if (data == 1) {
                             deleteEventInCalendar(editEventId);
                             $('#editEventModal').modal('hide');

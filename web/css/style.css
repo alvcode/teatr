@@ -67,6 +67,12 @@ a:hover {
 #one--schedule-content {
   overflow: auto;
 }
+.one--fixed-top {
+  position: fixed;
+  top: 25px;
+  background-color: black;
+  color: white;
+}
 .one--title-row {
   display: flex;
   -webkit-flex-direction: row;

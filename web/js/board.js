@@ -42,6 +42,7 @@ if(document.getElementById('board-container') != undefined){
                 document.getElementsByClassName('board-content')[0].style.display = 'block';
             }
         }
+        $(window).trigger('resize');
     };
 
     // Обработка нажатия на свой мейл в верхнем сайдбаре
