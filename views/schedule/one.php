@@ -40,6 +40,7 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
     </div>
 </div>
+<br>
 
 <?php // echo "<pre>";print_r($events); ?>
 

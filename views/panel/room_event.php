@@ -124,7 +124,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                                     <?php foreach ($events[$key]['events'] as $keyE => $valueE): ?>
                                                         <li data-event="<?= $valueE['id'] ?>" class="list-group-item d-flex justify-content-between align-items-center event-li">
                                                             <div class="proff-name">
-                                                                <?= $valueE['name'] ?> <?= $valueE['other_name'] !== null ? "(" . $valueE['other_name'] . ")" : "" ?>
+                                                                <?= $valueE['name'] ?> <?= $valueE['other_name'] ? "(" . $valueE['other_name'] . ")" : "" ?>
                                                             </div>
                                                             <div>
                                                                 <span class="badge badge-danger badge-pill delete-event cursor-pointer">Удалить</span>

@@ -13,6 +13,7 @@ use app\models\Events;
 use app\models\EventCategories;
 use app\models\ScheduleEvents;
 use app\models\Config;
+use app\components\ScheduleComponent;
 
 class ScheduleController extends AccessController
 {
@@ -46,11 +47,6 @@ class ScheduleController extends AccessController
         ];
     }
 
-    /**
-     * Displays homepage.
-     *
-     * @return string
-     */
     public function actionOne(){
         
         if(Yii::$app->request->isAjax){
@@ -119,6 +115,21 @@ class ScheduleController extends AccessController
             'events' => $events,
             'eventCategories' => $eventCategories,
         ]);
+    }
+    
+    public function actionTwo(){
+        
+        if(Yii::$app->request->isAjax){
+            if(Yii::$app->request->post('trigger') == 'load-schedule'){
+                $schedule = ScheduleEvents::find()
+                        ->where(['=', 'year(date)', Yii::$app->request->post('year')])
+                        ->andWhere(['=', 'month(date)', Yii::$app->request->post('month')])
+                        ->with('eventType')->with('event')->asArray()->all();
+                return json_encode(ScheduleComponent::transformEventsToTwo($schedule));
+            }
+        }
+        
+        return $this->render('two');
     }
     
 
