@@ -9,12 +9,12 @@
     display: flex;
     -webkit-flex-direction: @direction;
     -ms-flex-direction: @direction;
-        flex-direction: @direction;
+    flex-direction: @direction;
     -webkit-flex-wrap: @wrap;
     -ms-flex-wrap: @wrap;
-        flex-wrap: @wrap;
+    flex-wrap: @wrap;
     -webkit-justify-content: @align;
-         justify-content: @align;
+    justify-content: @align;
 }
 
 .font(@size: 14px, @color: #333, @weight: normal, @style: normal){
@@ -39,7 +39,7 @@
         color: inherit;
     }
     [hidden] {
-      display: none;
+        display: none;
     }
 }
 
@@ -106,7 +106,7 @@
     font-weight: 700;
     text-align: center;
     box-sizing: border-box;
-    
+
     .date{
         min-width: 150px;
         border: 1px solid #000;
@@ -125,7 +125,7 @@
     /*font-weight: 700;*/
     text-align: center;
     box-sizing: border-box;
-    
+
     .date{
         min-width: 150px;
         border-left: 1px solid #000;
@@ -138,7 +138,7 @@
         width: 750px;
         min-width: 300px;
         padding: 8px;
-/*        border-top: 1px solid #000;*/
+        /*        border-top: 1px solid #000;*/
         border-right: 1px solid #000;
         border-bottom: 1px solid #000;
         font-size: 14px;
@@ -148,7 +148,7 @@
     width: 260px;
     font-size: 22px;
     .flex();
-    
+
     .name{
         width: 180px;
         font-weight: 700;
@@ -166,12 +166,12 @@
     margin: 6px auto 0 auto;
     cursor: pointer;
     display: inline-block;
-    
+
     &>span{
         display: inline-block;
         margin: 0 5px;
     }
-    
+
     .type{
         font-size: 14px;
         color: @orange;
@@ -187,4 +187,68 @@
 }
 .event-cell:hover{
     opacity: 0.8;
+}
+
+.two--table-container{
+    max-width: 100%;
+    /*max-height: 100%;*/
+    overflow: scroll;
+    position: relative;
+    table {
+        position: relative;
+        border-collapse: collapse;
+    }
+
+    td, th {
+        padding: 0.25em;
+        
+    }
+
+    thead th {
+        position: -webkit-sticky; /* for Safari */
+        position: sticky;
+        top: 0;
+        /*background: #000;*/
+        /*color: #FFF;*/
+    }
+
+    thead th:first-child {
+        min-width: 170px;
+        left: 0;
+        z-index: 1;
+        background: #fff;
+    }
+
+    tbody th {
+        position: -webkit-sticky; /* for Safari */
+        position: sticky;
+        left: 0;
+        background: #FFF;
+        border-right: 1px solid #CCC;
+        text-align: center;
+    }
+    tbody td {
+        text-align: center;
+    }
+
+}
+.two--thead-date{
+    th{
+        text-align: center;
+    }
+}
+.two--thead-event{
+    th{
+        text-align: center;
+        font-size: 12px;
+    }
+}
+.two--thead-time{
+    
+    th:not(:first-child){
+        min-width: 30px;
+        text-align: center;
+        font-size: 10px;
+        /*transform: rotate(-90deg);*/
+    }
 }

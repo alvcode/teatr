@@ -10,44 +10,6 @@ $this->title = 'Расписание актеров';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
-<style>
-    .two--container {
-  max-width: 100%;
-  /*max-height: 100%;*/
-  overflow: scroll;
-  position: relative;
-}
-
-table {
-  position: relative;
-  border-collapse: collapse;
-}
-
-td, th {
-  padding: 0.25em;
-}
-
-thead th {
-  position: -webkit-sticky; /* for Safari */
-  position: sticky;
-  top: 0;
-  background: #000;
-  color: #FFF;
-}
-
-thead th:first-child {
-  left: 0;
-  z-index: 1;
-}
-
-tbody th {
-  position: -webkit-sticky; /* for Safari */
-  position: sticky;
-  left: 0;
-  background: #FFF;
-  border-right: 1px solid #CCC;
-}
-</style>
 
 <div class="container-fluid">
     <div class="row">
@@ -60,157 +22,14 @@ tbody th {
 
         </div>
     </div>
-    
-    <div class="two--container">
-<table class="table table-striped">
-<thead>
-<tr>
-  <th></th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-  <th>head</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-  <th>head</th>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-</tr>
-<tr>
-  <th>head</th>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-  <td>body</td>
-</tr>
-</tbody>
-</table>
-</div>
-    
+
+    <div class="two--table-container">
+        <table class="table-striped table-bordered">
+            <thead id="two--thead"></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
 </div>
 <br>
 
@@ -223,10 +42,12 @@ tbody th {
 
         var csrfParam = $('meta[name="csrf-param"]').attr("content");
         var csrfToken = $('meta[name="csrf-token"]').attr("content");
+
+
+        $('.two--table-container').css({'height': $(window).height() - 140});
         
-        
-        $('.two--container').css({'height': $(window).height() - 140});
-        
+        var scheduleData = false;
+
         var data = {
             trigger: 'load-schedule',
             month: 4,
@@ -238,7 +59,9 @@ tbody th {
             url: '/schedule/two',
             data: data,
             success: function (data) {
-                console.log(JSON.parse(data));
+                scheduleData = JSON.parse(data);
+                console.log(scheduleData);
+                renderThead(scheduleData);
             },
             error: function () {
                 showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
@@ -246,7 +69,57 @@ tbody th {
             }
         });
         
-        
+        /**
+         * Рендерит Thead таблицы
+         * @param {object} data
+         */
+        function renderThead(data){
+            $('#two--thead').empty();
+            
+            var dateContainer = document.createElement('tr');
+            dateContainer.className = 'two--thead-date';
+            dateContainer.append(document.createElement('th'));
+            
+            var eventContainer = document.createElement('tr');
+            eventContainer.className = 'two--thead-event';
+            eventContainer.append(document.createElement('th'));
+            
+            var timeContainer = document.createElement('tr');
+            timeContainer.className = 'two--thead-time';
+            var createTh = document.createElement('th');
+            createTh.innerHTML = 'Состав';
+            timeContainer.append(createTh);
+            
+            for(var key in data){
+                var dateCell = document.createElement('th');
+                dateCell.innerHTML = key;
+                var eventCount = 0; // Счетчик общего кол-ва мероприятий
+                for(var keyEvent in data[key]){
+                    var eventCell = document.createElement('th');
+                    var timeCount = 0; // Счетчик кол-ва повторов спектакля
+                    for(var keyTime in data[key][keyEvent]){
+                        if(timeCount === 0){
+                            eventCell.innerHTML = data[key][keyEvent][keyTime].event.name;
+                        }
+                        var timeCell = document.createElement('th');
+                        timeCell.innerHTML = data[key][keyEvent][keyTime].time_from;
+                        timeContainer.append(timeCell);
+                        timeCount++;
+                    }
+                    eventCount += timeCount;
+                    eventCell.setAttribute('colspan', timeCount);
+                    eventContainer.append(eventCell);
+                }
+                dateCell.setAttribute('colspan', eventCount);
+                dateContainer.append(dateCell);
+            }
+            
+            document.getElementById('two--thead').append(dateContainer);
+            document.getElementById('two--thead').append(eventContainer);
+            document.getElementById('two--thead').append(timeContainer);
+            
+        };
+
 
     }
 </script>
