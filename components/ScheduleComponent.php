@@ -14,7 +14,7 @@ class ScheduleComponent extends Model{
     
     /**
      * Принимает на вход список мероприятий и преобразует в удобном для обработки виде для
-     * расписания актеров
+     * расписания актеров. Первые ключи это даты, вторые ключи это id-мероприятий
      * @param array $events
      * @return array
      */
@@ -24,13 +24,17 @@ class ScheduleComponent extends Model{
         foreach ($events as $key => $value){
             $date = date('j', strtotime($value['date']));
             $eventId = $value['event']['id'];
-            if(!isset($result[$date])){
-                $result[$date] = [];
+            if(!isset($result['schedule'][$date])){
+                $result['schedule'][$date] = [];
             }
-            if(!isset($result[$date][$eventId])){
-                $result[$date][$eventId] = [];
+            if(!isset($result['schedule'][$date][$eventId])){
+                $result['schedule'][$date][$eventId] = [];
             }
-            $result[$date][$eventId][] = $value;
+            if(!isset($result['allEvents'][$eventId])){
+                $result['allEvents'][$eventId]['id'] = $eventId;
+                $result['allEvents'][$eventId]['name'] = $value['event']['name'];
+            }
+            $result['schedule'][$date][$eventId][] = $value;
             
         }
         

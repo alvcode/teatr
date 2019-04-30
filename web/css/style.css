@@ -131,7 +131,7 @@ a:hover {
   border-bottom: 1px solid #000;
   font-size: 14px;
 }
-.one--schedule-controls {
+.schedule-controls {
   width: 260px;
   font-size: 22px;
   display: flex;
@@ -144,7 +144,7 @@ a:hover {
   -webkit-justify-content: space-around;
   justify-content: space-around;
 }
-.one--schedule-controls .name {
+.schedule-controls .name {
   width: 180px;
   font-weight: 700;
   color: #F97979;
@@ -230,5 +230,12 @@ a:hover {
   text-align: center;
   font-size: 10px;
   /*transform: rotate(-90deg);*/
+}
+#two--notification-banner {
+  text-align: center;
+  color: #F97979;
+}
+#all-events-buttons {
+  text-align: right;
 }
 /*# sourceMappingURL=style.css.map */
