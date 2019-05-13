@@ -170,7 +170,9 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
     public function getUserProfession(){
         return $this->hasOne(UserProfession::className(), ['user_id' => 'id'])->with('prof');
     }
-    
+    public function getUserProfessionJoinProf(){
+        return $this->hasOne(UserProfession::className(), ['user_id' => 'id'])->joinWith('prof');
+    }
 
     /**
      * {@inheritdoc}

@@ -7,6 +7,8 @@ use yii\web\Response;
 use yii\filters\VerbFilter;
 use app\models\Room;
 use app\models\Config;
+use app\models\EventType;
+use app\models\ProffCategories;
 
 class SettingController extends AccessController
 {
@@ -53,29 +55,37 @@ class SettingController extends AccessController
          * 2 - Этот зал уже добавлен
          */
         if(Yii::$app->request->isAjax){
-            if(Yii::$app->request->post('trigger') == 'schedule-one-add-room'){
-                $setConfig = Config::setConfig('schedule_one_rooms', Yii::$app->request->post('room'));
+            if(Yii::$app->request->post('trigger') == 'add-simple-config'){
+                $setConfig = Config::setConfig(Yii::$app->request->post('configName'), Yii::$app->request->post('configValue'));
                 if($setConfig){
                     return 1;
                 }
             }
-            
-            if(Yii::$app->request->post('trigger') == 'schedule-one-delete-room'){
-                if(Config::removeConfig('schedule_one_rooms', Yii::$app->request->post('room'))){
+            if(Yii::$app->request->post('trigger') == 'delete-simple-config'){
+                if(Config::removeConfig(Yii::$app->request->post('configName'), Yii::$app->request->post('configValue'))){
                     return 1;
                 }
             }
             
-            
             return 0;
         }
-        $findConfig = Config::find()->where(['name_config' => 'schedule_one_rooms'])->asArray()->one();
-        $findConfig['value'] = json_decode(json_decode($findConfig['value']), true);
+        
+        $scheduleOneRooms = Config::getConfig('schedule_one_rooms');
         $rooms = Room::find()->where(['is_active' => 1])->asArray()->all();
+        
+        $scheduleTwoEventType = Config::getConfig('schedule_two_event_type');
+        $eventType = EventType::find()->where(['is_active' => 1])->asArray()->all();
+        
+        $actorsProfCat = Config::getConfig('actors_prof_cat');
+        $actorsCat = ProffCategories::find()->asArray()->all();
         
         return $this->render('index', [
             'rooms' => $rooms,
-            'scheduleOneRooms' => $findConfig,
+            'scheduleOneRooms' => $scheduleOneRooms,
+            'scheduleTwoEventType' => $scheduleTwoEventType,
+            'eventType' => $eventType,
+            'actorsCat' => $actorsCat,
+            'actorsProfCat' => $actorsProfCat,
         ]);
     }
     

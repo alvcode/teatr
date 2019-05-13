@@ -4,6 +4,7 @@ namespace app\components;
 
 use Yii;
 use yii\base\Model;
+use app\models\CastUnderstudy;
 
 /**
  *
@@ -39,6 +40,25 @@ class ScheduleComponent extends Model{
         }
         
         return $result;
+    }
+    
+    /**
+     * Принимает массив с полем cast_id, осуществляет поиск в understudy и присоединяем
+     * к соответствующим юзерам
+     * @param array $users
+     * @return array
+     */
+    public static function joinUnderstudy($users){
+        $findUnderstudy = CastUnderstudy::find()->select('cast_understudy.cast_id, user.id, user.name, user.surname')->where(['cast_id' => \yii\helpers\ArrayHelper::getColumn($users, 'cast_id')])
+                ->leftJoin('user', 'cast_understudy.user_id = user.id')->asArray()->all();
+        foreach ($users as $keyU => $valueU){
+            foreach($findUnderstudy as $key => $value){
+                if($valueU['cast_id'] == $value['cast_id']){
+                    $users[$keyU]['understudy'][] = $value;
+                }
+            }
+        }
+        return $users;
     }
    
 }

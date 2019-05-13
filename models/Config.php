@@ -67,7 +67,7 @@ class Config extends \yii\db\ActiveRecord
     }
     
     /**
-     * 
+     * Удаляем значение из списка конфигурации 
      * @param string $configName
      * @param string $value
      * @return boolean

@@ -5,22 +5,20 @@ namespace app\models;
 use Yii;
 
 /**
- * This is the model class for table "casts".
+ * This is the model class for table "user_in_schedule".
  *
  * @property int $id
- * @property int $event_id
+ * @property int $schedule_event_id
  * @property int $user_id
- * @property int $month
- * @property int $year
  */
-class Casts extends \yii\db\ActiveRecord
+class UserInSchedule extends \yii\db\ActiveRecord
 {
     /**
      * {@inheritdoc}
      */
     public static function tableName()
     {
-        return 'casts';
+        return 'user_in_schedule';
     }
 
     /**
@@ -29,8 +27,8 @@ class Casts extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['event_id', 'user_id', 'month', 'year'], 'required'],
-            [['event_id', 'user_id', 'month', 'year'], 'integer'],
+            [['schedule_event_id', 'user_id'], 'required'],
+            [['schedule_event_id', 'user_id'], 'integer'],
         ];
     }
 
@@ -41,7 +39,7 @@ class Casts extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'event_id' => 'Event ID',
+            'schedule_event_id' => 'Schedule Event ID',
             'user_id' => 'User ID',
         ];
     }
