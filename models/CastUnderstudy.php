@@ -31,6 +31,10 @@ class CastUnderstudy extends \yii\db\ActiveRecord
             [['cast_id', 'user_id'], 'integer'],
         ];
     }
+    
+    public function getUser(){
+        return $this->hasOne(User::className(), ['id' => 'user_id'])->select('user.id, user.name, user.surname');
+    }
 
     /**
      * {@inheritdoc}

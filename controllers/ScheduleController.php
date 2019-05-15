@@ -145,8 +145,8 @@ class ScheduleController extends AccessController
             
             if(Yii::$app->request->post('trigger') == 'load-casts-in-schedule'){
                 $result = [];
-                $result['cast'] = User::find()->select('user.id, user.name, user.surname, casts.id cast_id, cast_understudy.user_id')
-                        ->leftJoin('casts', 'casts.user_id = user.id')->leftJoin('cast_understudy', 'cast_understudy.cast_id = casts.id')
+                $result['cast'] = User::find()->select('user.id, user.name, user.surname, casts.id cast_id')
+                        ->leftJoin('casts', 'casts.user_id = user.id')
                         ->where([
                             'casts.year' => Yii::$app->request->post('year'), 
                             'casts.month' => Yii::$app->request->post('month'), 
@@ -195,17 +195,20 @@ class ScheduleController extends AccessController
                 $findInSchedule = UserInSchedule::find()->where([
                     'schedule_event_id' => Yii::$app->request->post('schedule'),
                     'user_id' => Yii::$app->request->post('user'),
+                    'cast_id' => Yii::$app->request->post('cast'),
                 ])->asArray()->one();
                 if($findInSchedule){
                     $deleteInSchedule = Yii::$app->db->createCommand()->delete('user_in_schedule', [
                         'schedule_event_id' => Yii::$app->request->post('schedule'),
                         'user_id' => Yii::$app->request->post('user'),
+                        'cast_id' => Yii::$app->request->post('cast'),
                     ])->execute();
                     if($deleteInSchedule) return 2;
                 }else{
                     $userInSchedule = new UserInSchedule();
                     $userInSchedule->schedule_event_id = Yii::$app->request->post('schedule');
                     $userInSchedule->user_id = Yii::$app->request->post('user');
+                    $userInSchedule->cast_id = Yii::$app->request->post('cast');
                     if($userInSchedule->save()) return 1;
                 }
             }

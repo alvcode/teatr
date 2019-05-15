@@ -95,10 +95,37 @@ $this->params['breadcrumbs'][] = $this->title;
         var csrfParam = $('meta[name="csrf-param"]').attr("content");
         var csrfToken = $('meta[name="csrf-token"]').attr("content");
 
+        Object.defineProperty(Array.prototype, 'includes', {
+            value: function (searchElement, fromIndex) {
+
+                if (this == null) {
+                    throw new TypeError('"this" is null or not defined');
+                }
+                var o = Object(this);
+                var len = o.length >>> 0;
+                if (len === 0) {
+                    return false;
+                }
+                var n = fromIndex | 0;
+                var k = Math.max(n >= 0 ? n : len - Math.abs(n), 0);
+
+                function sameValueZero(x, y) {
+                    return x === y || (typeof x === 'number' && typeof y === 'number' && isNaN(x) && isNaN(y));
+                }
+                while (k < len) {
+                    if (sameValueZero(o[k], searchElement)) {
+                        return true;
+                    }
+                    k++;
+                }
+                return false;
+            }
+        });
 
         $('.two--table-container').css({'height': $(window).height() - 140});
-        
+
         var selectedEvent = false;
+        var activeCells = false;
         var selectedActor = false;
         var selectedActorName = false;
         var castsData = false;
@@ -230,7 +257,7 @@ $this->params['breadcrumbs'][] = $this->title;
             }
         }
         ;
-        
+
         // Выделение спектакля
         $('#all-events-buttons').on('click', '.event-button', function (e) {
             $('#two--tbody').empty();
@@ -239,6 +266,14 @@ $this->params['breadcrumbs'][] = $this->title;
             selectedEvent = this.dataset.event;
             $('.two--thead-event > th, .two--thead-time > th').css({'color': 'black'});
             $('th[data-event=' + selectedEvent + ']').css({'color': '#F97979'});
+            var headCells = document.getElementsByClassName('two--thead-time')[0].getElementsByTagName('th');
+            activeCells = [];
+            for (var i = 0; i < headCells.length; i++) {
+                if (headCells[i].dataset.event == selectedEvent) {
+                    activeCells[activeCells.length] = i;
+                }
+            }
+            console.log(activeCells);
             goPreloader();
             var data = {
                 trigger: 'load-casts-in-schedule',
@@ -254,12 +289,12 @@ $this->params['breadcrumbs'][] = $this->title;
                 success: function (data) {
                     castsData = JSON.parse(data);
                     console.log(castsData);
-                    if(castsData.cast){
-                        for(var key in castsData.cast){
-                            insertActor(castsData.cast[key].name +" " +castsData.cast[key].surname, castsData.cast[key].id, castsData.cast[key].cast_id, 0);
-                            if(castsData.cast[key].understudy){
-                                for(var keyU in castsData.cast[key].understudy){
-                                    insertActor(castsData.cast[key].understudy[keyU].name +" " +castsData.cast[key].understudy[keyU].surname, castsData.cast[key].understudy[keyU].id, castsData.cast[key].cast_id, 1);
+                    if (castsData.cast) {
+                        for (var key in castsData.cast) {
+                            insertActor(castsData.cast[key].name + " " + castsData.cast[key].surname, castsData.cast[key].id, castsData.cast[key].cast_id, 0);
+                            if (castsData.cast[key].understudy) {
+                                for (var keyU in castsData.cast[key].understudy) {
+                                    insertActor(castsData.cast[key].understudy[keyU].name + " " + castsData.cast[key].understudy[keyU].surname, castsData.cast[key].understudy[keyU].id, castsData.cast[key].cast_id, 1);
                                 }
                             }
                         }
@@ -286,22 +321,22 @@ $this->params['breadcrumbs'][] = $this->title;
             }
             $('#actorsListModal').modal('show');
         });
-        
-        $('.actor-list-item').click(function(){
+
+        $('.actor-list-item').click(function () {
             selectedActor = this.dataset.id;
-            if(!checkRepeatCast(selectedActor, understudyMode, understudyParent)){
+            if (!checkRepeatCast(selectedActor, understudyMode, understudyParent)) {
                 showNotifications('Этот актер уже есть в списке', 3000, NOTIF_RED);
                 return false;
             }
             selectedActorName = this.innerHTML;
             goPreloader();
-            if(understudyMode){
+            if (understudyMode) {
                 var data = {
                     trigger: 'add-in-understudy',
                     user: selectedActor,
                     cast: understudyParent,
                 };
-            }else{
+            } else {
                 var data = {
                     trigger: 'add-in-cast',
                     event: selectedEvent,
@@ -316,14 +351,14 @@ $this->params['breadcrumbs'][] = $this->title;
                 url: '/schedule/two',
                 data: data,
                 success: function (data) {
-                    if(data > 0){
-                        if(understudyMode){
+                    if (data > 0) {
+                        if (understudyMode) {
                             insertActor(selectedActorName, selectedActor, understudyParent, understudyMode);
-                        }else{
+                        } else {
                             insertActor(selectedActorName, selectedActor, data, understudyMode);
                         }
                         $('#actorsListModal').modal('hide');
-                    }else if(data == 0){
+                    } else if (data == 0) {
                         showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
                     }
                     stopPreloader();
@@ -338,21 +373,21 @@ $this->params['breadcrumbs'][] = $this->title;
         var deletedActorInCast = false;
         var deletedActorCastId = false;
         var deletedActorUnderstudy = false;
-        $('#two--tbody').on('click', '.two--remove-cast', function(){
+        $('#two--tbody').on('click', '.two--remove-cast', function () {
             deletedActorUnderstudy = this.parentNode.parentNode.classList.contains('understudy');
             deletedActorInCast = this.parentNode.parentNode.dataset.id;
             deletedActorCastId = this.parentNode.parentNode.dataset.cast;
             $('#actorDeleteModal').modal('show');
         });
-        $('#delete-actor-cast-submit').click(function(){
+        $('#delete-actor-cast-submit').click(function () {
             goPreloader();
-            if(deletedActorUnderstudy){
+            if (deletedActorUnderstudy) {
                 var data = {
                     trigger: 'delete-understudy',
                     user: deletedActorInCast,
                     cast: deletedActorCastId,
                 };
-            }else{
+            } else {
                 var data = {
                     trigger: 'delete-actor-in-cast',
                     event: selectedEvent,
@@ -367,10 +402,10 @@ $this->params['breadcrumbs'][] = $this->title;
                 url: '/schedule/two',
                 data: data,
                 success: function (data) {
-                    if(data == 1){
+                    if (data == 1) {
                         deleteActor(deletedActorInCast, deletedActorCastId, deletedActorUnderstudy);
                         $('#actorDeleteModal').modal('hide');
-                    }else if(data == 0){
+                    } else if (data == 0) {
                         showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
                     }
                     stopPreloader();
@@ -384,24 +419,46 @@ $this->params['breadcrumbs'][] = $this->title;
         // Обнуляем режим дублера при закрывании списка актеров
         $('#actorsListModal').on('hide.bs.modal', function (e) {
             understudyMode = 0;
-          })
+        })
         var understudyParent = false;
-        $('#two--tbody').on('click', '.two--add-understudy', function(){
+        $('#two--tbody').on('click', '.two--add-understudy', function () {
             understudyParent = this.parentNode.parentNode.dataset.cast;
             understudyMode = 1;
             $('#actorsListModal').modal('show');
 //            alert('ok');
         });
-        
-        $('#two--tbody').on('click', 'tr > td', function(){
+
+        $('#two--tbody').on('click', 'tr > td', function () {
             var scheduleId = this.dataset.schedule;
             var userId = this.parentNode.dataset.id;
+            var castId = this.parentNode.dataset.cast;
             var self = this;
+            var thisIndex = $(this).index();
+            if (!activeCells.includes(thisIndex)) {
+                showNotifications('Невозможно поставить в другой спектакль', 2000, NOTIF_RED);
+                return false;
+            }
+            var rows = document.getElementById('two--tbody').getElementsByTagName('tr');
+            for (var i = 0; i < rows.length; i++) {
+                var cells = rows[i].getElementsByTagName('td');
+                var rowUser = rows[i].dataset.id;
+                for (var z = 0; z < cells.length; z++) {
+                    if (+rowUser == +userId && (+thisIndex - 1) == z && cells[z].innerHTML === "+" && cells[z] !== self) {
+                        showNotifications('Этот актер уже играет на этом мероприятии', 3000, NOTIF_RED);
+                        return false;
+                    }
+                    if(+cells[z].parentNode.dataset.cast == +castId && (+thisIndex - 1) == z && cells[z].innerHTML === "+" && cells[z] !== self){
+                        showNotifications('На эту роль уже поставлен актер', 3000, NOTIF_RED);
+                        return false;
+                    }
+                }
+            }
             goPreloader();
             var data = {
                 trigger: 'add-user-schedule',
                 schedule: scheduleId,
                 user: userId,
+                cast: castId
             };
             data[csrfParam] = csrfToken;
             $.ajax({
@@ -409,11 +466,11 @@ $this->params['breadcrumbs'][] = $this->title;
                 url: '/schedule/two',
                 data: data,
                 success: function (data) {
-                    if(data == 1){
+                    if (data == 1) {
                         self.innerHTML = '+';
-                    }else if(data == 2){
+                    } else if (data == 2) {
                         self.innerHTML = '';
-                    }else if(data == 0){
+                    } else if (data == 0) {
                         showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
                     }
                     stopPreloader();
@@ -424,105 +481,107 @@ $this->params['breadcrumbs'][] = $this->title;
                 }
             });
         });
-        
-        
-        
-        
-        
-        function insertActor(actorName, actorId, castId, understudyMode){
+
+
+
+
+
+        function insertActor(actorName, actorId, castId, understudyMode) {
             var createTr = document.createElement('tr');
-            if(understudyMode) createTr.className = 'understudy';
+            if (understudyMode)
+                createTr.className = 'understudy';
             createTr.dataset.id = actorId;
             createTr.dataset.cast = castId;
 //            if(!understudyModel) createTr.dataset.cast = castId;
             var createName = document.createElement('th');
-            createName.innerHTML = actorName +" <span class='badge badge-pill badge-danger two--remove-cast'><i class='fas fa-times'></i></span> "+ (!understudyMode?"<span class='badge badge-pill badge-info two--add-understudy'><i class='fas fa-share'></i></span>":"");
+            createName.innerHTML = actorName + " <span class='badge badge-pill badge-danger two--remove-cast'><i class='fas fa-times'></i></span> " + (!understudyMode ? "<span class='badge badge-pill badge-info two--add-understudy'><i class='fas fa-share'></i></span>" : "");
             createTr.append(createName);
             var scheduleCells = document.getElementsByClassName('two--event-cell');
-            for(var i = 0; i < scheduleCells.length; i++){
+            for (var i = 0; i < scheduleCells.length; i++) {
                 var createTd = document.createElement('td');
                 createTd.dataset.schedule = scheduleCells[i].dataset.schedule;
                 createTr.append(createTd);
-            };
-            if(understudyMode){
+            }
+            ;
+            if (understudyMode) {
                 var rows = document.getElementById('two--tbody').getElementsByTagName('tr');
                 var z = 0;
-                for(var i = 0; i < rows.length; i++){
-                    if(z && rows[i].dataset.cast != castId && z.dataset.cast == castId){
+                for (var i = 0; i < rows.length; i++) {
+                    if (z && rows[i].dataset.cast != castId && z.dataset.cast == castId) {
                         document.getElementById('two--tbody').insertBefore(createTr, rows[i]);
                         return true;
                     }
                     z = rows[i];
                 }
-                if(rows[rows.length - 1].dataset.cast == castId){
+                if (rows[rows.length - 1].dataset.cast == castId) {
                     document.getElementById('two--tbody').append(createTr);
                 }
-            }else{
+            } else {
                 document.getElementById('two--tbody').append(createTr);
             }
         }
-        function deleteActor(actorId, castId, understudy){
+        function deleteActor(actorId, castId, understudy) {
             var rows = document.getElementById('two--tbody').getElementsByTagName('tr');
-            if(understudy){
-                for(var i = 0; i < rows.length; i++){
-                    if(rows[i].dataset.id == actorId) rows[i].remove();
+            if (understudy) {
+                for (var i = 0; i < rows.length; i++) {
+                    if (rows[i].dataset.id == actorId)
+                        rows[i].remove();
                 }
-            }else{
-                $('#two--tbody > tr').remove('[data-cast='+ castId +']');
+            } else {
+                $('#two--tbody > tr').remove('[data-cast=' + castId + ']');
             }
         }
         // Проверка на повторное добавление актера в состав
-        function checkRepeatCast(actorId, understudy, cast){
+        function checkRepeatCast(actorId, understudy, cast) {
             var rows = document.getElementById('two--tbody').getElementsByTagName('tr');
-            if(understudy){
-                for(var i = 0; i < rows.length; i++){
-                    if(+rows[i].dataset.id == +actorId && +cast == +rows[i].dataset.cast){
+            if (understudy) {
+                for (var i = 0; i < rows.length; i++) {
+                    if (+rows[i].dataset.id == +actorId && +cast == +rows[i].dataset.cast) {
                         return false;
                     }
                 }
-            }else{
-                for(var i = 0; i < rows.length; i++){
-                    if(+rows[i].dataset.id == +actorId && !rows[i].classList.contains('understudy')){
+            } else {
+                for (var i = 0; i < rows.length; i++) {
+                    if (+rows[i].dataset.id == +actorId && !rows[i].classList.contains('understudy')) {
                         return false;
                     }
                 }
             }
-            
+
             return true;
         }
-        
-        function renderSchedule(schedule){
+
+        function renderSchedule(schedule) {
             var rows = document.getElementById('two--tbody').getElementsByTagName('tr');
-            for(var key in schedule){
-                for(var i = 0; i < rows.length; i++){
-                    if(+rows[i].dataset.id == +schedule[key].user_id){
+            for (var key in schedule) {
+                for (var i = 0; i < rows.length; i++) {
+                    if (+rows[i].dataset.id == +schedule[key].user_id && +rows[i].dataset.cast == +schedule[key].cast_id) {
                         var cells = rows[i].getElementsByTagName('td');
-                        for(var z = 0; z < cells.length; z++){
-                            if(+cells[z].dataset.schedule == +schedule[key].schedule_event_id){
+                        for (var z = 0; z < cells.length; z++) {
+                            if (+cells[z].dataset.schedule == +schedule[key].schedule_event_id) {
                                 cells[z].innerHTML = '+';
-                                console.log(cells[z]);
                             }
                         }
                     }
                 }
             }
         }
-        
+
         // Выделение ячеек при наведении
-        $('#two--tbody').on('mouseenter', 'td', function(){
+        $('#two--tbody').on('mouseenter', 'td', function () {
             var thisIndex = $(this).index();
             var rowIndex = $(this).parent().index();
             var rowCells = this.parentNode.getElementsByTagName('td');
-            for(var i = 0; i < thisIndex; i++){
+            for (var i = 0; i < thisIndex; i++) {
                 rowCells[i].style.backgroundColor = 'rgb(179, 255, 255)';
             }
             var rows = document.getElementById('two--tbody').getElementsByTagName('tr');
-            for(var i = 0; i < rowIndex; i++){
+            for (var i = 0; i < rowIndex; i++) {
                 var rc = rows[i].getElementsByTagName('td');
                 rc[thisIndex - 1].style.backgroundColor = 'rgb(179, 255, 255)';
             }
         });
-        $('#two--tbody').on('mouseleave', 'td', function(){
+        $('#two--tbody').on('mouseleave', 'td', function () {
             $('#two--tbody td').css({'background-color': ''});
         });
 

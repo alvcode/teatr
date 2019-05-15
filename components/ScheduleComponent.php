@@ -49,12 +49,13 @@ class ScheduleComponent extends Model{
      * @return array
      */
     public static function joinUnderstudy($users){
-        $findUnderstudy = CastUnderstudy::find()->select('cast_understudy.cast_id, user.id, user.name, user.surname')->where(['cast_id' => \yii\helpers\ArrayHelper::getColumn($users, 'cast_id')])
-                ->leftJoin('user', 'cast_understudy.user_id = user.id')->asArray()->all();
+        $findUnderstudy = CastUnderstudy::find()->select('*')
+                ->where(['cast_id' => \yii\helpers\ArrayHelper::getColumn($users, 'cast_id')])->with('user')->asArray()->all();
+        
         foreach ($users as $keyU => $valueU){
             foreach($findUnderstudy as $key => $value){
                 if($valueU['cast_id'] == $value['cast_id']){
-                    $users[$keyU]['understudy'][] = $value;
+                    $users[$keyU]['understudy'][] = $value['user'];
                 }
             }
         }

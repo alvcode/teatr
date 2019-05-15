@@ -10,6 +10,7 @@ use Yii;
  * @property int $id
  * @property int $schedule_event_id
  * @property int $user_id
+ * @property int $cast_id
  */
 class UserInSchedule extends \yii\db\ActiveRecord
 {
@@ -27,8 +28,8 @@ class UserInSchedule extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['schedule_event_id', 'user_id'], 'required'],
-            [['schedule_event_id', 'user_id'], 'integer'],
+            [['schedule_event_id', 'user_id', 'cast_id'], 'required'],
+            [['schedule_event_id', 'user_id', 'cast_id'], 'integer'],
         ];
     }
 
