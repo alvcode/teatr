@@ -203,11 +203,20 @@
         padding: 0.25em;
 
     }
-
-    thead th {
-        position: -webkit-sticky; /* for Safari */
+    
+    .two--thead-date th{
         position: sticky;
         top: 0;
+    }
+    .two--thead-time th{
+        position: sticky;
+        top: 30px;
+    }
+
+    thead th {
+        background: #fff;
+/*        position: sticky;
+        top: 0;*/
         /*background: #000;*/
         /*color: #FFF;*/
     }
@@ -278,6 +287,12 @@
     &>div:hover{
         opacity: 0.75;
     }
+    .selected{
+        font-weight: 700;
+    }
+}
+.understudy > th:before{
+    content: '- ';
 }
 .two--remove-cast, .two--add-understudy{
     &:hover{

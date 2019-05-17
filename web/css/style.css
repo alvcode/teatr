@@ -192,11 +192,18 @@ a:hover {
 .two--table-container th {
   padding: 0.25em;
 }
-.two--table-container thead th {
-  position: -webkit-sticky;
-  /* for Safari */
+.two--table-container .two--thead-date th {
   position: sticky;
   top: 0;
+}
+.two--table-container .two--thead-time th {
+  position: sticky;
+  top: 30px;
+}
+.two--table-container thead th {
+  background: #fff;
+  /*        position: sticky;
+        top: 0;*/
   /*background: #000;*/
   /*color: #FFF;*/
 }
@@ -257,6 +264,12 @@ a:hover {
 }
 .actor-modal-container > div:hover {
   opacity: 0.75;
+}
+.actor-modal-container .selected {
+  font-weight: 700;
+}
+.understudy > th:before {
+  content: '- ';
 }
 .two--remove-cast:hover,
 .two--add-understudy:hover {

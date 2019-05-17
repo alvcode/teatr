@@ -22,7 +22,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
         </div>
     </div>
-
+    
     <div id="all-events-buttons"></div>
     <div class="schedule-controls">
         <div id="control-name" class="name"></div>
@@ -53,12 +53,16 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="modal-body">
                 <div class="actor-modal-container">
                     <?php foreach ($actors as $key => $value): ?>
-                        <div class="actor-list-item" data-id="<?= $value['id'] ?>"><?= $value['name'] ?> <?= $value['surname'] ?></div>
+                        <div style="font-weight: 700;" class="text-danger"><?= $key ?></div>
+                        <?php foreach($value as $keyV => $valueV): ?>
+                            <div class="actor-list-item" data-id="<?= $valueV['id'] ?>"><?= $valueV['name'] ?> <?= $valueV['surname'] ?></div>
+                        <?php endforeach; ?>
                     <?php endforeach; ?>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Закрыть</button>
+                <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Отмена</button>
+                <button id="add-actor-list-submit" type="button" class="btn btn-sm btn-success">Применить</button>
             </div>
         </div>
     </div>
@@ -126,7 +130,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
         var selectedEvent = false;
         var activeCells = false;
-        var selectedActor = false;
+        var selectedActor = [];
         var selectedActorName = false;
         var castsData = false;
         var understudyMode = 0;
@@ -142,11 +146,13 @@ $this->params['breadcrumbs'][] = $this->title;
         $('#month-right').click(function () {
             nowDate.setMonth(nowDate.getMonth() + 1);
             $('#two--tbody').empty();
+            selectedEvent = false;
             loadSchedule();
         });
         $('#month-left').click(function () {
             nowDate.setMonth(nowDate.getMonth() - 1);
             $('#two--tbody').empty();
+            selectedEvent = false;
             loadSchedule();
         });
 
@@ -321,14 +327,27 @@ $this->params['breadcrumbs'][] = $this->title;
             }
             $('#actorsListModal').modal('show');
         });
-
+        
         $('.actor-list-item').click(function () {
-            selectedActor = this.dataset.id;
-            if (!checkRepeatCast(selectedActor, understudyMode, understudyParent)) {
-                showNotifications('Этот актер уже есть в списке', 3000, NOTIF_RED);
-                return false;
+            var actorId = this.dataset.id;
+            if(this.classList.contains('selected')){
+                this.classList.remove('selected');
+                var idx = selectedActor.indexOf(actorId);
+                selectedActor.splice(idx, 1);
+            }else{
+                this.classList.add('selected');
+                selectedActor[selectedActor.length] = actorId;
             }
-            selectedActorName = this.innerHTML;
+            console.log(selectedActor);
+        });
+        
+        $('#add-actor-list-submit').click(function(){
+            for(var i = 0; i < selectedActor.length; i++){
+                if (!checkRepeatCast(selectedActor[i], understudyMode, understudyParent)) {
+                    showNotifications('Этот актер уже есть в списке', 3000, NOTIF_RED);
+                    return false;
+                }
+            }
             goPreloader();
             if (understudyMode) {
                 var data = {
@@ -351,17 +370,34 @@ $this->params['breadcrumbs'][] = $this->title;
                 url: '/schedule/two',
                 data: data,
                 success: function (data) {
-                    if (data > 0) {
+                    var result = JSON.parse(data);
+                    console.log(result);
+                    var actorsList = document.getElementsByClassName('actor-list-item');
+                    if (result.result == 'ok') {
                         if (understudyMode) {
-                            insertActor(selectedActorName, selectedActor, understudyParent, understudyMode);
+                            for(var key in result.data){
+                                for(var i = 0; i < actorsList.length; i++){
+                                    if(+actorsList[i].dataset.id == +result.data[key].user){
+                                        insertActor(actorsList[i].innerHTML, actorsList[i].dataset.id, understudyParent, understudyMode);
+                                    }
+                                }
+                            }
                         } else {
-                            insertActor(selectedActorName, selectedActor, data, understudyMode);
+                            for(var key in result.data){
+                                for(var i = 0; i < actorsList.length; i++){
+                                    if(+actorsList[i].dataset.id == +result.data[key].user){
+                                        insertActor(actorsList[i].innerHTML, actorsList[i].dataset.id, result.data[key].cast, understudyMode);
+                                    }
+                                }
+                            }
                         }
                         $('#actorsListModal').modal('hide');
-                    } else if (data == 0) {
+                    }else {
                         showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
                     }
                     stopPreloader();
+                    selectedActor = [];
+                    $('.actor-list-item').removeClass('selected');
                 },
                 error: function () {
                     showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
@@ -369,6 +405,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 }
             });
         });
+        
         // Удаление актера из состава
         var deletedActorInCast = false;
         var deletedActorCastId = false;
@@ -444,7 +481,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 var rowUser = rows[i].dataset.id;
                 for (var z = 0; z < cells.length; z++) {
                     if (+rowUser == +userId && (+thisIndex - 1) == z && cells[z].innerHTML === "+" && cells[z] !== self) {
-                        showNotifications('Этот актер уже играет на этом мероприятии', 3000, NOTIF_RED);
+                        showNotifications('Этот актер уже стоит на этом спектакле', 3000, NOTIF_RED);
                         return false;
                     }
                     if(+cells[z].parentNode.dataset.cast == +castId && (+thisIndex - 1) == z && cells[z].innerHTML === "+" && cells[z] !== self){
@@ -572,6 +609,7 @@ $this->params['breadcrumbs'][] = $this->title;
             var thisIndex = $(this).index();
             var rowIndex = $(this).parent().index();
             var rowCells = this.parentNode.getElementsByTagName('td');
+            this.parentNode.querySelector('th').style.backgroundColor = 'rgb(179, 255, 255)';
             for (var i = 0; i < thisIndex; i++) {
                 rowCells[i].style.backgroundColor = 'rgb(179, 255, 255)';
             }
@@ -583,6 +621,7 @@ $this->params['breadcrumbs'][] = $this->title;
         });
         $('#two--tbody').on('mouseleave', 'td', function () {
             $('#two--tbody td').css({'background-color': ''});
+            $('#two--tbody th').css({'background-color': ''});
         });
 
         /**

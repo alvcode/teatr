@@ -135,12 +135,33 @@ class ScheduleController extends AccessController
             }
             
             if(Yii::$app->request->post('trigger') == 'add-in-cast'){
-                $newCast = new Casts();
-                $newCast->event_id = Yii::$app->request->post('event');
-                $newCast->user_id = Yii::$app->request->post('user');
-                $newCast->month = Yii::$app->request->post('month');
-                $newCast->year = Yii::$app->request->post('year');
-                if($newCast->save()) return $newCast->id;
+                $response = [];
+                $response['data'] = [];
+                $actorsArr = Yii::$app->request->post('user');
+                $db = Yii::$app->db;
+                $transaction = $db->beginTransaction();
+                try {
+                    foreach ($actorsArr as $key => $value){
+                        $newCast = new Casts();
+                        $newCast->event_id = Yii::$app->request->post('event');
+                        $newCast->user_id = $value;
+                        $newCast->month = Yii::$app->request->post('month');
+                        $newCast->year = Yii::$app->request->post('year');
+                        if($newCast->save()){
+                            $count = count($response['data']);
+                            $response['data'][$count]['user'] = $value;
+                            $response['data'][$count]['cast'] = $newCast->id;
+                        }
+                    }
+                    $transaction->commit();
+                    $response['result'] = 'ok';
+                    return json_encode($response);
+                } catch (\Exception $e) {
+                    $transaction->rollBack();
+                    //throw $e;
+                    $response['result'] = 'error';
+                    return json_encode($response);
+                }
             }
             
             if(Yii::$app->request->post('trigger') == 'load-casts-in-schedule'){
@@ -175,10 +196,31 @@ class ScheduleController extends AccessController
             }
             
             if(Yii::$app->request->post('trigger') == 'add-in-understudy'){
-                $understudy = new CastUnderstudy();
-                $understudy->cast_id = Yii::$app->request->post('cast');
-                $understudy->user_id = Yii::$app->request->post('user');
-                if($understudy->save()) return 1;
+                $response = [];
+                $response['data'] = [];
+                $actorsArr = Yii::$app->request->post('user');
+                $db = Yii::$app->db;
+                $transaction = $db->beginTransaction();
+                try {
+                    foreach ($actorsArr as $key => $value){
+                        $understudy = new CastUnderstudy();
+                        $understudy->cast_id = Yii::$app->request->post('cast');
+                        $understudy->user_id = $value;
+                        if($understudy->save()){
+                            $count = count($response['data']);
+                            $response['data'][$count]['user'] = $value;
+                            $response['data'][$count]['cast'] = $understudy->cast_id;
+                        }
+                    }
+                    $transaction->commit();
+                    $response['result'] = 'ok';
+                    return json_encode($response);
+                } catch (\Exception $e) {
+                    $transaction->rollBack();
+                    //throw $e;
+                    $response['result'] = 'error';
+                    return json_encode($response);
+                }
             }
             if(Yii::$app->request->post('trigger') == 'delete-understudy'){
                 $deleteUnderstudy = Yii::$app->db->createCommand()->delete('cast_understudy', [
@@ -216,7 +258,6 @@ class ScheduleController extends AccessController
             
             return 0;
         }
-        
         $configActorsProf = Config::getConfig('actors_prof_cat');
         $actors = User::find()->select('user.id, user.name, user.surname')
                 ->leftJoin('user_profession', 'user.id = user_profession.user_id')
@@ -224,6 +265,8 @@ class ScheduleController extends AccessController
                 ->where(['profession.proff_cat_id' => $configActorsProf])
                 ->andWhere(['user.is_active' => 1])
                 ->asArray()->all();
+        
+        $actors = ScheduleComponent::sortFirstLetter($actors, 'surname');
         
         return $this->render('two', [
             'actors' => $actors,
