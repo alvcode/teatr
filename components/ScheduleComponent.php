@@ -5,6 +5,7 @@ namespace app\components;
 use Yii;
 use yii\base\Model;
 use app\models\CastUnderstudy;
+use app\models\ScheduleEvents;
 
 /**
  *
@@ -75,6 +76,54 @@ class ScheduleComponent extends Model{
             }
         }
         return $result;
+    }
+    
+    /**
+     * Проверка на пересечение времени. Передаем ID мероприятия из расписания на которое хотим поставить сотрудника
+     * Функция берет все мероприятия где стоит сотрудник на сегодня и проверяет, чтобы время не пересекалось.
+     * false - не пересекается, array - данные с пересечениями
+     * 
+     * @param integer $scheduleId
+     * @param integer $userId
+     * @return array
+     */
+    public static function checkIntersect($scheduleId, $userId){
+        $result = [];
+        $findSchedule = ScheduleEvents::findOne($scheduleId);
+        $getAllEvents = ScheduleEvents::find()->select('events.name, schedule_events.time_from, schedule_events.time_to')
+                ->leftJoin('user_in_schedule', 'schedule_events.id = user_in_schedule.schedule_event_id')
+                ->leftJoin('events', 'events.id = schedule_events.event_id')
+                ->where(['date(schedule_events.date)' => $findSchedule->date, 'user_in_schedule.user_id' => $userId])
+                ->asArray()->all();
+        if($getAllEvents){
+            if($findSchedule->time_to){
+                foreach ($getAllEvents as $key => $value){
+                    if($value['time_to']){
+                        if((($value['time_from'] < $findSchedule->time_to && $value['time_from'] >= $findSchedule->time_from))
+                                || ($value['time_to'] <= $findSchedule->time_to && $value['time_to'] > $findSchedule->time_from) 
+                                || ($value['time_from'] <= $findSchedule->time_from && $value-['time_to'] >= $findSchedule->time_to)){
+                                    $result[] = $value;
+                                }
+                    }else{
+                        if(+$findSchedule->time_from == $value['time_from']){
+                            $result[] = $value;
+                        }
+                    }
+                }
+            }else{
+                foreach ($getAllEvents as $key => $value){
+                    if(+$findSchedule->time_from == $value['time_from']){
+                        $result[] = $value;
+                    }
+//                    return [];
+                }
+            }
+        }
+        if($result){
+            return $result;
+        }else{
+            return false;
+        }
     }
    
 }

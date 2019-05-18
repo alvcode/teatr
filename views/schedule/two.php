@@ -396,8 +396,6 @@ $this->params['breadcrumbs'][] = $this->title;
                         showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
                     }
                     stopPreloader();
-                    selectedActor = [];
-                    $('.actor-list-item').removeClass('selected');
                 },
                 error: function () {
                     showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
@@ -405,6 +403,11 @@ $this->params['breadcrumbs'][] = $this->title;
                 }
             });
         });
+        
+        $('#actorsListModal').on('hide.bs.modal', function (e) {
+            selectedActor = [];
+            $('.actor-list-item').removeClass('selected');
+        })
         
         // Удаление актера из состава
         var deletedActorInCast = false;
@@ -503,6 +506,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 url: '/schedule/two',
                 data: data,
                 success: function (data) {
+                    console.log(JSON.parse(data));
                     if (data == 1) {
                         self.innerHTML = '+';
                     } else if (data == 2) {

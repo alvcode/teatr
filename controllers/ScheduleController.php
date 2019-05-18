@@ -186,13 +186,40 @@ class ScheduleController extends AccessController
             }
             
             if(Yii::$app->request->post('trigger') == 'delete-actor-in-cast'){
-                $cast = \Yii::$app->db->createCommand()->delete('casts', [
-                    'year' => Yii::$app->request->post('year'),
-                    'month' => Yii::$app->request->post('month'),
-                    'user_id' => Yii::$app->request->post('user'),
-                    'event_id' => Yii::$app->request->post('event'),
-                ])->execute();
-                if($cast) return 1;
+                $db = Yii::$app->db;
+                $transaction = $db->beginTransaction();
+                try{
+                    $findCast = Casts::find()->where([
+                        'year' => Yii::$app->request->post('year'),
+                        'month' => Yii::$app->request->post('month'),
+                        'user_id' => Yii::$app->request->post('user'),
+                        'event_id' => Yii::$app->request->post('event'),
+                    ])->one();
+                    $findUnderstudy = CastUnderstudy::find()->where([
+                        'cast_id' => $findCast->id
+                    ])->all();
+                    if($findUnderstudy){
+                        foreach ($findUnderstudy as $key => $value){
+                            \Yii::$app->db->createCommand()->delete('user_in_schedule', [
+                                'user_id' => $value->user_id,
+                                'cast_id' => $value->cast_id
+                            ])->execute();
+                            $value->delete();
+                        }
+                    }
+                    \Yii::$app->db->createCommand()->delete('user_in_schedule', [
+                        'user_id' => Yii::$app->request->post('user'),
+                        'cast_id' => $findCast->id
+                    ])->execute();
+                    if($findCast->delete()){
+                        $transaction->commit();
+                        return 1;   
+                    }
+                }catch (\Exception $e) {
+                    $transaction->rollBack();
+                    //throw $e;
+                    return 0;
+                }
             }
             
             if(Yii::$app->request->post('trigger') == 'add-in-understudy'){
@@ -227,6 +254,10 @@ class ScheduleController extends AccessController
                     'cast_id' => Yii::$app->request->post('cast'),
                     'user_id' => Yii::$app->request->post('user'),
                 ])->execute();
+                \Yii::$app->db->createCommand()->delete('user_in_schedule', [
+                    'user_id' => Yii::$app->request->post('user'),
+                    'cast_id' => Yii::$app->request->post('cast')
+                ])->execute();
                 if($deleteUnderstudy) return 1;
             }
             /**
@@ -245,13 +276,18 @@ class ScheduleController extends AccessController
                         'user_id' => Yii::$app->request->post('user'),
                         'cast_id' => Yii::$app->request->post('cast'),
                     ])->execute();
-                    if($deleteInSchedule) return 2;
+                    if($deleteInSchedule) return json_encode(['result' => 'deleted']);
                 }else{
-                    $userInSchedule = new UserInSchedule();
-                    $userInSchedule->schedule_event_id = Yii::$app->request->post('schedule');
-                    $userInSchedule->user_id = Yii::$app->request->post('user');
-                    $userInSchedule->cast_id = Yii::$app->request->post('cast');
-                    if($userInSchedule->save()) return 1;
+                    $checkIntersect = ScheduleComponent::checkIntersect(Yii::$app->request->post('schedule'), Yii::$app->request->post('user'));
+                    if(!$checkIntersect){
+                        $userInSchedule = new UserInSchedule();
+                        $userInSchedule->schedule_event_id = Yii::$app->request->post('schedule');
+                        $userInSchedule->user_id = Yii::$app->request->post('user');
+                        $userInSchedule->cast_id = Yii::$app->request->post('cast');
+                        if($userInSchedule->save()) return json_encode(['result' => 'ok']);
+                    }else{
+                        return json_encode(['result' => 'error', 'data' => $checkIntersect]);
+                    }
                 }
             }
             
