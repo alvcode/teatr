@@ -36,6 +36,8 @@ $this->params['breadcrumbs'][] = $this->title;
             <tbody id="two--tbody" class="cursor-pointer"></tbody>
         </table>
     </div>
+    <br>
+    <button id="check-fill" class="btn btn-sm btn-info">Выполнить проверку на заполненность</button>
 
 </div>
 <br>
@@ -55,7 +57,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?php foreach ($actors as $key => $value): ?>
                         <div style="font-weight: 700;" class="text-danger"><?= $key ?></div>
                         <?php foreach($value as $keyV => $valueV): ?>
-                            <div class="actor-list-item" data-id="<?= $valueV['id'] ?>"><?= $valueV['name'] ?> <?= $valueV['surname'] ?></div>
+                            <div class="actor-list-item noselect" data-id="<?= $valueV['id'] ?>"><?= $valueV['name'] ?> <?= $valueV['surname'] ?></div>
                         <?php endforeach; ?>
                     <?php endforeach; ?>
                 </div>
@@ -67,6 +69,28 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
     </div>
 </div>
+
+<!-- Modal check fill -->
+<div class="modal fade" id="checkFillModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Проверка расписания на заполненность</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div><div id="check-fill-update" class="btn btn-sm btn-info"><i class="fas fa-sync"></i> Обновить</div></div>
+                <div id="check-fill-result"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal actor delete -->
 <div class="modal fade" id="actorDeleteModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
@@ -506,12 +530,25 @@ $this->params['breadcrumbs'][] = $this->title;
                 url: '/schedule/two',
                 data: data,
                 success: function (data) {
-                    console.log(JSON.parse(data));
-                    if (data == 1) {
+                    var result = JSON.parse(data);
+                    console.log(result);
+                    if(result.result == 'ok'){
                         self.innerHTML = '+';
-                    } else if (data == 2) {
+                    }else if(result.result == 'deleted'){
                         self.innerHTML = '';
-                    } else if (data == 0) {
+                    }else if(result.result == 'error'){
+                        var textNotification = '';
+                        for(var key in result.data){
+                            if(result.data[key].time_to){
+                                textNotification += "Конфликт. Данный сотрудник уже стоит на \n\
+                                    "+ result.data[key].name +" с "+ minuteToTime(result.data[key].time_from) +" до "+ minuteToTime(result.data[key].time_to);
+                            }else{
+                                textNotification += "Конфликт. Данный сотрудник уже стоит на \n\
+                                    "+ result.data[key].name +" в "+ minuteToTime(result.data[key].time_from);
+                            }
+                        }
+                        showNotifications(textNotification, 7000, NOTIF_RED);
+                    }else{
                         showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
                     }
                     stopPreloader();
@@ -523,8 +560,46 @@ $this->params['breadcrumbs'][] = $this->title;
             });
         });
 
-
-
+        $('#check-fill').click(function(){
+            $('#checkFillModal').modal('show');
+        });
+        $('#check-fill-update').click(function(){
+            goPreloader();
+            var data = {
+                trigger: 'check-fill',
+                month: nowDate.getMonth() + 1,
+                year: nowDate.getFullYear(),
+            };
+            data[csrfParam] = csrfToken;
+            $.ajax({
+                type: "POST",
+                url: '/schedule/two',
+                data: data,
+                success: function (data) {
+                    $('#check-fill-result').empty();
+                    var result = JSON.parse(data);
+                    console.log(result);
+                    if(result.length){
+                        for(var key in result){
+                            var dateObj = new Date(result[key].date);
+                            var createContainer = document.createElement('div');
+                            createContainer.innerHTML = normalizeDate(dateObj.getDate() +"." +dateObj.getMonth() +"." +dateObj.getFullYear())
+                                + " на спектакле <b>" + result[key].event_name +"</b> в " + minuteToTime(result[key].time_from)
+                                + " не проставлена роль " +result[key].name +" " +result[key].surname;
+                            
+                            document.getElementById('check-fill-result').append(createContainer);
+                        }
+                    }else{
+                        showNotifications("Расписание полностью заполнено", 3000, NOTIF_GREEN);
+                    }
+                    stopPreloader();
+                },
+                error: function () {
+                    showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                    stopPreloader();
+                }
+            });
+        });
 
 
         function insertActor(actorName, actorId, castId, understudyMode) {

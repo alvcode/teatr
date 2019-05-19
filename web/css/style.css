@@ -261,12 +261,14 @@ a:hover {
 .actor-modal-container > div {
   margin-top: 5px;
   cursor: pointer;
+  color: #333;
 }
 .actor-modal-container > div:hover {
   opacity: 0.75;
 }
 .actor-modal-container .selected {
   font-weight: 700;
+  color: #F97979;
 }
 .understudy > th:before {
   content: '- ';
@@ -274,5 +276,11 @@ a:hover {
 .two--remove-cast:hover,
 .two--add-understudy:hover {
   opacity: 0.7;
+}
+#check-fill-result {
+  margin-top: 15px;
+}
+#check-fill-result > div {
+  margin-top: 8px;
 }
 /*# sourceMappingURL=style.css.map */

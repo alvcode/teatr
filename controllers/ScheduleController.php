@@ -50,7 +50,9 @@ class ScheduleController extends AccessController
             ],
         ];
     }
-
+    /**
+     * Action сводного расписания
+     */
     public function actionOne(){
         
         if(Yii::$app->request->isAjax){
@@ -121,6 +123,9 @@ class ScheduleController extends AccessController
         ]);
     }
     
+    /**
+     * Action расписания актеров
+     */
     public function actionTwo(){
         
         if(Yii::$app->request->isAjax){
@@ -261,8 +266,9 @@ class ScheduleController extends AccessController
                 if($deleteUnderstudy) return 1;
             }
             /**
-             * 1 - Добавлен на мероприятие
-             * 2 - Удален с мероприятия
+             * ok - Добавлен на мероприятие
+             * deleted - Удален с мероприятия
+             * error - есть пересечения
              */
             if(Yii::$app->request->post('trigger') == 'add-user-schedule'){
                 $findInSchedule = UserInSchedule::find()->where([
@@ -291,6 +297,10 @@ class ScheduleController extends AccessController
                 }
             }
             
+            if(Yii::$app->request->post('trigger') == 'check-fill'){
+                return json_encode(ScheduleComponent::checkFullSchedule(Yii::$app->request->post('month'), Yii::$app->request->post('year')));
+            }
+            
             
             return 0;
         }
@@ -307,6 +317,13 @@ class ScheduleController extends AccessController
         return $this->render('two', [
             'actors' => $actors,
         ]);
+    }
+    
+    /**
+     * Action недельного расписания
+     */
+    public function actionThree(){
+        return $this->render('three');
     }
     
 

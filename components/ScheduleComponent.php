@@ -6,6 +6,8 @@ use Yii;
 use yii\base\Model;
 use app\models\CastUnderstudy;
 use app\models\ScheduleEvents;
+use app\models\Casts;
+use app\models\UserInSchedule;
 
 /**
  *
@@ -101,7 +103,7 @@ class ScheduleComponent extends Model{
                     if($value['time_to']){
                         if((($value['time_from'] < $findSchedule->time_to && $value['time_from'] >= $findSchedule->time_from))
                                 || ($value['time_to'] <= $findSchedule->time_to && $value['time_to'] > $findSchedule->time_from) 
-                                || ($value['time_from'] <= $findSchedule->time_from && $value-['time_to'] >= $findSchedule->time_to)){
+                                || ($value['time_from'] <= $findSchedule->time_from && $value['time_to'] >= $findSchedule->time_to)){
                                     $result[] = $value;
                                 }
                     }else{
@@ -115,7 +117,6 @@ class ScheduleComponent extends Model{
                     if(+$findSchedule->time_from == $value['time_from']){
                         $result[] = $value;
                     }
-//                    return [];
                 }
             }
         }
@@ -124,6 +125,89 @@ class ScheduleComponent extends Model{
         }else{
             return false;
         }
+    }
+    
+    public static function checkFullSchedule($month, $year){
+        $result = [];
+        $schedule = ScheduleEvents::find()->select('*')
+                ->where(['=', 'year(date)', $year])
+                ->andWhere(['=', 'month(date)', $month])
+                ->asArray()->all();
+        
+        $casts = Casts::find()->where(['year' => $year, 'month' => $month])->with('understudy')->asArray()->all();
+        $data = [];
+        foreach ($schedule as $key => $value){
+            $data[$key] = $value;
+            $data[$key]['casts'] = [];
+            foreach ($casts as $keyC => $valueC){
+                if($value['event_id'] == $valueC['event_id']){
+                    $data[$key]['casts'][] = $valueC;
+                }
+            }
+        }
+        $userInSchedule = UserInSchedule::find()->where(['schedule_event_id' => \yii\helpers\ArrayHelper::getColumn($schedule, 'id')])
+                ->asArray()->all();
+        foreach ($userInSchedule as $key => $value){
+            foreach ($data as $kD => $vD){
+                if($vD['casts']){
+                    if($vD['id'] == $value['schedule_event_id']){
+                        foreach ($vD['casts'] as $kC => $vC){
+                            if($value['user_id'] == $vC['user_id'] && $value['cast_id'] == $vC['id']){
+                                $data[$kD]['casts'][$kC]['status'] = '1';
+                            }
+                            if($vC['understudy']){
+                                foreach ($vC['understudy'] as $kU => $vU){
+                                    if($value['user_id'] == $vU['user_id'] && $value['cast_id'] == $vU['cast_id']){
+                                        $data[$kD]['casts'][$kC]['understudy'][$kU]['status'] = '1';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        foreach ($data as $key => $value){
+            if($value['casts']){
+                foreach ($value['casts'] as $kC => $vC){
+                    $z = 0;
+                    if(isset($vC['status'])) $z++;
+                    if($vC['understudy']){
+                        foreach ($vC['understudy'] as $kU => $vU){
+                            if(isset($vU['status'])) $z++;
+                        }
+                    }
+                    if(!$z){
+                        $countR = count($result);
+                        $result[$countR]['event_id'] = $value['event_id'];
+                        $result[$countR]['date'] = $value['date'];
+                        $result[$countR]['time_from'] = $value['time_from'];
+                        $result[$countR]['user_id'] = $vC['user_id'];
+                    }
+                }
+            }
+        }
+        $uniqueUsers = array_unique(\yii\helpers\ArrayHelper::getColumn($result, 'user_id'));
+        $uniqueEvents = array_unique(\yii\helpers\ArrayHelper::getColumn($result, 'event_id'));
+        
+        $getUsers = \app\models\User::find()->select('id, name, surname')->where(['id' => $uniqueUsers])->asArray()->all();
+        $getEvents = \app\models\Events::find()->select('id, name')->where(['id' => $uniqueEvents])->asArray()->all();
+        
+        foreach ($result as $key => $value){
+            foreach ($getUsers as $kU => $vU){
+                if($value['user_id'] == $vU['id']){
+                    $result[$key]['name'] = $vU['name'];
+                    $result[$key]['surname'] = $vU['surname'];
+                }
+            }
+            foreach ($getEvents as $kE => $vE){
+                if($value['event_id'] == $vE['id']){
+                    $result[$key]['event_name'] = $vE['name'];
+                }
+            }
+        }
+        
+        return $result;
     }
    
 }

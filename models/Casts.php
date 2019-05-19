@@ -33,6 +33,10 @@ class Casts extends \yii\db\ActiveRecord
             [['event_id', 'user_id', 'month', 'year'], 'integer'],
         ];
     }
+    
+    public function getUnderstudy(){
+        return $this->hasMany(CastUnderstudy::className(), ['cast_id' => 'id']);
+    }
 
     /**
      * {@inheritdoc}
