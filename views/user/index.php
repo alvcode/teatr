@@ -17,18 +17,17 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="main--page-title">
                 <h1><?= Html::encode($this->title) ?></h1>
             </div>
-            
+
             <?= $this->render('../templates/_flash') ?>
             <?php
-            
 //            echo "<pre>";
 //            print_r($users);
             ?>
-            
+
             <div>
                 <button type="button" class="btn btn-outline-success btn-sm" data-toggle="modal" data-target="#newUserModal"><i class="fas fa-plus"></i> Новый пользователь</button>
             </div>
-            
+
             <form class="my-2" id="search-form">
                 <div class="row">
                     <div class="col-lg-6">
@@ -43,7 +42,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     </div>
                 </div>
             </form>
-            
+
             <div id="user--search-result" class="table-responsive-sm">
                 <h4>Результат поиска:</h4>
                 <table class="table table-sm table-striped">
@@ -65,10 +64,23 @@ $this->params['breadcrumbs'][] = $this->title;
                     </tbody>
                 </table>
             </div>
-            
+
             <div class="mrg-top45 table-responsive-sm">
-                <h4>Список сотрудников:</h4>
-                <table class="table table-sm table-striped">
+                <div class="row justify-content-between">
+                    <div class="col-4">
+                        <h4>Список сотрудников:</h4>
+                    </div>
+                    <div class="col-4 text-right form-inline">
+                        <a href="/user/index?act=sort&val=asc" class="btn btn-sm <?= (isset($sort) && $sort['act'] = 'sort' && $sort['val'] = 'asc')?"btn-success":"" ?> ml-1">По порядку</a>
+                        <a href="#" class="btn btn-sm btn-outline-info ml-1">По фамилии</a>
+                        <select class="form-control-sm form-control ml-1">
+                            <?php foreach ($categories as $key => $value): ?>
+                                <option value="<?= $value['id'] ?>"><?= $value['name'] ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+                <table class="table table-sm table-striped mt-2">
                     <thead>
                         <tr>
                             <th scope="col">ID</th>
@@ -90,7 +102,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <td><?= $value['name'] ?></td>
                                 <td><?= $value['surname'] ?></td>
                                 <td><?= $value['email'] ?></td>
-                                <td><?= $value['number']?"+".$value['number']:"-" ?></td>
+                                <td><?= $value['number'] ? "+" . $value['number'] : "-" ?></td>
                                 <td>
                                     <span class="badge badge-success">
                                         <?php if ($value->role): ?>
@@ -102,7 +114,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <td><?= Formatt::dateMysqlToForm($value['date_register']) ? Formatt::dateMysqlToForm($value['date_register']) : "-" ?></td>
                                 <td><?= Formatt::dateMysqlToForm($value['last_login']) ? Formatt::dateMysqlToForm($value['last_login']) : "-" ?></td>
                                 <td>
-                                    <a href="/user/login-as?id=<?= $value['id']  ?>" class="btn btn-sm btn-info f-s10"><i class="fas fa-sign-out-alt"></i></a>
+                                    <a href="/user/login-as?id=<?= $value['id'] ?>" class="btn btn-sm btn-info f-s10"><i class="fas fa-sign-out-alt"></i></a>
                                     <a class="btn btn-sm btn-success f-s10" href="/user/user-single?id=<?= $value['id'] ?>"><i class="fas fa-edit"></i></a>
                                     <div class="btn btn-sm btn-danger f-s10 delete-user"><i class="fas fa-times"></i></div>
                                 </td>
@@ -134,13 +146,16 @@ $this->params['breadcrumbs'][] = $this->title;
                 ?>
 
                 <?= $form->field($userModel, 'name', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
-                        ->textInput(['class' => 'form-control form-control-sm']) ?>
+                        ->textInput(['class' => 'form-control form-control-sm'])
+                ?>
 
                 <?= $form->field($userModel, 'surname', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
-                        ->textInput(['class' => 'form-control form-control-sm']) ?>
+                        ->textInput(['class' => 'form-control form-control-sm'])
+                ?>
 
                 <?= $form->field($userModel, 'email', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
-                        ->textInput(['class' => 'form-control form-control-sm']) ?>
+                        ->textInput(['class' => 'form-control form-control-sm'])
+                ?>
 
                 <?=
                         $form->field($userModel, 'number', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
@@ -148,7 +163,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 ?>
 
                 <?= $form->field($userModel, 'password', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
-                        ->textInput(['class' => 'form-control form-control-sm', 'id' => 'new-password']) ?>
+                        ->textInput(['class' => 'form-control form-control-sm', 'id' => 'new-password'])
+                ?>
 
                 <?=
                 $form->field($userModel, 'user_role')->dropDownList(\yii\helpers\ArrayHelper::map($roleList, 'name', 'description'), [
@@ -157,7 +173,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     'id' => 'new-role',
                 ])->label("Роль")
                 ?>
-                
+
                 <?=
                 $form->field($profModel, 'prof_id', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])->dropDownList(\yii\helpers\ArrayHelper::map($categories, 'id', 'name'), [
                     'prompt' => 'Должность',
@@ -165,15 +181,15 @@ $this->params['breadcrumbs'][] = $this->title;
                     'id' => 'new-prof',
                 ])->label("Должность")
                 ?>
-                
+
                 <?=
-                $form->field($userModel, 'timesheet', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
+                        $form->field($userModel, 'timesheet', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
                         ->dropDownList([
                             '0' => 'Не задано',
                             '1' => 'Учитывать часы',
                             '2' => 'Учитывать выходы',
                             '3' => 'Дети (часы)'
-                        ], ['class' => 'form-control form-control-sm', 'id' => 'new-timesheet'])->label("Метод расчета табеля")
+                                ], ['class' => 'form-control form-control-sm', 'id' => 'new-timesheet'])->label("Метод расчета табеля")
                 ?>
 
 <?php ActiveForm::end(); ?>
@@ -210,7 +226,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
 <script>
     window.onload = function () {
-        
+
         var csrfParam = $('meta[name="csrf-param"]').attr("content");
         var csrfToken = $('meta[name="csrf-token"]').attr("content");
 
@@ -226,15 +242,15 @@ $this->params['breadcrumbs'][] = $this->title;
 
         $('#users--new-user-button').click(function (e) {
             e.preventDefault();
-            if(!$('#new-password').val()){
+            if (!$('#new-password').val()) {
                 showNotifications("Не заполнен пароль", 3000, NOTIF_RED);
                 return false;
             }
-            if(!$('#new-role').val()){
+            if (!$('#new-role').val()) {
                 showNotifications("Не выбрана роль пользователя", 3000, NOTIF_RED);
                 return false;
             }
-            if(!$('#new-prof').val()){
+            if (!$('#new-prof').val()) {
                 showNotifications("Не выбрана профессия", 3000, NOTIF_RED);
                 return false;
             }
@@ -268,15 +284,15 @@ $this->params['breadcrumbs'][] = $this->title;
         $('#newUserModal').on('hidden.bs.modal', function (e) {
             $('#new-user-form')[0].reset();
         });
-        
+
         // Удаление юзера
         var userForDelete = false;
-        $('body').on('click', '.delete-user', function(){
+        $('body').on('click', '.delete-user', function () {
             userForDelete = this.parentNode.parentNode.dataset.user;
             $('#deleteUserModal').modal('show');
         });
-        
-        $('#delete-user-submit').click(function(){
+
+        $('#delete-user-submit').click(function () {
             goPreloader();
             var data = {
                 trigger: 'delete-user',
@@ -290,8 +306,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 success: function (data) {
                     if (data == 1) {
                         var userRows = document.getElementsByClassName('user-row');
-                        for(var i = 0; i < userRows.length; i++){
-                            if(userRows[i].dataset.user == userForDelete){
+                        for (var i = 0; i < userRows.length; i++) {
+                            if (userRows[i].dataset.user == userForDelete) {
                                 userRows[i].remove();
                             }
                         }
@@ -308,7 +324,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 }
             });
         });
-        
+
         // Поиск юзера
         $('#search-submit').click(function (e) {
             e.preventDefault();
@@ -327,7 +343,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     var result = JSON.parse(data);
                     if (result) {
                         document.getElementById('search-result-tbody').innerHTML = '';
-                        for(var key in result){
+                        for (var key in result) {
                             console.log(result);
                             var createTR = document.createElement('tr');
                             createTR.className = 'user-row';
@@ -347,29 +363,29 @@ $this->params['breadcrumbs'][] = $this->title;
                             item2.innerHTML = result[key].name;
                             item3.innerHTML = result[key].surname;
                             item4.innerHTML = result[key].email;
-                            item5.innerHTML = '+' +result[key].number;
-                            item6.innerHTML = "<span class='badge badge-success'>"+ result[key].role.item_name +"</span>";
+                            item5.innerHTML = '+' + result[key].number;
+                            item6.innerHTML = "<span class='badge badge-success'>" + result[key].role.item_name + "</span>";
                             item7.innerHTML = result[key].date_register;
                             item8.innerHTML = result[key].last_login;
-                            
+
                             var createLoginAs = document.createElement('a');
-                            createLoginAs.setAttribute('href', '/user/login-as?id=' +result[key].id);
+                            createLoginAs.setAttribute('href', '/user/login-as?id=' + result[key].id);
                             createLoginAs.className = 'btn btn-sm btn-info f-s10';
                             createLoginAs.innerHTML = '<i class="fas fa-sign-out-alt"></i> ';
-                            
+
                             var createEdit = document.createElement('a');
                             createEdit.className = 'btn btn-sm btn-success f-s10';
-                            createEdit.setAttribute('href', '/user/user-single?id=' +result[key].id);
+                            createEdit.setAttribute('href', '/user/user-single?id=' + result[key].id);
                             createEdit.innerHTML = '<i class="fas fa-edit"></i> ';
-                            
+
                             var createDelete = document.createElement('div');
                             createDelete.className = 'btn btn-sm btn-danger f-s10 delete-user';
                             createDelete.innerHTML = '<i class="fas fa-times"></i> ';
-                            
+
                             item9.appendChild(createLoginAs);
                             item9.appendChild(createEdit);
                             item9.appendChild(createDelete);
-                            
+
                             createTR.appendChild(item1);
                             createTR.appendChild(item2);
                             createTR.appendChild(item3);
@@ -382,7 +398,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
                             document.getElementById('search-result-tbody').appendChild(createTR);
                         }
-                        
+
                         document.getElementById('user--search-result').style.display = 'block';
                     } else {
                         document.getElementById('search-result-tbody').innerHTML = '';

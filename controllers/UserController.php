@@ -101,7 +101,11 @@ class UserController extends AccessController
             }
             
         }
-        
+        $sort = [];
+        if(\Yii::$app->request->get('act') == 'sort' && \Yii::$app->request->get('val') == 'asc'){
+            $sort['act'] = 'sort';
+            $sort['val'] = 'asc';
+        }
         $getUsers = User::find()->where(['is_active' => 1]);
         $pages = new Pagination(['totalCount' => $getUsers->count(), 'pageSize' => 150]);
         $users = $getUsers->offset($pages->offset)
@@ -130,6 +134,7 @@ class UserController extends AccessController
             'categories' => $categories,
             'profModel' => $userProfModel,
             'authAssignment' => $authAssignment,
+            'sort' => $sort,
         ]);
     }
     

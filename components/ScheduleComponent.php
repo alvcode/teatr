@@ -8,6 +8,7 @@ use app\models\CastUnderstudy;
 use app\models\ScheduleEvents;
 use app\models\Casts;
 use app\models\UserInSchedule;
+use app\models\User;
 
 /**
  *
@@ -125,6 +126,93 @@ class ScheduleComponent extends Model{
         }else{
             return false;
         }
+    }
+    
+    /**
+     * Загружает состав и проставленные дни из user_in_schedule для него
+     * Внимание! Не загружает дубли
+     * 
+     * @param integer $month
+     * @param integer $year
+     * @param integer $event
+     * @return array
+     */
+    public static function loadCastInSchedule($month, $year, $event){
+        $data = [];
+        $data['cast'] = User::find()->select('user.id, user.name, user.surname, casts.event_id, casts.id cast_id')
+                ->leftJoin('casts', 'casts.user_id = user.id')
+                ->where([
+                    'casts.year' => $year, 
+                    'casts.month' => $month, 
+                    'casts.event_id' => $event,
+                ])
+                ->asArray()->all();
+        $data['schedule'] = UserInSchedule::find()->select('user_in_schedule.*')
+                ->leftJoin('schedule_events', 'schedule_events.id = user_in_schedule.schedule_event_id')
+                ->where(['=', 'year(schedule_events.date)', $year])
+                ->andWhere(['=', 'month(schedule_events.date)', $month])
+                ->andWhere(['schedule_events.event_id' => $event])
+                ->asArray()->all();
+        return $data;
+    }
+    
+    /**
+     * Принимает массив состава с дублями (loadCastInSchedule + joinUnderstudy) и проставляет на указанный месяц и год
+     * и вставляет в БД
+     * 
+     * @param array $data
+     * @param integer $month
+     * @param integer $year
+     * @param integer $event
+     * 
+     * @return boolean
+     */
+    public static function copyLastCast($data, $month, $year, $event){
+        if(!$data) return false;
+        $db = Yii::$app->db;
+        $transaction = $db->beginTransaction();
+        try{
+            foreach ($data as $key => $value){
+                $newCast = new Casts();
+                $newCast->event_id = $value['event_id'];
+                $newCast->user_id = $value['id'];
+                $newCast->month = $month;
+                $newCast->year = $year;
+                $newCast->save();
+                if(isset($value['understudy'])){
+                    foreach ($value['understudy'] as $keyU => $valueU){
+                        $db->createCommand()->insert('cast_understudy', [
+                            'cast_id' => $newCast->id,
+                            'user_id' => $valueU['id']
+                        ])->execute();
+                    }
+                }
+            }
+            $transaction->commit();
+        }catch (\Exception $e) {
+            $transaction->rollBack();
+            //throw $e;
+            return false;
+        }
+        return true;
+    }
+    
+    public static function searchLastCast($month, $year, $eventId, $monthCount){
+        $result = [];
+        for($i = 0; $i <= $monthCount; $i++){
+            $Date = explode(".", date("n.Y", mktime(0, 0, 0, $month - $i, 1, $year)));
+            $findCast = Casts::find()->where([
+                'year' => $Date[1],
+                'month' => $Date[0],
+                'event_id' => $eventId
+            ])->asArray()->all();
+            if($findCast){
+                $result['month'] = $Date[0];
+                $result['year'] = $Date[1];
+                break;
+            }
+        }
+        return $result;
     }
     
     public static function checkFullSchedule($month, $year){

@@ -18,6 +18,7 @@ use app\models\User;
 use app\models\Casts;
 use app\models\CastUnderstudy;
 use app\models\UserInSchedule;
+use yii\base\Exception;
 
 class ScheduleController extends AccessController
 {
@@ -129,6 +130,7 @@ class ScheduleController extends AccessController
     public function actionTwo(){
         
         if(Yii::$app->request->isAjax){
+            // Загрузка мероприятий
             if(Yii::$app->request->post('trigger') == 'load-schedule'){
                 $configEventType = Config::getConfig('schedule_two_event_type');
                 $schedule = ScheduleEvents::find()
@@ -169,25 +171,48 @@ class ScheduleController extends AccessController
                 }
             }
             
+            /**
+             * Загружаем состав на выбранное мероприятие
+             * ok - Есть данные для заполнения
+             * last - нет данных, но найден состав из предыдущих месяцев
+             * empty - нет данных
+             */
+            
             if(Yii::$app->request->post('trigger') == 'load-casts-in-schedule'){
-                $result = [];
-                $result['cast'] = User::find()->select('user.id, user.name, user.surname, casts.id cast_id')
-                        ->leftJoin('casts', 'casts.user_id = user.id')
-                        ->where([
-                            'casts.year' => Yii::$app->request->post('year'), 
-                            'casts.month' => Yii::$app->request->post('month'), 
-                            'casts.event_id' => Yii::$app->request->post('event'),
-                        ])
-                        ->asArray()->all();
-                $result['schedule'] = UserInSchedule::find()->select('user_in_schedule.*')
-                        ->leftJoin('schedule_events', 'schedule_events.id = user_in_schedule.schedule_event_id')
-                        ->where(['=', 'year(schedule_events.date)', Yii::$app->request->post('year')])
-                        ->andWhere(['=', 'month(schedule_events.date)', Yii::$app->request->post('month')])
-                        ->andWhere(['schedule_events.event_id' => Yii::$app->request->post('event')])
-                        ->asArray()->all();
-                        
-                $result['cast'] = ScheduleComponent::joinUnderstudy($result['cast']);
+//                return json_encode(ScheduleComponent::searchLastCast(Yii::$app->request->post('month'), Yii::$app->request->post('year'), Yii::$app->request->post('event'), 12));
+                $data = [];
+                $data = ScheduleComponent::loadCastInSchedule(Yii::$app->request->post('month'), Yii::$app->request->post('year'), Yii::$app->request->post('event'));
+                $data['cast'] = ScheduleComponent::joinUnderstudy($data['cast']);
+                
+                if(!$data['cast']){
+                    $searchCast = ScheduleComponent::searchLastCast(Yii::$app->request->post('month'), Yii::$app->request->post('year'), Yii::$app->request->post('event'), 12);
+                    if($searchCast){
+                        $result['result'] = 'last';
+                        $result['data'] = $searchCast;
+                    }else{
+                        $result['result'] = 'empty';
+                        $result['data'] = [];
+                    }
+                }else{
+                    $result['result'] = 'ok';
+                    $result['data'] = $data;
+                }
                 return json_encode($result);
+            }
+            
+            if(Yii::$app->request->post('trigger') == 'add-last-cast'){
+                $data = ScheduleComponent::loadCastInSchedule(Yii::$app->request->post('searchMonth'), Yii::$app->request->post('searchYear'), Yii::$app->request->post('event'));
+                $data['cast'] = ScheduleComponent::joinUnderstudy($data['cast']);
+                if(ScheduleComponent::copyLastCast($data['cast'], Yii::$app->request->post('month'), Yii::$app->request->post('year'), Yii::$app->request->post('event'))){
+                    $addedData = ScheduleComponent::loadCastInSchedule(Yii::$app->request->post('month'), Yii::$app->request->post('year'), Yii::$app->request->post('event'));
+                    $addedData['cast'] = ScheduleComponent::joinUnderstudy($addedData['cast']);
+                    return json_encode([
+                        'result' => 'ok',
+                        'data' => $addedData
+                        ]);
+                }else{
+                    return json_encode(['result' => 'error']);
+                }
             }
             
             if(Yii::$app->request->post('trigger') == 'delete-actor-in-cast'){
@@ -294,6 +319,35 @@ class ScheduleController extends AccessController
                     }else{
                         return json_encode(['result' => 'error', 'data' => $checkIntersect]);
                     }
+                }
+            }
+            
+            if(Yii::$app->request->post('trigger') == 'magic-add-schedule'){
+                $scheduleList = Yii::$app->request->post('scheduleList');
+                $db = Yii::$app->db;
+                $transaction = $db->beginTransaction();
+                try {
+                    foreach ($scheduleList as $key => $value){
+                        $checkIntersect = ScheduleComponent::checkIntersect($value, Yii::$app->request->post('user'));
+                        if(!$checkIntersect){
+                            $transaction->db->createCommand()->insert('user_in_schedule', [
+                                'schedule_event_id' => $value,
+                                'user_id' => Yii::$app->request->post('user'),
+                                'cast_id' => Yii::$app->request->post('cast')
+                            ])->execute();
+                        }else{
+                            throw new Exception('Конфликт расписания');
+                        }
+                    }
+                    $transaction->commit();
+                    $response['result'] = 'ok';
+                    return json_encode($response);
+                } catch (\Exception $e) {
+                    $transaction->rollBack();
+                    //throw $e;
+                    $response['result'] = 'error';
+                    $response['data'] = $checkIntersect;
+                    return json_encode($response);
                 }
             }
             

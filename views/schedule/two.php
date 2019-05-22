@@ -91,6 +91,48 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 </div>
 
+<!-- Modal magic notification -->
+<div class="modal fade" id="magicModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Применить автозаполнение расписания?</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Для выбранного сотрудника будет автоматически проставлено расписание на все незаполненные дни
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Закрыть</button>
+                <button id="magic-schedule-submit" type="button" class="btn btn-sm btn-success">Продолжить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal last cast -->
+<div class="modal fade" id="lastCastModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Для данного мероприятия найден состав. Скопировать?</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Весь состав будет скопирован и проставлен на выбранное мероприятие
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Закрыть</button>
+                <button id="last-cast-submit" type="button" class="btn btn-sm btn-success">Продолжить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal actor delete -->
 <div class="modal fade" id="actorDeleteModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
@@ -289,6 +331,7 @@ $this->params['breadcrumbs'][] = $this->title;
         ;
 
         // Выделение спектакля
+        var lastCastDate = false;
         $('#all-events-buttons').on('click', '.event-button', function (e) {
             $('#two--tbody').empty();
             $('.event-button').removeClass('btn-info').addClass('btn-outline-info');
@@ -319,23 +362,64 @@ $this->params['breadcrumbs'][] = $this->title;
                 success: function (data) {
                     castsData = JSON.parse(data);
                     console.log(castsData);
-                    if (castsData.cast) {
-                        for (var key in castsData.cast) {
-                            insertActor(castsData.cast[key].name + " " + castsData.cast[key].surname, castsData.cast[key].id, castsData.cast[key].cast_id, 0);
-                            if (castsData.cast[key].understudy) {
-                                for (var keyU in castsData.cast[key].understudy) {
-                                    insertActor(castsData.cast[key].understudy[keyU].name + " " + castsData.cast[key].understudy[keyU].surname, castsData.cast[key].understudy[keyU].id, castsData.cast[key].cast_id, 1);
+                    if(castsData.result == 'ok'){
+                        for (var key in castsData.data.cast) {
+                            insertActor(castsData.data.cast[key].name + " " + castsData.data.cast[key].surname, castsData.data.cast[key].id, castsData.data.cast[key].cast_id, 0);
+                            if (castsData.data.cast[key].understudy) {
+                                for (var keyU in castsData.data.cast[key].understudy) {
+                                    insertActor(castsData.data.cast[key].understudy[keyU].name + " " + castsData.data.cast[key].understudy[keyU].surname, castsData.data.cast[key].understudy[keyU].id, castsData.data.cast[key].cast_id, 1);
                                 }
                             }
                         }
+                        renderSchedule(castsData.data.schedule);
+                    }else if(castsData.result == 'last'){
+                        $('#lastCastModal').modal('show');
+                        lastCastDate = castsData.data;
+                    }else if(castsData.result == 'empty'){
+                        
                     }
-                    renderSchedule(castsData.schedule);
-//                    if(data == 1){
-//                        insertActor(selectedActorName);
-//                    }else if(data == 0){
-//                        showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
-//                    }
                     stopPreloader();
+                },
+                error: function () {
+                    showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                    stopPreloader();
+                }
+            });
+        });
+        
+        $('#last-cast-submit').click(function(){
+            goPreloader();
+            var data = {
+                trigger: 'add-last-cast',
+                event: selectedEvent,
+                month: nowDate.getMonth() + 1,
+                year: nowDate.getFullYear(),
+                searchMonth: lastCastDate.month,
+                searchYear: lastCastDate.year,
+            };
+            data[csrfParam] = csrfToken;
+            $.ajax({
+                type: "POST",
+                url: '/schedule/two',
+                data: data,
+                success: function (data) {
+                    castsData = JSON.parse(data);
+                    console.log(castsData);
+                    if(castsData.result == 'ok'){
+                        for (var key in castsData.data.cast) {
+                            insertActor(castsData.data.cast[key].name + " " + castsData.data.cast[key].surname, castsData.data.cast[key].id, castsData.data.cast[key].cast_id, 0);
+                            if (castsData.data.cast[key].understudy) {
+                                for (var keyU in castsData.data.cast[key].understudy) {
+                                    insertActor(castsData.data.cast[key].understudy[keyU].name + " " + castsData.data.cast[key].understudy[keyU].surname, castsData.data.cast[key].understudy[keyU].id, castsData.data.cast[key].cast_id, 1);
+                                }
+                            }
+                        }
+                        renderSchedule(castsData.data.schedule);
+                    }else if(castsData.result == 'error'){
+                        showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                    }
+                    stopPreloader();
+                    $('#lastCastModal').modal('hide');
                 },
                 error: function () {
                     showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
@@ -600,6 +684,102 @@ $this->params['breadcrumbs'][] = $this->title;
                 }
             });
         });
+        
+        // Автозаполнение роли на основе пустых клеток
+        var magicEmptySchedule = [];
+//        var magicUnderstudySelected = [];
+        var magicUnderstudyMode = false;
+        var magicCastId = false;
+        var magicUserId = false;
+        $('#two--tbody').on('click', '.two--magic-add-schedule', function(){
+            magicEmptySchedule = [];
+            magicUnderstudyMode = this.parentNode.parentNode.classList.contains('understudy');
+            magicCastId = this.parentNode.parentNode.dataset.cast;
+            magicUserId = this.parentNode.parentNode.dataset.id;
+            var rows = document.getElementById('two--tbody').getElementsByTagName('tr');
+            for (var i = 0; i < rows.length; i++) {
+                if(+rows[i].dataset.cast == +magicCastId){
+                    var cells = rows[i].getElementsByTagName('td');
+                    for (var z = 0; z < cells.length; z++) {
+                        if (activeCells.includes(z + 1)) {
+                            magicEmptySchedule[magicEmptySchedule.length] = cells[z].dataset.schedule;
+                        }
+                    }
+                    if(magicEmptySchedule.length) break;
+                }
+            }
+            for (var i = 0; i < rows.length; i++) {
+                if(+rows[i].dataset.cast == +magicCastId){
+                    var cells = rows[i].getElementsByTagName('td');
+                    for (var z = 0; z < cells.length; z++) {
+                        if(cells[z].innerHTML == '+'){
+                            var idx = magicEmptySchedule.indexOf(cells[z].dataset.schedule);
+                            magicEmptySchedule.splice(idx, 1);
+                        }
+                    }
+
+                }
+            }
+            console.log(magicEmptySchedule);
+            $('#magicModal').modal('show');
+//            alert('ok');
+        });
+        
+        $('#magic-schedule-submit').click(function(){
+            if(!magicEmptySchedule.length){
+                showNotifications("Кажется все дни уже проставлены", 3000, NOTIF_RED);
+                $('#magicModal').modal('hide');
+                return false;
+            }
+            goPreloader();
+            var data = {
+                trigger: 'magic-add-schedule',
+                scheduleList: magicEmptySchedule,
+                user: magicUserId,
+                cast: magicCastId,
+            };
+            data[csrfParam] = csrfToken;
+            $.ajax({
+                type: "POST",
+                url: '/schedule/two',
+                data: data,
+                success: function (data) {
+                    $('#check-fill-result').empty();
+                    var result = JSON.parse(data);
+                    if(result.result == 'ok'){
+                        var rows = document.getElementById('two--tbody').getElementsByTagName('tr');
+                        for (var i = 0; i < rows.length; i++) {
+                            if(+rows[i].dataset.cast == +magicCastId && +rows[i].dataset.id == +magicUserId){
+                                var cells = rows[i].getElementsByTagName('td');
+                                for (var z = 0; z < cells.length; z++) {
+                                    if (magicEmptySchedule.includes(cells[z].dataset.schedule)) {
+                                        cells[z].innerHTML = '+';
+                                    }
+                                }
+                            }
+                        }
+                    }else if(result.result = 'error'){
+                        var textNotification = '';
+                        for(var key in result.data){
+                            if(result.data[key].time_to){
+                                textNotification += "Конфликт. Данный сотрудник уже стоит на \n\
+                                    "+ result.data[key].name +" с "+ minuteToTime(result.data[key].time_from) +" до "+ minuteToTime(result.data[key].time_to);
+                            }else{
+                                textNotification += "Конфликт. Данный сотрудник уже стоит на \n\
+                                    "+ result.data[key].name +" в "+ minuteToTime(result.data[key].time_from);
+                            }
+                        }
+                        showNotifications(textNotification, 7000, NOTIF_RED);
+                    }
+                    $('#magicModal').modal('hide');
+                    stopPreloader();
+                },
+                error: function () {
+                    showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                    stopPreloader();
+                }
+            });
+        });
 
 
         function insertActor(actorName, actorId, castId, understudyMode) {
@@ -610,7 +790,8 @@ $this->params['breadcrumbs'][] = $this->title;
             createTr.dataset.cast = castId;
 //            if(!understudyModel) createTr.dataset.cast = castId;
             var createName = document.createElement('th');
-            createName.innerHTML = actorName + " <span class='badge badge-pill badge-danger two--remove-cast'><i class='fas fa-times'></i></span> " + (!understudyMode ? "<span class='badge badge-pill badge-info two--add-understudy'><i class='fas fa-share'></i></span>" : "");
+            createName.innerHTML = actorName + " <span class='badge badge-pill badge-danger two--remove-cast'><i class='fas fa-times'></i></span> " 
+                    + (!understudyMode ? "<span class='badge badge-pill badge-info two--add-understudy'><i class='fas fa-share'></i></span>" : "") + " <span class='badge badge-pill badge-warning two--magic-add-schedule'><i class='fas fa-magic'></i></span>";
             createTr.append(createName);
             var scheduleCells = document.getElementsByClassName('two--event-cell');
             for (var i = 0; i < scheduleCells.length; i++) {

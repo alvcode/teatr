@@ -274,7 +274,8 @@ a:hover {
   content: '- ';
 }
 .two--remove-cast:hover,
-.two--add-understudy:hover {
+.two--add-understudy:hover,
+.two--magic-add-schedule:hover {
   opacity: 0.7;
 }
 #check-fill-result {
