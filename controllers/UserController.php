@@ -106,6 +106,15 @@ class UserController extends AccessController
             $sort['act'] = 'sort';
             $sort['val'] = 'asc';
         }
+        if(\Yii::$app->request->get('act') == 'sort' && \Yii::$app->request->get('val') == 'surname'){
+            $sort['act'] = 'sort';
+            $sort['val'] = 'surname';
+        }
+        if(\Yii::$app->request->get('act') == 'sortProf'){
+            $sort['act'] = 'sortProf';
+            $sort['val'] = \Yii::$app->request->get('val');
+        }
+        
         $getUsers = User::find()->where(['is_active' => 1]);
         $pages = new Pagination(['totalCount' => $getUsers->count(), 'pageSize' => 150]);
         $users = $getUsers->offset($pages->offset)
@@ -126,6 +135,20 @@ class UserController extends AccessController
                 }
             }
         }
+        
+        if(isset($sort['act']) && $sort['act'] == 'sort' && $sort['val'] == 'surname'){
+            $users = \app\components\ScheduleComponent::sortFirstLetter($users, 'surname', false);
+        }
+        
+        // Костыль на сортировку по профессии
+        if(isset($sort['act']) && $sort['act'] == 'sortProf'){
+            foreach ($users as $key => $value){
+                if(+$value['userProfession']['prof']['id'] != +$sort['val']){
+                    unset($users[$key]);
+                }
+            }
+        }
+        
         
         return $this->render('index', [
             'users' => $users,

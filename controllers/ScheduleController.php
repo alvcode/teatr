@@ -366,7 +366,7 @@ class ScheduleController extends AccessController
                 ->andWhere(['user.is_active' => 1])
                 ->asArray()->all();
         
-        $actors = ScheduleComponent::sortFirstLetter($actors, 'surname');
+        $actors = ScheduleComponent::sortFirstLetter($actors, 'surname', true);
         
         return $this->render('two', [
             'actors' => $actors,

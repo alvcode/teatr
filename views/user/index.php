@@ -71,13 +71,22 @@ $this->params['breadcrumbs'][] = $this->title;
                         <h4>Список сотрудников:</h4>
                     </div>
                     <div class="col-4 text-right form-inline">
-                        <a href="/user/index?act=sort&val=asc" class="btn btn-sm <?= (isset($sort) && $sort['act'] = 'sort' && $sort['val'] = 'asc')?"btn-success":"" ?> ml-1">По порядку</a>
-                        <a href="#" class="btn btn-sm btn-outline-info ml-1">По фамилии</a>
-                        <select class="form-control-sm form-control ml-1">
-                            <?php foreach ($categories as $key => $value): ?>
-                                <option value="<?= $value['id'] ?>"><?= $value['name'] ?></option>
-                            <?php endforeach; ?>
-                        </select>
+                        <div class="input-group mb-3">
+                            <a href="/user/index?act=sort&val=asc" class="btn btn-sm <?= (isset($sort['act']) && $sort['act'] == 'sort' && $sort['val'] == 'asc') ? "btn-success" : "btn-outline-info" ?> ml-1">По порядку</a>
+                            <a href="/user/index?act=sort&val=surname" class="btn btn-sm <?= (isset($sort['act']) && $sort['act'] == 'sort' && $sort['val'] == 'surname') ? "btn-success" : "btn-outline-info" ?> ml-1">По фамилии</a>
+                            <form method="get" class="form-inline">
+                                <input type="hidden" name="act" value="sortProf">
+                                <select name="val" class="form-control-sm form-control ml-1">
+                                    <?php foreach ($categories as $key => $value): ?>
+                                        <option value="<?= $value['id'] ?>" <?= (isset($sort['act']) && $sort['act'] == 'sortProf' && $sort['val'] == $value['id']) ? "selected" : "" ?>><?= $value['name'] ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <div class="input-group-append">
+                                    <button class="btn btn-sm <?= (isset($sort['act']) && $sort['act'] == 'sortProf') ? "btn-success" : "btn-outline-info" ?> clean-input" type="submit" id="button-addon2">ok</button>
+                                </div>
+                            </form>
+                        </div>
+
                     </div>
                 </div>
                 <table class="table table-sm table-striped mt-2">
@@ -145,15 +154,18 @@ $this->params['breadcrumbs'][] = $this->title;
                 ]);
                 ?>
 
-                <?= $form->field($userModel, 'name', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
+                <?=
+                        $form->field($userModel, 'name', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
                         ->textInput(['class' => 'form-control form-control-sm'])
                 ?>
 
-                <?= $form->field($userModel, 'surname', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
+                <?=
+                        $form->field($userModel, 'surname', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
                         ->textInput(['class' => 'form-control form-control-sm'])
                 ?>
 
-                <?= $form->field($userModel, 'email', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
+                <?=
+                        $form->field($userModel, 'email', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
                         ->textInput(['class' => 'form-control form-control-sm'])
                 ?>
 
@@ -162,7 +174,8 @@ $this->params['breadcrumbs'][] = $this->title;
                         ->textInput(['class' => 'p--number form-control form-control-sm', 'inputmode' => 'numeric', 'pattern' => '\+7?[\(][0-9]{3}[\)]{0,1}\s?\d{3}[-]{0,1}\d{4}'])
                 ?>
 
-                <?= $form->field($userModel, 'password', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
+                <?=
+                        $form->field($userModel, 'password', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
                         ->textInput(['class' => 'form-control form-control-sm', 'id' => 'new-password'])
                 ?>
 
