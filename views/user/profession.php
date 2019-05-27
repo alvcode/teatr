@@ -31,6 +31,12 @@ $this->params['breadcrumbs'][] = $this->title;
                                     ->textInput(['class' => 'form-control form-control-sm'])
                                     ->label("Служба <span class='text-danger'>*</span>")
                             ?>
+                            
+                            <?=
+                                    $form->field($addCategory, 'alias', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
+                                    ->textInput(['class' => 'form-control form-control-sm'])
+                                    ->label("Сокращенное название <span class='text-danger'>*</span>")
+                            ?>
 
                             <div class="form-group">
                                 <div class="col-lg-offset-1 col-lg-11">

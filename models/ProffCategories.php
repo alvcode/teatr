@@ -9,6 +9,7 @@ use Yii;
  *
  * @property int $id
  * @property string $name
+ * @property string $alias
  *
  * @property Profession[] $professions
  */
@@ -28,8 +29,9 @@ class ProffCategories extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['name'], 'required'],
+            [['name', 'alias'], 'required'],
             [['name'], 'string', 'max' => 255],
+            [['alias'], 'string', 'max' => 25],
         ];
     }
 
@@ -41,6 +43,7 @@ class ProffCategories extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'name' => 'Name',
+            'alias' => 'Сокращенное название'
         ];
     }
 

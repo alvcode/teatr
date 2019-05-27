@@ -377,7 +377,35 @@ class ScheduleController extends AccessController
      * Action недельного расписания
      */
     public function actionThree(){
-        return $this->render('three');
+        
+        if(Yii::$app->request->isAjax){
+            if(Yii::$app->request->post('trigger') == 'load-schedule'){
+                $period = Yii::$app->request->post('period');
+                $startDate = date('Y-m-d', strtotime($period[0]['year'] ."-" .$period[0]['month'] ."-" .$period[0]['day']));
+                $endDate = date('Y-m-d', strtotime($period[1]['year'] ."-" .$period[1]['month'] ."-" .$period[1]['day']));
+                $schedule = ScheduleEvents::find()
+                        ->where(['between', 'date', $startDate, $endDate])
+                        ->with('eventType')->with('event')->asArray()->all();
+                return json_encode($schedule);
+            }
+            
+            if(Yii::$app->request->post('trigger') == 'load-user-in-schedule'){
+                $data = UserInSchedule::find()->select('user_in_schedule.*')
+                    ->where(['schedule_event_id' => Yii::$app->request->post('event')])
+                    ->with('user')->asArray()->all();
+                
+                return json_encode($data);
+            }
+            
+            return 0;
+        }
+        
+        
+        $rooms = Room::find()->where(['is_active' => 1])->asArray()->all();
+        
+        return $this->render('three', [
+            'rooms' => $rooms
+        ]);
     }
     
 

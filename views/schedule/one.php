@@ -273,8 +273,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 document.getElementById('one--schedule-items').append(returnScheduleRow(date.getFullYear(), date.getMonth(), date.getDate(), date.getDay(), rooms));
             }
             return true;
-        }
-        ;
+        };
 
         function returnScheduleRow(year, month, day, week, rooms) {
             var createContainer = document.createElement('div');

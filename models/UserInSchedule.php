@@ -32,6 +32,10 @@ class UserInSchedule extends \yii\db\ActiveRecord
             [['schedule_event_id', 'user_id', 'cast_id'], 'integer'],
         ];
     }
+    
+    public function getUser(){
+        return $this->hasOne(User::className(), ['id' => 'user_id'])->select('user.id, user.name, user.surname');
+    }
 
     /**
      * {@inheritdoc}

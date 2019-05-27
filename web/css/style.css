@@ -133,7 +133,7 @@ a:hover {
 }
 .schedule-controls {
   width: 260px;
-  font-size: 22px;
+  font-size: 20px;
   display: flex;
   -webkit-flex-direction: row;
   -ms-flex-direction: row;
@@ -283,5 +283,92 @@ a:hover {
 }
 #check-fill-result > div {
   margin-top: 8px;
+}
+#three--schedule-content {
+  overflow: auto;
+}
+.three--fixed-top {
+  position: fixed;
+  top: 25px;
+  background-color: black;
+  color: white;
+}
+.three--title-row {
+  display: flex;
+  -webkit-flex-direction: row;
+  -ms-flex-direction: row;
+  flex-direction: row;
+  -webkit-flex-wrap: nowrap;
+  -ms-flex-wrap: nowrap;
+  flex-wrap: nowrap;
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  box-sizing: border-box;
+}
+.three--title-row .date {
+  min-width: 150px;
+  border: 1px solid #000;
+}
+.three--title-row .room {
+  width: 750px;
+  min-width: 300px;
+  border-top: 1px solid #000;
+  border-right: 1px solid #000;
+  border-bottom: 1px solid #000;
+}
+.three--date-row {
+  display: flex;
+  -webkit-flex-direction: row;
+  -ms-flex-direction: row;
+  flex-direction: row;
+  -webkit-flex-wrap: nowrap;
+  -ms-flex-wrap: nowrap;
+  flex-wrap: nowrap;
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
+  /*font-size: 18px;*/
+  /*font-weight: 700;*/
+  text-align: center;
+  box-sizing: border-box;
+}
+.three--date-row .date {
+  min-width: 150px;
+  border-left: 1px solid #000;
+  border-bottom: 1px solid #000;
+  border-right: 1px solid #000;
+  font-size: 17px;
+  padding: 4px;
+}
+.three--date-row .room {
+  width: 750px;
+  min-width: 300px;
+  padding: 8px;
+  /*        border-top: 1px solid #000;*/
+  border-right: 1px solid #000;
+  border-bottom: 1px solid #000;
+  font-size: 14px;
+}
+.three--right-more {
+  width: 460px;
+  position: fixed;
+  padding-top: 50px;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  overflow: auto;
+  margin: auto 0;
+  background-color: #fff;
+  -webkit-box-shadow: -2px -1px 28px 0px rgba(0, 0, 0, 0.75);
+  -moz-box-shadow: -2px -1px 28px 0px rgba(0, 0, 0, 0.75);
+  box-shadow: -2px -1px 28px 0px rgba(0, 0, 0, 0.75);
+  display: none;
+}
+#three--right-more-close {
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
 }
 /*# sourceMappingURL=style.css.map */
