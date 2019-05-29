@@ -56,6 +56,24 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
             
             <div class="card border-info mt-2">
+                <div class="card-header"><h5 class="card-title">Какие типы мероприятий относятся к спектаклю?</h5></div>
+                <div class="card-body text-info">
+                    <div id="spectacle-event-container">
+                        <?php if ($spectacleEvent && $eventType): ?>
+                            <?php foreach ($eventType as $key => $value): ?>
+                                <?php if (in_array($value['id'], $spectacleEvent)): ?>
+                                    <button data-id="<?= $value['id'] ?>" type="button" class="btn btn-sm btn-info mt-1 spectacle-event-type-item">
+                                        <?= $value['name'] ?> <span class="badge badge-danger delete-spectacle-event"><i class="fas fa-times"></i></span>
+                                    </button>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+                    <div id="add-spectacle-event" class="btn btn-sm btn-outline-success mrg-top15"><i class="fas fa-plus"></i> Добавить</div>
+                </div>
+            </div>
+            
+            <div class="card border-info mt-2">
                 <div class="card-header"><h5 class="card-title">Какие службы относятся к актерам?</h5></div>
                 <div class="card-body text-info">
                     <div id="actors-prof-cat-container">
@@ -168,6 +186,53 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="modal-footer">
                 <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Отмена</button>
                 <button id="delete-schedule-two-event-type-submit" type="button" class="btn btn-sm btn-success">Продолжить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal spectacle event -->
+<div class="modal fade" id="spectacleEventTypeModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Добавить тип мероприятия</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <select class="form-control" id="spectacle-event-select">
+                    <?php foreach ($eventType as $key => $value): ?>
+                        <option value="<?= $value['id'] ?>"><?= $value['name'] ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Отмена</button>
+                <button id="add-spectacle-event-submit" type="button" class="btn btn-sm btn-success">Добавить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal delete spectacle event -->
+<div class="modal fade" id="deleteSpectacleEventModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Удалить службу?</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Служба будет удалена из конфигурации. Это может сильно повлиять на работу приложения,
+                если вы не поставите замену удаляемому мероприятию
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Отмена</button>
+                <button id="delete-spectacle-event-submit" type="button" class="btn btn-sm btn-success">Продолжить</button>
             </div>
         </div>
     </div>
@@ -389,6 +454,88 @@ $this->params['breadcrumbs'][] = $this->title;
                 }
             });
         });
+        
+        $('#add-spectacle-event').click(function(){
+            $('#spectacleEventTypeModal').modal('show');
+        });
+        
+        $('#add-spectacle-event-submit').click(function(){
+            var eventType = $('#spectacle-event-select').val();
+            var eventTypeName = $('#spectacle-event-select').find(':selected').html();
+            var eventTypeArr = {};
+            var oldEventType = document.getElementsByClassName('spectacle-event-type-item');
+            var z = 0;
+            for (var i = 0; i < oldEventType.length; i++) {
+                if (eventType == oldEventType[i].dataset.id) {
+                    showNotifications('Этот тип мероприятия уже добавлен в список', 3000, NOTIF_RED);
+                    return false;
+                }
+                eventTypeArr[z] = oldEventType[i].dataset.id;
+                z++;
+            }
+            eventTypeArr[z] = eventType;
+            goPreloader();
+            var data = {
+                trigger: 'add-simple-config',
+                configName: 'spectacle_event',
+                configValue: eventTypeArr,
+            };
+            data[csrfParam] = csrfToken;
+            $.ajax({
+                type: "POST",
+                url: '/setting/index',
+                data: data,
+                success: function (data) {
+                    console.log(data);
+                    if (data == 1) {
+                        addConfigButton(eventType, 'spectacle-event-type-item', eventTypeName, 'delete-spectacle-event', 'spectacle-event-container');
+                        $('#spectacleEventTypeModal').modal('hide');
+                    } else if (data == 0) {
+                        showNotifications(NOTIF_TEXT_ERROR, 3000, NOTIF_RED);
+                    }
+                    stopPreloader();
+                },
+                error: function () {
+                    showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                    stopPreloader();
+                }
+            });
+        });
+        
+        var spectacleEventDeleted = false;
+        $('body').on('click', '.delete-spectacle-event', function () {
+            $('#deleteSpectacleEventModal').modal('show');
+            spectacleEventDeleted = this.parentNode.dataset.id;
+        });
+        
+        $('#delete-spectacle-event-submit').click(function(){
+            goPreloader();
+            var data = {
+                trigger: 'delete-simple-config',
+                configName: 'spectacle_event',
+                configValue: spectacleEventDeleted,
+            };
+            data[csrfParam] = csrfToken;
+            $.ajax({
+                type: "POST",
+                url: '/setting/index',
+                data: data,
+                success: function (data) {
+                    if (data == 1) {
+                        deleteConfigButton('spectacle-event-type-item', spectacleEventDeleted);
+                        $('#deleteSpectacleEventModal').modal('hide');
+                    } else if (data == 0) {
+                        showNotifications(NOTIF_TEXT_ERROR, 3000, NOTIF_RED);
+                    }
+                    stopPreloader();
+                },
+                error: function () {
+                    showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                    stopPreloader();
+                }
+            });
+        });
+        
         
         $('#add-actors-cat-event').click(function(){
             $('#actorsCatModal').modal('show');

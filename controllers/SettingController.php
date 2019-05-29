@@ -74,6 +74,7 @@ class SettingController extends AccessController
         $rooms = Room::find()->where(['is_active' => 1])->asArray()->all();
         
         $scheduleTwoEventType = Config::getConfig('schedule_two_event_type');
+        $spectacleEvent = Config::getConfig('spectacle_event');
         $eventType = EventType::find()->where(['is_active' => 1])->asArray()->all();
         
         $actorsProfCat = Config::getConfig('actors_prof_cat');
@@ -86,6 +87,7 @@ class SettingController extends AccessController
             'eventType' => $eventType,
             'actorsCat' => $actorsCat,
             'actorsProfCat' => $actorsProfCat,
+            'spectacleEvent' => $spectacleEvent,
         ]);
     }
     

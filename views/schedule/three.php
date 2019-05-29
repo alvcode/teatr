@@ -86,33 +86,6 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 </div>
 
-<!-- Modal actors list -->
-<div class="modal fade" id="actorsListModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Список актеров</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="actor-modal-container">
-                    <?php foreach ($actors as $key => $value): ?>
-                        <div style="font-weight: 700;" class="text-danger"><?= $key ?></div>
-                        <?php foreach($value as $keyV => $valueV): ?>
-                            <div class="actor-list-item noselect" data-id="<?= $valueV['id'] ?>"><?= $valueV['name'] ?> <?= $valueV['surname'] ?></div>
-                        <?php endforeach; ?>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Отмена</button>
-                <button id="add-actor-list-submit" type="button" class="btn btn-sm btn-success">Применить</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- Modal edit event -->
 <!--<div class="modal fade" id="editEventModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -374,8 +347,20 @@ $this->params['breadcrumbs'][] = $this->title;
                             createContainer.append(createBudgie);
                             createContainer.append(createEventType);
                             createContainer.append(createEventName);
+                            
+                            var createProfCat = document.createElement('div');
+                            createProfCat.className = 'three--prof-cat-cell';
+                            if(params.profCat && params.profCat.length){
+                                for(var k = 0; k < params.profCat.length; k++){
+                                    var profCatSpan = document.createElement('span');
+                                    profCatSpan.innerHTML = params.profCat[k].profCat.alias;
+                                    createProfCat.append(profCatSpan);
+                                }
+                            }
+                            createContainer.append(createProfCat);
+                            
                             createContainer.append(returnHR());
-
+                            
                             var eventsCell = roomsCell[z].getElementsByClassName('event-cell');
                             if (!eventsCell.length) {
                                 roomsCell[z].append(createContainer);
@@ -445,6 +430,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             eventOtherName: (scheduleData[key].event.other_name !== null ? scheduleData[key].event.other_name : ''),
                             timeFrom: scheduleData[key].time_from,
                             timeTo: (scheduleData[key].time_to !== null ? scheduleData[key].time_to : ''),
+                            profCat : scheduleData[key].profCat
                         };
                         addEventInCalendar(cellData);
                     }

@@ -18,6 +18,7 @@ use app\models\User;
 use app\models\Casts;
 use app\models\CastUnderstudy;
 use app\models\UserInSchedule;
+use app\models\ProfCatInSchedule;
 use yii\base\Exception;
 
 class ScheduleController extends AccessController
@@ -68,6 +69,14 @@ class ScheduleController extends AccessController
                     $scheduleEvent->time_to = \app\components\Formatt::timeToMinute(Yii::$app->request->post('timeTo'));
                 }
                 if($scheduleEvent->validate() && $scheduleEvent->save()){
+                    $spectacleEventConfig = Config::getConfig('spectacle_event');
+                    if(in_array($scheduleEvent->event_type_id, $spectacleEventConfig)){
+                        $actorsProfCat = Config::getConfig('actors_prof_cat');
+                        $profInSchedule = new ProfCatInSchedule();
+                        $profInSchedule->prof_cat_id = $actorsProfCat[0];
+                        $profInSchedule->schedule_id = $scheduleEvent->id;
+                        $profInSchedule->save();
+                    }
                     $record = ScheduleEvents::find()
                         ->where(['id' => $scheduleEvent->id])
                         ->with('eventType')->with('event')->asArray()->one();
@@ -385,7 +394,7 @@ class ScheduleController extends AccessController
                 $endDate = date('Y-m-d', strtotime($period[1]['year'] ."-" .$period[1]['month'] ."-" .$period[1]['day']));
                 $schedule = ScheduleEvents::find()
                         ->where(['between', 'date', $startDate, $endDate])
-                        ->with('eventType')->with('event')->asArray()->all();
+                        ->with('eventType')->with('event')->with('profCat')->asArray()->all();
                 return json_encode($schedule);
             }
             

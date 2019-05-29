@@ -47,6 +47,11 @@ class ScheduleEvents extends \yii\db\ActiveRecord
     {
         return $this->hasOne(Events::className(), ['id' => 'event_id']);
     }
+    
+    public function getProfCat()
+    {
+        return $this->hasMany(ProfCatInSchedule::className(), ['schedule_id' => 'id'])->with('profCat');
+    }
 
     /**
      * {@inheritdoc}
