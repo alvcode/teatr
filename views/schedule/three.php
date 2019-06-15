@@ -22,7 +22,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
         </div>
     </div>
-    
+
     <div class="three--schedule-container">
 
         <div id="three--schedule-content">
@@ -40,8 +40,8 @@ $this->params['breadcrumbs'][] = $this->title;
             <div id="three--schedule-items"></div>
         </div>
     </div>
-    
-    
+
+
 
 </div>
 <br>
@@ -82,31 +82,39 @@ $this->params['breadcrumbs'][] = $this->title;
                     </tr>
                 </tbody>
             </table>
+            <div class="text-right mrg-top15">
+                <div id="add-prof-categories" class="btn btn-sm btn-success">Добавить службу <i class="fas fa-plus-circle"></i></div>
+            </div>
+            <div class="text-center mrg-top15" id="prof-cat-right-button-container">
+                
+            </div>
         </div>
     </div>
 </div>
 
 
-<!-- Modal edit event -->
-<!--<div class="modal fade" id="editEventModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<!-- Modal prof categories --> 
+<div class="modal fade" id="profCatModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Информация о мероприятии</h5>
+                <h5 class="modal-title" id="exampleModalLabel">Выбор служб</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body">
-                <div class="btn btn-sm btn-danger" id="delete-event">Удалить мероприятие</div>
+            <div class="modal-body text-center noselect">
+                <?php foreach ($profCategories as $key => $value): ?>
+                    <div data-id="<?= $value['id'] ?>" class="cursor-pointer add-prof-cat-item"><?= $value['name'] ?></div>
+                <?php endforeach; ?>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Отмена</button>
-                <button id="edit-event-submit" type="button" class="btn btn-sm btn-success">Применить</button>
+                <button id="add-prof-cat-submit" type="button" class="btn btn-sm btn-success">Применить</button>
             </div>
         </div>
     </div>
-</div>-->
+</div>
 
 <script>
     window.onload = function () {
@@ -140,7 +148,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 return false;
             }
         });
-        
+
         Date.prototype.setDay = function (dayCount) {
             if (this.getDay() == 0) {
                 this.setDate(this.getDate() - 6);
@@ -151,8 +159,8 @@ $this->params['breadcrumbs'][] = $this->title;
             }
             return true;
         };
-        
-         $('#add--time_from, #edit--time_from').bootstrapMaterialDatePicker({
+
+        $('#add--time_from, #edit--time_from').bootstrapMaterialDatePicker({
             date: false,
             shortTime: false,
             format: 'HH:mm'
@@ -162,9 +170,9 @@ $this->params['breadcrumbs'][] = $this->title;
             shortTime: false,
             format: 'HH:mm'
         });
-        
+
         var rooms = document.querySelector('.three--title-row').getElementsByClassName('room');
-        
+
         // ====== Плагин календаря
         var monthName = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
         //    var monthNameTwo = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
@@ -172,7 +180,7 @@ $this->params['breadcrumbs'][] = $this->title;
         var weekdayName = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
 
         var nowDate = new Date();
-        
+
         var scheduleData = false;
         var datePeriod = {};
 
@@ -196,7 +204,7 @@ $this->params['breadcrumbs'][] = $this->title;
         function renderCalendar(dateObj) {
             $('#three--schedule-items').empty();
             dateObj.setDay(1);
-            document.getElementById('control-name').innerHTML = dateObj.getDate() +" " +monthNameDec[dateObj.getMonth()];
+            document.getElementById('control-name').innerHTML = dateObj.getDate() + " " + monthNameDec[dateObj.getMonth()];
             datePeriod[0] = {};
             datePeriod[0].day = dateObj.getDate();
             datePeriod[0].month = (dateObj.getMonth() + 1);
@@ -205,19 +213,20 @@ $this->params['breadcrumbs'][] = $this->title;
             for (var i = 0; i < 7; i++) {
                 dateObj.setFullYear(dateObj.getFullYear());
                 dateObj.setMonth(dateObj.getMonth());
-                if(i > 0){
+                if (i > 0) {
                     dateObj.setDate(dateObj.getDate() + 1);
                 }
                 document.getElementById('three--schedule-items').append(returnScheduleRow(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate(), dateObj.getDay(), rooms));
             }
-            document.getElementById('control-name').innerHTML += " - " +dateObj.getDate() +" " +monthNameDec[dateObj.getMonth()];
+            document.getElementById('control-name').innerHTML += " - " + dateObj.getDate() + " " + monthNameDec[dateObj.getMonth()];
             datePeriod[1] = {};
             datePeriod[1].day = dateObj.getDate();
             datePeriod[1].month = (dateObj.getMonth() + 1);
             datePeriod[1].year = dateObj.getFullYear();
             return true;
-        };
-        
+        }
+        ;
+
         function returnScheduleRow(year, month, day, week, rooms) {
             var createContainer = document.createElement('div');
             createContainer.dataset.day = day;
@@ -241,15 +250,17 @@ $this->params['breadcrumbs'][] = $this->title;
                 createContainer.append(createRoom);
             }
             return createContainer;
-        };
-        
+        }
+        ;
+
         /**
          * Проверяет, не пересекается ли время мероприятия с другими мероприятиями
          * @param {integer} exclude - id мероприятия, которое не должно учавствовать в проверке (используем при изменении, т.к тогда эта же запись будет участвовать и не пропускать)
          * @returns {boolean}
          */
         function checkTimesInterval(timeFrom, timeTo, date, room, exclude) {
-            if(!exclude) exclude = 0;
+            if (!exclude)
+                exclude = 0;
             var dateRows = document.getElementsByClassName('three--date-row');
             for (var i = 0; i < dateRows.length; i++) {
                 if (date.day == dateRows[i].dataset.day && date.month == dateRows[i].dataset.month && date.year == dateRows[i].dataset.year) {
@@ -259,7 +270,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             var eventsCell = roomsCell[z].getElementsByClassName('event-cell');
                             if (eventsCell.length) {
                                 for (var k = 0; k < eventsCell.length; k++) {
-                                    if(+exclude != +eventsCell[k].dataset.id){
+                                    if (+exclude != +eventsCell[k].dataset.id) {
                                         if (+eventsCell[k].dataset.timeFrom == +timeFrom) {
                                             return false;
                                         }
@@ -286,7 +297,7 @@ $this->params['breadcrumbs'][] = $this->title;
             }
             return true;
         }
-        
+
         /**
          * Генерирует объект с параметрами для добавления в расписание.
          * 
@@ -311,8 +322,9 @@ $this->params['breadcrumbs'][] = $this->title;
                 timeTo: (result.time_to !== null ? result.time_to : ''),
             };
             return cellData;
-        };
-        
+        }
+        ;
+
         /**
          * Добавляет мероприятие в календарь
          * @param {object} params
@@ -347,20 +359,20 @@ $this->params['breadcrumbs'][] = $this->title;
                             createContainer.append(createBudgie);
                             createContainer.append(createEventType);
                             createContainer.append(createEventName);
-                            
+
                             var createProfCat = document.createElement('div');
                             createProfCat.className = 'three--prof-cat-cell';
-                            if(params.profCat && params.profCat.length){
-                                for(var k = 0; k < params.profCat.length; k++){
+                            if (params.profCat && params.profCat.length) {
+                                for (var k = 0; k < params.profCat.length; k++) {
                                     var profCatSpan = document.createElement('span');
                                     profCatSpan.innerHTML = params.profCat[k].profCat.alias;
                                     createProfCat.append(profCatSpan);
                                 }
                             }
                             createContainer.append(createProfCat);
-                            
+
                             createContainer.append(returnHR());
-                            
+
                             var eventsCell = roomsCell[z].getElementsByClassName('event-cell');
                             if (!eventsCell.length) {
                                 roomsCell[z].append(createContainer);
@@ -368,10 +380,10 @@ $this->params['breadcrumbs'][] = $this->title;
                             } else {
                                 var p = false;
                                 for (var k = 0; k < eventsCell.length; k++) {
-                                    if(!p && +params.timeFrom < +eventsCell[k].dataset.timeFrom){
+                                    if (!p && +params.timeFrom < +eventsCell[k].dataset.timeFrom) {
                                         roomsCell[z].insertBefore(createContainer, eventsCell[k]);
                                         return true;
-                                            }
+                                    }
                                     if (p && +params.timeFrom < +eventsCell[k].dataset.timeFrom &&
                                             +params.timeFrom > +p.dataset.timeFrom) {
                                         roomsCell[z].insertBefore(createContainer, eventsCell[k]);
@@ -393,8 +405,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 }
             }
         }
-        
-        
+
+
         /**
          * Загружает расписание на месяц и рендерит в нужные ячейки
          * @param {int} month
@@ -430,7 +442,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             eventOtherName: (scheduleData[key].event.other_name !== null ? scheduleData[key].event.other_name : ''),
                             timeFrom: scheduleData[key].time_from,
                             timeTo: (scheduleData[key].time_to !== null ? scheduleData[key].time_to : ''),
-                            profCat : scheduleData[key].profCat
+                            profCat: scheduleData[key].profCat
                         };
                         addEventInCalendar(cellData);
                     }
@@ -443,12 +455,13 @@ $this->params['breadcrumbs'][] = $this->title;
             });
         }
         loadSchedule(datePeriod);
-        
+
         // Редактирование мероприятия
         var editEventId = false;
 //        var editEventDate = false;
         var editEventRoom = false;
         $('body').on('click', '.event-cell', function (e) {
+            $('#prof-cat-right-button-container').empty();
             editEventId = this.dataset.id;
             for (var key in scheduleData) {
                 if (scheduleData[key].id == editEventId) {
@@ -459,21 +472,33 @@ $this->params['breadcrumbs'][] = $this->title;
                     var dateT = new Date(scheduleData[key].date);
 //                    editEventDate = {day: dateT.getDate(), month: dateT.getMonth(), year: dateT.getFullYear()};
                     editEventRoom = scheduleData[key].room_id;
-                    
+
                     $('#three--right-more-meta').html(normalizeDate(dateT.getDate() + "." + dateT.getMonth() + "." + dateT.getFullYear()) +
                             ", " + minuteToTime(scheduleData[key].time_from) +
                             " / " + scheduleData[key].event.name + " (" + scheduleData[key].eventType.name + ")");
+                    
+                    if(scheduleData[key].profCat){
+                        for(var keyProf in scheduleData[key].profCat){
+                            var createButton = document.createElement('div');
+                            createButton.dataset.id = scheduleData[key].profCat[keyProf].profCat.id;
+                            createButton.className = 'btn btn-sm btn-outline-secondary';
+                            createButton.innerHTML = scheduleData[key].profCat[keyProf].profCat.alias;
+                            document.getElementById('prof-cat-right-button-container').append(createButton);
+                        }
+                    }
                 }
             }
             loadUserInEvent(editEventId);
             $('.three--right-more').removeClass('zoomOutRight').addClass('zoomInRight animated').css({'display': 'block'});
         });
-        
+
         $('#three--right-more-close').click(function () {
             $('.three--right-more').removeClass('zoomInRight').addClass('zoomOutRight');
         });
-        
-        function loadUserInEvent(eventId){
+
+        // Загружает всех пользователей на выбранном мероприятии
+        var usersInEvent = false;
+        function loadUserInEvent(eventId) {
             goPreloader();
             var data = {
                 trigger: 'load-user-in-schedule',
@@ -485,9 +510,9 @@ $this->params['breadcrumbs'][] = $this->title;
                 url: '/schedule/three',
                 data: data,
                 success: function (data) {
-                    var result = JSON.parse(data);
-                    console.log(result);
-                    
+                    usersInEvent = JSON.parse(data);
+                    console.log(usersInEvent);
+
                     stopPreloader();
                 },
                 error: function () {
@@ -496,9 +521,69 @@ $this->params['breadcrumbs'][] = $this->title;
                 }
             });
         }
+
+        $('#add-prof-categories').click(function () {
+            $('#profCatModal').modal('show');
+        });
+
+        // Выделяем службы для добавления в мероприятие
+        var selectedProfCat = [];
+        $('.add-prof-cat-item').click(function () {
+            if (this.classList.contains('selected')) {
+                this.classList.remove('selected');
+                var idx = selectedProfCat.indexOf(this.dataset.id);
+                selectedProfCat.splice(idx, 1);
+            } else {
+                this.classList.add('selected');
+                selectedProfCat[selectedProfCat.length] = this.dataset.id;
+            }
+            console.log(selectedProfCat);
+        });
+
+        $('#profCatModal').on('hidden.bs.modal', function (e) {
+            $('.add-prof-cat-item').removeClass('selected');
+            selectedProfCat = [];
+        });
         
-        
-        
+        $('#add-prof-cat-submit').click(function(){
+            for (var key in scheduleData) {
+                if (scheduleData[key].id == editEventId) {
+                    if(scheduleData[key].profCat){
+                        for(var keyProf in scheduleData[key].profCat){
+                            for(var k in selectedProfCat){
+                                if(+selectedProfCat[k] === +scheduleData[key].profCat[keyProf].profCat.id){
+                                    showNotifications('Кажется, одна из добавляемых служб уже заявлена на мероприятие', 3000, NOTIF_RED);
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            goPreloader();
+            var data = {
+                trigger: 'add-prof-cat-in-event',
+                event: editEventId,
+                profCat: selectedProfCat
+            };
+            data[csrfParam] = csrfToken;
+            $.ajax({
+                type: "POST",
+                url: '/schedule/three',
+                data: data,
+                success: function (data) {
+                    var result = JSON.parse(data);
+                    console.log(result);
+                    stopPreloader();
+                },
+                error: function () {
+                    showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                    stopPreloader();
+                }
+            });
+        });
+
+
         $('.clean-input').click(function () {
             this.parentNode.parentNode.querySelector('input').value = '';
         });
@@ -551,7 +636,7 @@ $this->params['breadcrumbs'][] = $this->title;
         function returnFloor(val) {
             return Math.floor(val);
         }
-        
+
         function returnHR() {
             var createBR = document.createElement('hr');
             return createBR;

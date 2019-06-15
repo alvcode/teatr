@@ -374,4 +374,7 @@ a:hover {
 .three--prof-cat-cell {
   font-weight: 700;
 }
+#profCatModal .selected {
+  color: #F97979;
+}
 /*# sourceMappingURL=style.css.map */

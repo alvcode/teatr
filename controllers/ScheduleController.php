@@ -20,6 +20,7 @@ use app\models\CastUnderstudy;
 use app\models\UserInSchedule;
 use app\models\ProfCatInSchedule;
 use yii\base\Exception;
+use app\models\ProffCategories;
 
 class ScheduleController extends AccessController
 {
@@ -406,14 +407,34 @@ class ScheduleController extends AccessController
                 return json_encode($data);
             }
             
+            if(Yii::$app->request->post('trigger') == 'add-prof-cat-in-event'){
+                $profCategories = Yii::$app->request->post('profCat');
+                $event = Yii::$app->request->post('event');
+                foreach ($profCategories as $value){
+                    $profCatInScheduleObj = new ProfCatInSchedule();
+                    $profCatInScheduleObj->prof_cat_id = $value;
+                    $profCatInScheduleObj->schedule_id = $event;
+                    $profCatInScheduleObj->save();
+                }
+                $getProfCat = ScheduleEvents::find()
+                        ->where(['id' => $event])
+                        ->with('profCat')->asArray()->all();
+                return json_encode([
+                    'response' => 'ok',
+                    'result' => $getProfCat
+                ]);
+            }
+            
             return 0;
         }
         
         
         $rooms = Room::find()->where(['is_active' => 1])->asArray()->all();
+        $profCategories = ProffCategories::find()->asArray()->all();
         
         return $this->render('three', [
-            'rooms' => $rooms
+            'rooms' => $rooms,
+            'profCategories' => $profCategories
         ]);
     }
     

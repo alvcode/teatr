@@ -96,6 +96,9 @@
   width: 100px;
   text-align: center;
 }
+.selected {
+  font-weight: 700;
+}
 .board-min-sidebar .board-content {
   position: relative;
   margin-left: 0;
