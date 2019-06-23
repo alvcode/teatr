@@ -296,7 +296,7 @@
 .understudy > th:before{
     content: '- ';
 }
-.two--remove-cast, .two--add-understudy, .two--magic-add-schedule{
+.two--remove-cast, .two--add-understudy, .two--magic-add-schedule, .three--remove-in-schedule{
     &:hover{
         opacity: 0.7;
     }
@@ -386,5 +386,11 @@ display: none;
     font-weight: 700;
 }
 #profCatModal .selected{
+    color: @orange;
+}
+.user-modal-liter-container > div{
+    cursor: pointer;
+}
+#usersListModal .selected{
     color: @orange;
 }

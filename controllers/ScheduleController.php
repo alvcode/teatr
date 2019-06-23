@@ -402,7 +402,7 @@ class ScheduleController extends AccessController
             if(Yii::$app->request->post('trigger') == 'load-user-in-schedule'){
                 $data = UserInSchedule::find()->select('user_in_schedule.*')
                     ->where(['schedule_event_id' => Yii::$app->request->post('event')])
-                    ->with('user')->asArray()->all();
+                    ->with('userWithProf')->asArray()->all();
                 
                 return json_encode($data);
             }
@@ -418,7 +418,73 @@ class ScheduleController extends AccessController
                 }
                 $getProfCat = ScheduleEvents::find()
                         ->where(['id' => $event])
-                        ->with('profCat')->asArray()->all();
+                        ->with('profCat')->asArray()->one();
+                return json_encode([
+                    'response' => 'ok',
+                    'result' => $getProfCat
+                ]);
+            }
+            
+            if(Yii::$app->request->post('trigger') == 'add-user-in-schedule'){
+                $configSpectacle = Config::getConfig('spectacle_event');
+                $configActor = Config::getConfig('actors_prof_cat');
+                $eventSchedule = ScheduleEvents::findOne(Yii::$app->request->post('eventSchedule'));
+                if(in_array($eventSchedule['event_type_id'], $configSpectacle) && in_array(Yii::$app->request->post('profCat'), $configActor)){
+                    return json_encode(['response' => 'error', 'result' => 'Для заполнения актеров в спектаклях, воспользуйтесь расписанием актеров']);
+                }
+                $users = Yii::$app->request->post('users');
+                $db = Yii::$app->db;
+                $transaction = $db->beginTransaction();
+                try{
+                    foreach ($users as $value){
+                        Yii::$app->db->createCommand()->insert('user_in_schedule', [
+                            'schedule_event_id' => Yii::$app->request->post('eventSchedule'),
+                            'user_id' => $value,
+                            'cast_id' => 0
+                        ])->execute();
+                    }
+                    $userInSchedule = UserInSchedule::find()->select('user_in_schedule.*')
+                        ->where(['schedule_event_id' => Yii::$app->request->post('eventSchedule')])
+                        ->with('userWithProf')->asArray()->all();
+                    $transaction->commit();
+                    return json_encode([
+                        'response' => 'ok',
+                        'result' => $userInSchedule
+                    ]);
+                }catch (\Exception $e) {
+                    $transaction->rollBack();
+                    //throw $e;
+                    return json_encode(['response' => 'error', 'result' => 'Ошибка при добавлении в базу данных']);
+                }
+            }
+            
+            if(Yii::$app->request->post('trigger') == 'delete-in-schedule'){
+                Yii::$app->db->createCommand()->delete('user_in_schedule', ['id' => Yii::$app->request->post('eventSchedule')])
+                        ->execute();
+                return json_encode(['response' => 'ok']);
+            }
+            
+            if(Yii::$app->request->post('trigger') == 'delete-prof-cat'){
+                $userInSchedule = UserInSchedule::find()->select('user_in_schedule.*')
+                        ->where(['schedule_event_id' => Yii::$app->request->post('eventSchedule')])
+                        ->with('userWithProf')->asArray()->all();
+                $deletedUsers = [];
+                foreach ($userInSchedule as $key => $value){
+                    if(+$value['userWithProf']['userProfession']['prof']['proff_cat_id'] == +Yii::$app->request->post('profCat')){
+                        $deletedUsers[] = $value['userWithProf']['id'];
+                    }
+                }
+                Yii::$app->db->createCommand()->delete('user_in_schedule', [
+                    'schedule_event_id' => Yii::$app->request->post('eventSchedule'),
+                    'user_id' => $deletedUsers
+                ])->execute();
+                Yii::$app->db->createCommand()->delete('prof_cat_in_schedule', [
+                    'prof_cat_id' => Yii::$app->request->post('profCat'),
+                    'schedule_id' => Yii::$app->request->post('eventSchedule')
+                ])->execute();
+                $getProfCat = ScheduleEvents::find()
+                        ->where(['id' => Yii::$app->request->post('eventSchedule')])
+                        ->with('profCat')->asArray()->one();
                 return json_encode([
                     'response' => 'ok',
                     'result' => $getProfCat
@@ -431,10 +497,16 @@ class ScheduleController extends AccessController
         
         $rooms = Room::find()->where(['is_active' => 1])->asArray()->all();
         $profCategories = ProffCategories::find()->asArray()->all();
+        $users = User::find()->select('user.id, user.name, user.surname')
+                ->with('userProfessionJoinProf')
+                ->where(['user.is_active' => 1])
+                ->asArray()->all();
+        $users = ScheduleComponent::sortFirstLetter($users, 'surname', true);
         
         return $this->render('three', [
             'rooms' => $rooms,
-            'profCategories' => $profCategories
+            'profCategories' => $profCategories,
+            'users' => $users
         ]);
     }
     

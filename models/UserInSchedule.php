@@ -36,6 +36,10 @@ class UserInSchedule extends \yii\db\ActiveRecord
     public function getUser(){
         return $this->hasOne(User::className(), ['id' => 'user_id'])->select('user.id, user.name, user.surname');
     }
+    
+    public function getUserWithProf(){
+        return $this->hasOne(User::className(), ['id' => 'user_id'])->select('user.id, user.name, user.surname')->with('userProfession');
+    }
 
     /**
      * {@inheritdoc}

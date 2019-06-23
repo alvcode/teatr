@@ -22,6 +22,10 @@ $this->params['breadcrumbs'][] = $this->title;
 
         </div>
     </div>
+    
+    <?php
+     //echo yii\helpers\VarDumper::dumpAsString($users, 10, true);
+    ?>
 
     <div class="three--schedule-container">
 
@@ -85,9 +89,9 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="text-right mrg-top15">
                 <div id="add-prof-categories" class="btn btn-sm btn-success">Добавить службу <i class="fas fa-plus-circle"></i></div>
             </div>
-            <div class="text-center mrg-top15" id="prof-cat-right-button-container">
-                
-            </div>
+            <div class="text-center mrg-top15" id="prof-cat-right-button-container"></div>
+            <div style="display: none;" id="add-user-in-schedule-container" class="text-center mrg-top15"><div class="btn btn-sm btn-outline-info" id="add-user-in-schedule-button"><i class="fas fa-plus-circle"></i></div></div>
+            <div class="text-center mrg-top15" id="user-in-event-right-button-container"></div>
         </div>
     </div>
 </div>
@@ -111,6 +115,78 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="modal-footer">
                 <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Отмена</button>
                 <button id="add-prof-cat-submit" type="button" class="btn btn-sm btn-success">Применить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal users list -->
+<div class="modal fade" id="usersListModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Список сотрудников</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="user-modal-container text-center">
+                    <?php foreach ($users as $key => $value): ?>
+                    <div class="user-modal-liter-container">
+                            <div style="font-weight: 700;" class="text-danger liter-key"><?= $key ?></div>
+                            <?php foreach($value as $keyV => $valueV): ?>
+                                <div class="actor-list-item noselect" data-prof-cat="<?= $valueV['userProfessionJoinProf']['prof']['proff_cat_id'] ?>" data-id="<?= $valueV['id'] ?>"><?= $valueV['name'] ?> <?= $valueV['surname'] ?></div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Отмена</button>
+                <button id="add-user-list-submit" type="button" class="btn btn-sm btn-success">Применить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal delete prof cat --> 
+<div class="modal fade" id="deleteProfCatModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Удаление службы</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Внимание! С данного мероприятия будет удалена служба и сотрудники
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Отмена</button>
+                <button id="delete-prof-cat-submit" type="button" class="btn btn-sm btn-success">Продолжить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal delete in schedule --> 
+<div class="modal fade" id="deleteInScheduleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Удаление из мероприятия</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Сотрудник будет удален из данного мероприятия
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Отмена</button>
+                <button id="delete-in-schedule-submit" type="button" class="btn btn-sm btn-success">Продолжить</button>
             </div>
         </div>
     </div>
@@ -363,11 +439,13 @@ $this->params['breadcrumbs'][] = $this->title;
                             var createProfCat = document.createElement('div');
                             createProfCat.className = 'three--prof-cat-cell';
                             if (params.profCat && params.profCat.length) {
+                                var profCatArr = [];
                                 for (var k = 0; k < params.profCat.length; k++) {
-                                    var profCatSpan = document.createElement('span');
-                                    profCatSpan.innerHTML = params.profCat[k].profCat.alias;
-                                    createProfCat.append(profCatSpan);
+//                                    var profCatSpan = document.createElement('span');
+//                                    profCatSpan.innerHTML = params.profCat[k].profCat.alias;
+                                    profCatArr[profCatArr.length] = params.profCat[k].profCat.alias;
                                 }
+                                createProfCat.innerHTML = profCatArr.join(', ');
                             }
                             createContainer.append(createProfCat);
 
@@ -478,13 +556,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             " / " + scheduleData[key].event.name + " (" + scheduleData[key].eventType.name + ")");
                     
                     if(scheduleData[key].profCat){
-                        for(var keyProf in scheduleData[key].profCat){
-                            var createButton = document.createElement('div');
-                            createButton.dataset.id = scheduleData[key].profCat[keyProf].profCat.id;
-                            createButton.className = 'btn btn-sm btn-outline-secondary';
-                            createButton.innerHTML = scheduleData[key].profCat[keyProf].profCat.alias;
-                            document.getElementById('prof-cat-right-button-container').append(createButton);
-                        }
+                        addRightProfCatButton(scheduleData[key].profCat);
                     }
                 }
             }
@@ -537,7 +609,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 this.classList.add('selected');
                 selectedProfCat[selectedProfCat.length] = this.dataset.id;
             }
-            console.log(selectedProfCat);
+//            console.log(selectedProfCat);
         });
 
         $('#profCatModal').on('hidden.bs.modal', function (e) {
@@ -545,6 +617,7 @@ $this->params['breadcrumbs'][] = $this->title;
             selectedProfCat = [];
         });
         
+        //  Добавление новых служб к мероприятию
         $('#add-prof-cat-submit').click(function(){
             for (var key in scheduleData) {
                 if (scheduleData[key].id == editEventId) {
@@ -573,7 +646,288 @@ $this->params['breadcrumbs'][] = $this->title;
                 data: data,
                 success: function (data) {
                     var result = JSON.parse(data);
+                    if(result.response == 'ok'){
+                        for (var key in scheduleData) {
+                            if(+scheduleData[key].id == +result.result.id){
+                                var eventCells = document.getElementsByClassName('event-cell');
+                                for(var i = 0; i < eventCells.length; i++){
+                                    if(+eventCells[i].dataset.id == +result.result.id){
+                                        eventCells[i].remove();
+                                    }
+                                }
+                                scheduleData[key].profCat = result.result.profCat;
+                                var dateT = new Date(scheduleData[key].date);
+                                var cellData = {
+                                    id: scheduleData[key].id,
+                                    date: {
+                                        day: dateT.getDate(),
+                                        month: dateT.getMonth(),
+                                        year: dateT.getFullYear()
+                                    },
+                                    room: scheduleData[key].room_id,
+                                    eventType: scheduleData[key].eventType.name,
+                                    eventTypeId: scheduleData[key].eventType.id,
+                                    eventName: scheduleData[key].event.name,
+                                    eventOtherName: (scheduleData[key].event.other_name !== null ? scheduleData[key].event.other_name : ''),
+                                    timeFrom: scheduleData[key].time_from,
+                                    timeTo: (scheduleData[key].time_to !== null ? scheduleData[key].time_to : ''),
+                                    profCat: scheduleData[key].profCat
+                                };
+                                addEventInCalendar(cellData);
+                                $('#prof-cat-right-button-container').empty();
+                                addRightProfCatButton(scheduleData[key].profCat);
+                                $('#profCatModal').modal('hide');
+                            }
+                        }
+                    }
+                    stopPreloader();
+                },
+                error: function () {
+                    showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                    stopPreloader();
+                }
+            });
+        });
+        
+        var selectedShowProfCat = false;
+        $('#prof-cat-right-button-container').on('click', 'div', function(){
+            $('#user-in-event-right-button-container').empty();
+            $('#add-user-in-schedule-container').css({'display': 'block'});
+            selectedShowProfCat = this.dataset.id;
+            $('#prof-cat-right-button-container div').removeClass('btn-info');
+            $('#prof-cat-right-button-container div').addClass('btn-outline-secondary');
+            $(this).removeClass('btn-outline-secondary');
+            $(this).addClass('btn-info');
+            for(var i = 0; i < usersInEvent.length; i++){
+                if(+usersInEvent[i].userWithProf.userProfession.prof.proff_cat_id === +selectedShowProfCat){
+                    var createContainer = document.createElement('div');
+                    createContainer.className = 'cursor-pointer';
+                    createContainer.innerHTML = usersInEvent[i].userWithProf.name +" " +usersInEvent[i].userWithProf.surname +" <span class='badge badge-pill badge-danger three--remove-in-schedule'><i class='fas fa-times'></i></span>";
+                    createContainer.dataset.userInSchedule = usersInEvent[i].id;
+                    createContainer.dataset.userId = usersInEvent[i].userWithProf.id;
+                    document.getElementById('user-in-event-right-button-container').append(createContainer);
+                }
+            }
+        });
+        
+        // Удаление службы с мероприятия
+        var deletedProfCat = false;
+        $('body').on('click', '.three--remove-prof-cat-button', function(){
+            deletedProfCat = this.parentNode.dataset.id;
+            $('#deleteProfCatModal').modal('show');
+        });
+        
+        $('#delete-prof-cat-submit').click(function(){
+            goPreloader();
+            var data = {
+                trigger: 'delete-prof-cat',
+                profCat: deletedProfCat,
+                eventSchedule: editEventId,
+            };
+            data[csrfParam] = csrfToken;
+            $.ajax({
+                type: "POST",
+                url: '/schedule/three',
+                data: data,
+                success: function (data) {
+                    var result = JSON.parse(data);
                     console.log(result);
+                    if(result.response == 'ok'){
+                        for (var key in scheduleData) {
+                            if(+scheduleData[key].id == +result.result.id){
+                                var eventCells = document.getElementsByClassName('event-cell');
+                                for(var i = 0; i < eventCells.length; i++){
+                                    if(+eventCells[i].dataset.id == +result.result.id){
+                                        eventCells[i].remove();
+                                    }
+                                }
+                                scheduleData[key].profCat = result.result.profCat;
+                                var dateT = new Date(scheduleData[key].date);
+                                var cellData = {
+                                    id: scheduleData[key].id,
+                                    date: {
+                                        day: dateT.getDate(),
+                                        month: dateT.getMonth(),
+                                        year: dateT.getFullYear()
+                                    },
+                                    room: scheduleData[key].room_id,
+                                    eventType: scheduleData[key].eventType.name,
+                                    eventTypeId: scheduleData[key].eventType.id,
+                                    eventName: scheduleData[key].event.name,
+                                    eventOtherName: (scheduleData[key].event.other_name !== null ? scheduleData[key].event.other_name : ''),
+                                    timeFrom: scheduleData[key].time_from,
+                                    timeTo: (scheduleData[key].time_to !== null ? scheduleData[key].time_to : ''),
+                                    profCat: scheduleData[key].profCat
+                                };
+                                for(var i = 0; i < usersInEvent.length; i++){
+                                    if(+usersInEvent[i].userWithProf.userProfession.prof.proff_cat_id === +deletedProfCat){
+                                        usersInEvent.splice(i, 1);
+                                    }
+                                }
+                                addEventInCalendar(cellData);
+                                $('#prof-cat-right-button-container').empty();
+                                addRightProfCatButton(scheduleData[key].profCat);
+                                $('#add-user-in-schedule-container').css({'display': 'none'});
+                                $('#user-in-event-right-button-container').css({'display': 'none'});
+                                $('#profCatModal').modal('hide');
+                            }
+                        }
+                        $('#deleteProfCatModal').modal('hide');
+                    }else if(result.response == 'error'){
+                        showNotifications(result.result, 4000, NOTIF_RED);
+                    }
+                    stopPreloader();
+                },
+                error: function () {
+                    showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                    stopPreloader();
+                }
+            });
+        });
+        
+        $('#add-user-in-schedule-button').click(function(){
+            var literContainers = document.getElementsByClassName('user-modal-liter-container');
+            $('.user-modal-liter-container').css({'display': 'block'});
+            for(var i = 0; i < literContainers.length; i++){
+                var usersList = literContainers[i].getElementsByTagName('div');
+                for(var z = 0; z < usersList.length; z++){
+                    if(+selectedShowProfCat == +usersList[z].dataset.profCat){
+                        usersList[z].style.display = 'block';
+                    }else{
+                        if(!usersList[z].classList.contains('liter-key')){
+                            usersList[z].style.display = 'none';
+                        }
+                    }
+                }
+            }
+            for(var i = 0; i < literContainers.length; i++){
+                var usersList = literContainers[i].getElementsByTagName('div');
+                var k = 1;
+                for(var z = 0; z < usersList.length; z++){
+                    if(usersList[z].style.display == 'none'){
+                        k++;
+                    }
+                }
+                if(k == usersList.length){
+                    literContainers[i].style.display = 'none';
+                }
+            }
+            $('#usersListModal').modal('show');
+        });
+        
+        // Выделение юзеров в списке юзеров
+        var selectedUsers = [];
+        $('.actor-list-item').click(function () {
+            var actorId = this.dataset.id;
+            if(this.classList.contains('selected')){
+                this.classList.remove('selected');
+                var idx = selectedUsers.indexOf(actorId);
+                selectedUsers.splice(idx, 1);
+            }else{
+                this.classList.add('selected');
+                selectedUsers[selectedUsers.length] = actorId;
+            }
+//            console.log(selectedActor);
+        });
+        
+        $('#usersListModal').on('hide.bs.modal', function (e) {
+            selectedUsers = [];
+            $('.actor-list-item').removeClass('selected');
+        });
+        
+        $('#add-user-list-submit').click(function(){
+            if(selectedUsers.length === 0){
+                showNotifications('Не выбран ни один сотрудник', 3500, NOTIF_RED);
+                return false;
+            }
+            for(var i = 0; i < usersInEvent.length; i++){
+                if(selectedUsers.includes(usersInEvent[i].userWithProf.id)){
+                    showNotifications('Похоже, что один из добавляемых сотрудников уже стоит в этом мероприятии', 3500, NOTIF_RED);
+                    return false;
+                }
+            }
+            goPreloader();
+            var data = {
+                trigger: 'add-user-in-schedule',
+                profCat: selectedShowProfCat,
+                eventSchedule: editEventId,
+                users: selectedUsers
+            };
+            data[csrfParam] = csrfToken;
+            $.ajax({
+                type: "POST",
+                url: '/schedule/three',
+                data: data,
+                success: function (data) {
+                    var result = JSON.parse(data);
+                    console.log(result);
+                    if(result.response == 'ok'){
+                        usersInEvent = result.result;
+                        $('#user-in-event-right-button-container').empty();
+                        $('#user-in-event-right-button-container').css({'display': 'block'});
+                        for(var i = 0; i < usersInEvent.length; i++){
+                            if(+usersInEvent[i].userWithProf.userProfession.prof.proff_cat_id === +selectedShowProfCat){
+                                var createContainer = document.createElement('div');
+                                createContainer.className = 'cursor-pointer';
+                                createContainer.innerHTML = usersInEvent[i].userWithProf.name +" " +usersInEvent[i].userWithProf.surname +" <span class='badge badge-pill badge-danger three--remove-in-schedule'><i class='fas fa-times'></i></span>";
+                                createContainer.dataset.userInSchedule = usersInEvent[i].id;
+                                createContainer.dataset.userId = usersInEvent[i].userWithProf.id;
+                                document.getElementById('user-in-event-right-button-container').append(createContainer);
+                            }
+                        }
+                        $('#usersListModal').modal('hide');
+                    }else if(result.response == 'error'){
+                        showNotifications(result.result, 4000, NOTIF_RED);
+                    }
+                    stopPreloader();
+                },
+                error: function () {
+                    showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                    stopPreloader();
+                }
+            });
+        });
+        
+        var deletedUserInSchedule = false;
+        $('#user-in-event-right-button-container').on('click', '.three--remove-in-schedule', function(){
+            deletedUserInSchedule = this.parentNode.dataset.userInSchedule;
+            $('#deleteInScheduleModal').modal('show');
+        });
+        
+        $('#delete-in-schedule-submit').click(function(){
+            goPreloader();
+            var data = {
+                trigger: 'delete-in-schedule',
+                eventSchedule: deletedUserInSchedule
+            };
+            data[csrfParam] = csrfToken;
+            $.ajax({
+                type: "POST",
+                url: '/schedule/three',
+                data: data,
+                success: function (data) {
+                    var result = JSON.parse(data);
+                    if(result.response == 'ok'){
+                        for(var i = 0; i < usersInEvent.length; i++){
+                            if(+usersInEvent[i].id == +deletedUserInSchedule){
+                                usersInEvent.splice(i, 1);
+                            }
+                        }
+                        $('#user-in-event-right-button-container').empty();
+                        for(var i = 0; i < usersInEvent.length; i++){
+                            if(+usersInEvent[i].userWithProf.userProfession.prof.proff_cat_id === +selectedShowProfCat){
+                                var createContainer = document.createElement('div');
+                                createContainer.className = 'cursor-pointer';
+                                createContainer.innerHTML = usersInEvent[i].userWithProf.name +" " +usersInEvent[i].userWithProf.surname +" <span class='badge badge-pill badge-danger three--remove-in-schedule'><i class='fas fa-times'></i></span>";
+                                createContainer.dataset.userInSchedule = usersInEvent[i].id;
+                                createContainer.dataset.userId = usersInEvent[i].userWithProf.id;
+                                document.getElementById('user-in-event-right-button-container').append(createContainer);
+                            }
+                        }
+                    }else if(result.response == 'error'){
+                        showNotifications(result.result, 4000, NOTIF_RED);
+                    }
+                    $('#deleteInScheduleModal').modal('hide');
                     stopPreloader();
                 },
                 error: function () {
@@ -587,6 +941,16 @@ $this->params['breadcrumbs'][] = $this->title;
         $('.clean-input').click(function () {
             this.parentNode.parentNode.querySelector('input').value = '';
         });
+        // Добавляет кнопки служб в правое меню
+        function addRightProfCatButton(obj){
+            for(var keyProf in obj){
+                var createButton = document.createElement('div');
+                createButton.dataset.id = obj[keyProf].profCat.id;
+                createButton.className = 'btn btn-sm btn-outline-secondary ml-1';
+                createButton.innerHTML = obj[keyProf].profCat.alias + " <span class='badge badge-danger three--remove-prof-cat-button'><i class='fas fa-times'></i></span>";
+                document.getElementById('prof-cat-right-button-container').append(createButton);
+            }
+        }
 
         /**
          * Переводит дату формата 3.6.2019 в 3.07.2019

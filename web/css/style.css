@@ -275,7 +275,8 @@ a:hover {
 }
 .two--remove-cast:hover,
 .two--add-understudy:hover,
-.two--magic-add-schedule:hover {
+.two--magic-add-schedule:hover,
+.three--remove-in-schedule:hover {
   opacity: 0.7;
 }
 #check-fill-result {
@@ -375,6 +376,12 @@ a:hover {
   font-weight: 700;
 }
 #profCatModal .selected {
+  color: #F97979;
+}
+.user-modal-liter-container > div {
+  cursor: pointer;
+}
+#usersListModal .selected {
   color: #F97979;
 }
 /*# sourceMappingURL=style.css.map */
