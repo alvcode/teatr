@@ -86,6 +86,10 @@ $this->params['breadcrumbs'][] = $this->title;
                     </tr>
                 </tbody>
             </table>
+            <div class="three--right-save-button">
+                <div id="save--event-time" class="btn btn-sm btn-success">Сохранить</div>
+                <div id="delete--event" class="btn btn-sm btn-danger">Удалить мероприятие</div>
+            </div>
             <div class="text-right mrg-top15">
                 <div id="add-prof-categories" class="btn btn-sm btn-success">Добавить службу <i class="fas fa-plus-circle"></i></div>
             </div>
@@ -221,6 +225,18 @@ $this->params['breadcrumbs'][] = $this->title;
                     }
                     k++;
                 }
+                return false;
+            }
+        });
+        
+        Object.defineProperty(Array.prototype, 'remove', {
+            value: function (value) {
+                return this.splice(value, 1);
+//                var idx = this.indexOf(value);
+//                if (idx != -1) {
+//                    // Второй параметр - число элементов, которые необходимо удалить
+//                    return this.splice(idx, 1);
+//                }
                 return false;
             }
         });
@@ -396,6 +412,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 eventOtherName: (result.event.other_name !== null ? result.event.other_name : ''),
                 timeFrom: result.time_from,
                 timeTo: (result.time_to !== null ? result.time_to : ''),
+                profCat: result.profCat,
             };
             return cellData;
         }
@@ -536,7 +553,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
         // Редактирование мероприятия
         var editEventId = false;
-//        var editEventDate = false;
+        var editEventDate = false;
         var editEventRoom = false;
         $('body').on('click', '.event-cell', function (e) {
             $('#prof-cat-right-button-container').empty();
@@ -548,7 +565,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         $('#edit--time_to').val(normalizeTime(minuteToTime(scheduleData[key].time_to)));
                     }
                     var dateT = new Date(scheduleData[key].date);
-//                    editEventDate = {day: dateT.getDate(), month: dateT.getMonth(), year: dateT.getFullYear()};
+                    editEventDate = {day: dateT.getDate(), month: dateT.getMonth(), year: dateT.getFullYear()};
                     editEventRoom = scheduleData[key].room_id;
 
                     $('#three--right-more-meta').html(normalizeDate(dateT.getDate() + "." + dateT.getMonth() + "." + dateT.getFullYear()) +
@@ -936,6 +953,49 @@ $this->params['breadcrumbs'][] = $this->title;
                 }
             });
         });
+        
+        $('#save--event-time').click(function(){
+            var newTimeFrom = $('#edit--time_from').val();
+            var newTimeTo = $('#edit--time_to').val();
+            if (!newTimeFrom) {
+                showNotifications('Кажется вы не указали время начала мероприятия', 7000, NOTIF_RED);
+                return false;
+            }
+            if (!checkTimesInterval(timeToMinute(newTimeFrom), timeToMinute(newTimeTo), editEventDate, editEventRoom, editEventId)) {
+                showNotifications("Изменяемое мероприятие пересекается с другими в этот день", 3000, NOTIF_RED);
+                return false;
+            }
+            goPreloader();
+            var data = {
+                trigger: 'edit-event',
+                id: editEventId,
+                timeFrom: newTimeFrom,
+                timeTo: newTimeTo
+            };
+            data[csrfParam] = csrfToken;
+            $.ajax({
+                type: "POST",
+                url: '/schedule/three',
+                data: data,
+                success: function (data) {
+                    if (data != 0) {
+                        var result = JSON.parse(data);
+                        console.log(result);
+                        deleteEventInCalendar(editEventId);
+                        scheduleData[scheduleData.length] = result;
+                        addEventInCalendar(generateCellData(result));
+//                        $('#editEventModal').modal('hide');
+                    } else {
+                        showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                    }
+                    stopPreloader();
+                },
+                error: function () {
+                    showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                    stopPreloader();
+                }
+            });
+        });
 
 
         $('.clean-input').click(function () {
@@ -950,6 +1010,30 @@ $this->params['breadcrumbs'][] = $this->title;
                 createButton.innerHTML = obj[keyProf].profCat.alias + " <span class='badge badge-danger three--remove-prof-cat-button'><i class='fas fa-times'></i></span>";
                 document.getElementById('prof-cat-right-button-container').append(createButton);
             }
+        }
+        
+        // Удаление из календаря
+        function deleteEventInCalendar(eventId) {
+            var eventCell = document.getElementsByClassName('event-cell');
+            for (var i = 0; i < eventCell.length; i++) {
+                if (eventId == eventCell[i].dataset.id) {
+                    eventCell[i].remove();
+                    break;
+                }
+            }
+            removeInScheduleData(eventId);
+            return true;
+        }
+
+        // Удаление из массива данных
+        function removeInScheduleData(eventId) {
+            for (var key in scheduleData) {
+                if (scheduleData[key].id == eventId) {
+                    scheduleData.remove(key);
+                    break;
+                }
+            }
+            return true;
         }
 
         /**

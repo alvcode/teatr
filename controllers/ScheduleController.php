@@ -491,6 +491,22 @@ class ScheduleController extends AccessController
                 ]);
             }
             
+            if(Yii::$app->request->post('trigger') == 'edit-event'){
+                $findEvent = ScheduleEvents::findOne(Yii::$app->request->post('id'));
+                $findEvent->time_from = \app\components\Formatt::timeToMinute(Yii::$app->request->post('timeFrom'));
+                if(\app\components\Formatt::timeToMinute(Yii::$app->request->post('timeTo'))){
+                    $findEvent->time_to = \app\components\Formatt::timeToMinute(Yii::$app->request->post('timeTo'));
+                }else{
+                    $findEvent->time_to = '';
+                }
+                if($findEvent->validate() && $findEvent->save()){
+                    $record = ScheduleEvents::find()
+                        ->where(['id' => $findEvent->id])
+                        ->with('eventType')->with('event')->with('profCat')->asArray()->one();
+                return json_encode($record);
+                }
+            }
+            
             return 0;
         }
         
