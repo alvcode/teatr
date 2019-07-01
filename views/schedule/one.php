@@ -102,14 +102,18 @@ $this->params['breadcrumbs'][] = $this->title;
                         <tr>
                             <th scope="row">Мероприятие</th>
                             <td id="add--event">
-                                <div class="form-group">
+                                <div>
+                                    <input type="checkbox" class="" id="add--without-event">
+                                    <label class="form-check-label" for="add--without-event">Без мероприятия</label>
+                                </div>
+                                <div id="add-div-category" class="form-group mrg-top15">
                                     <select id="select-event-category" class="form-control form-control-sm">
                                         <?php foreach ($eventCategories as $key => $value): ?>
                                             <option value="<?= $value['id'] ?>"><?= $value['name'] ?></option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
-                                <div class="form-group">
+                                <div id="add-div-event" class="form-group">
                                     <select id="select-event" class="form-control form-control-sm">
                                         <?php foreach ($events as $key => $value): ?>
                                             <option data-category="<?= $value['category_id'] ?>" data-other-name="<?= $value['other_name'] ?>" value="<?= $value['id'] ?>"><?= $value['name'] ?></option>
@@ -347,6 +351,19 @@ $this->params['breadcrumbs'][] = $this->title;
             }
         }
         eventCatSort();
+        
+        var withoutEvent = 0;
+        $('#add--without-event').click(function(){
+            if($(this).prop('checked')){
+                withoutEvent = 1;
+                $('#select-event-category').prop('disabled', true);
+                $('#select-event').prop('disabled', true);
+            }else{
+                withoutEvent = 0;
+                $('#select-event-category').prop('disabled', false);
+                $('#select-event').prop('disabled', false);
+            }
+        });
 
         $('#select-event-category').change(function () {
             eventCatSort();
@@ -374,7 +391,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 timeFrom: timeFrom,
                 timeTo: timeTo,
                 eventType: eventType,
-                event: event
+                event: event,
+                withoutEvent: withoutEvent
             };
             data[csrfParam] = csrfToken;
             $.ajax({
@@ -382,13 +400,14 @@ $this->params['breadcrumbs'][] = $this->title;
                 url: '/schedule/one',
                 data: data,
                 success: function (data) {
-                    if (JSON.parse(data) != 0) {
-                        var result = JSON.parse(data);
-                        scheduleData[scheduleData.length] = result;
-                        addEventInCalendar(generateCellData(result));
+                    var result = JSON.parse(data);
+                    if (result.response == 'ok') {
+                        scheduleData[scheduleData.length] = result.result;
+                        addEventInCalendar(generateCellData(result.result));
                         $('#addEventModal').modal('hide');
-                    } else {
-                        showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                        $('.clean-input').click();
+                    } else if (result.response == 'error'){
+                        showNotifications(result.result, 4000, NOTIF_RED);
                     }
                     stopPreloader();
                 },
@@ -461,8 +480,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 room: result.room_id,
                 eventType: result.eventType.name,
                 eventTypeId: result.eventType.id,
-                eventName: result.event.name,
-                eventOtherName: (result.event.other_name !== null ? result.event.other_name : ''),
+                eventName: (result.event !== null ? result.event.name : ''),
+                eventOtherName: (result.event !== null && result.event.other_name !== null ? result.event.other_name : ''),
                 timeFrom: result.time_from,
                 timeTo: (result.time_to !== null ? result.time_to : ''),
             };
@@ -582,6 +601,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 data: data,
                 success: function (data) {
                     scheduleData = JSON.parse(data);
+                    console.log(scheduleData);
                     for (var key in scheduleData) {
                         var dateT = new Date(scheduleData[key].date);
                         var cellData = {
@@ -594,8 +614,8 @@ $this->params['breadcrumbs'][] = $this->title;
                             room: scheduleData[key].room_id,
                             eventType: scheduleData[key].eventType.name,
                             eventTypeId: scheduleData[key].eventType.id,
-                            eventName: scheduleData[key].event.name,
-                            eventOtherName: (scheduleData[key].event.other_name !== null ? scheduleData[key].event.other_name : ''),
+                            eventName: (scheduleData[key].event !== null ? scheduleData[key].event.name : ''),
+                            eventOtherName: (scheduleData[key].event !== null && scheduleData[key].event.other_name !== null? scheduleData[key].event.other_name : ''),
                             timeFrom: scheduleData[key].time_from,
                             timeTo: (scheduleData[key].time_to !== null ? scheduleData[key].time_to : ''),
                         };
@@ -629,7 +649,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     editEventRoom = scheduleData[key].room_id;
                     
                     $('#edit--meta').html(normalizeDate(dateT.getDate() + "." + dateT.getMonth() + "." + dateT.getFullYear()) +
-                            " / " + scheduleData[key].event.name + " (" + scheduleData[key].eventType.name + ")");
+                            " / " + (scheduleData[key].event !== null ? scheduleData[key].event.name : '') + " (" + scheduleData[key].eventType.name + ")");
                 }
             }
 
@@ -747,22 +767,23 @@ $this->params['breadcrumbs'][] = $this->title;
                                 success: function (data) {
                                     if (JSON.parse(data) != 0) {
                                         var result = JSON.parse(data);
-                                        scheduleData[scheduleData.length] = result;
-                                        var dateT = new Date(result.date);
+                                        console.log(result);
+                                        scheduleData[scheduleData.length] = result.result;
+                                        var dateT = new Date(result.result.date);
                                         var cellData = {
-                                            id: result.id,
+                                            id: result.result.id,
                                             date: {
                                                 day: dateT.getDate(),
                                                 month: dateT.getMonth(),
                                                 year: dateT.getFullYear()
                                             },
-                                            room: result.room_id,
-                                            eventType: result.eventType.name,
-                                            eventTypeId: result.eventType.id,
-                                            eventName: result.event.name,
-                                            eventOtherName: (result.event.other_name !== null ? result.event.other_name : ''),
-                                            timeFrom: result.time_from,
-                                            timeTo: (result.time_to !== null ? result.time_to : ''),
+                                            room: result.result.room_id,
+                                            eventType: result.result.eventType.name,
+                                            eventTypeId: result.result.eventType.id,
+                                            eventName: (result.result.event !== null ? result.result.event.name : ''),
+                                            eventOtherName: (result.result.event !== null && result.result.event.other_name !== null ? result.result.event.other_name : ''),
+                                            timeFrom: result.result.time_from,
+                                            timeTo: (result.result.time_to !== null ? result.result.time_to : ''),
                                         };
                                         addEventInCalendar(cellData);
                                         $('#addEventModal').modal('hide');
@@ -781,7 +802,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 }
             });
         });
-
+        
         $('.clean-input').click(function () {
             this.parentNode.parentNode.querySelector('input').value = '';
         });

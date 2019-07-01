@@ -60,9 +60,15 @@ class ScheduleController extends AccessController
         
         if(Yii::$app->request->isAjax){
             if(Yii::$app->request->post('trigger') == 'add-schedule'){
+                $spectacleEventConfig = Config::getConfig('spectacle_event');
+                if(in_array(Yii::$app->request->post('eventType'), $spectacleEventConfig) && +Yii::$app->request->post('withoutEvent') > 0){
+                    return json_encode(['response' => 'error', 'result' => 'На спектакль обязательно нужно выбрать мероприятие']);
+                }
                 $scheduleEvent = new ScheduleEvents();
                 $scheduleEvent->event_type_id = Yii::$app->request->post('eventType');
-                $scheduleEvent->event_id = Yii::$app->request->post('event');
+                if(+Yii::$app->request->post('withoutEvent') === 0){
+                    $scheduleEvent->event_id = Yii::$app->request->post('event');
+                }
                 $scheduleEvent->room_id = Yii::$app->request->post('room');
                 $scheduleEvent->date = date('Y-m-d', mktime(0, 0, 0, Yii::$app->request->post('date')['month'] + 1, Yii::$app->request->post('date')['day'], Yii::$app->request->post('date')['year']));
                 $scheduleEvent->time_from = \app\components\Formatt::timeToMinute(Yii::$app->request->post('timeFrom'));
@@ -70,7 +76,6 @@ class ScheduleController extends AccessController
                     $scheduleEvent->time_to = \app\components\Formatt::timeToMinute(Yii::$app->request->post('timeTo'));
                 }
                 if($scheduleEvent->validate() && $scheduleEvent->save()){
-                    $spectacleEventConfig = Config::getConfig('spectacle_event');
                     if(in_array($scheduleEvent->event_type_id, $spectacleEventConfig)){
                         $actorsProfCat = Config::getConfig('actors_prof_cat');
                         $profInSchedule = new ProfCatInSchedule();
@@ -81,7 +86,7 @@ class ScheduleController extends AccessController
                     $record = ScheduleEvents::find()
                         ->where(['id' => $scheduleEvent->id])
                         ->with('eventType')->with('event')->asArray()->one();
-                return json_encode($record);
+                    return json_encode(['response' => 'ok', 'result' => $record]);
                 }else{
                     return 0;
                 }
@@ -97,6 +102,7 @@ class ScheduleController extends AccessController
             
             if(Yii::$app->request->post('trigger') == 'delete-event'){
                 $findEvent = ScheduleEvents::findOne(Yii::$app->request->post('id'));
+                Yii::$app->db->createCommand()->delete('prof_cat_in_schedule', ['schedule_id' => Yii::$app->request->post('id')])->execute();
                 if(!$findEvent) return 0;
                 if($findEvent->delete()) return 1;
             }
@@ -507,12 +513,80 @@ class ScheduleController extends AccessController
                 }
             }
             
+            if(Yii::$app->request->post('trigger') == 'copy-event'){
+                $configSpectacle = Config::getConfig('spectacle_event');
+                $getEvent = ScheduleEvents::find()->where(['id' => Yii::$app->request->post('id')])->asArray()->one();
+                if(in_array($getEvent['event_type_id'], $configSpectacle)){
+                    return json_encode(['response' => 'error', 'result' => 'Для управления спектаклями воспользуйтесь сводным расписанием']);
+                }
+                $db = Yii::$app->db;
+                $transaction = $db->beginTransaction();
+                try {
+                    $newScheduleEvent = new ScheduleEvents();
+                    $newScheduleEvent->event_type_id = $getEvent['event_type_id'];
+                    $newScheduleEvent->event_id = $getEvent['event_id'];
+                    $newScheduleEvent->room_id = Yii::$app->request->post('room');
+                    $newScheduleEvent->date = date('Y-m-d', mktime(0, 0, 0, Yii::$app->request->post('date')['month'] + 1, Yii::$app->request->post('date')['day'], Yii::$app->request->post('date')['year']));
+                    $newScheduleEvent->time_from = $getEvent['time_from'];
+                    $newScheduleEvent->time_to = $getEvent['time_to'];
+                    if($newScheduleEvent->save()){
+                        if(+Yii::$app->request->post('moveUsers') > 0){
+                            $getUserInSchedule = UserInSchedule::find()->where([
+                                'schedule_event_id' => Yii::$app->request->post('id')
+                            ])->asArray()->all();
+                            if($getUserInSchedule){
+                                foreach ($getUserInSchedule as $key => $value){
+                                    $db->createCommand()->insert('user_in_schedule', [
+                                        'schedule_event_id' => $newScheduleEvent->id,
+                                        'user_id' => $value['user_id'],
+                                        'cast_id' => $value['cast_id']
+                                    ])->execute();
+                                }
+                            }
+                            $getProfCat = ProfCatInSchedule::find()->where(['schedule_id' => Yii::$app->request->post('id')])->asArray()->all();
+                            if($getProfCat){
+                                foreach ($getProfCat as $key => $value){
+                                    $db->createCommand()->insert('prof_cat_in_schedule', [
+                                        'prof_cat_id' => $value['prof_cat_id'],
+                                        'schedule_id' => $newScheduleEvent->id
+                                    ])->execute();
+                                }
+                            }
+                        }
+                    }
+                    $transaction->commit();
+                    $record = ScheduleEvents::find()
+                        ->where(['id' => $newScheduleEvent->id])
+                        ->with('eventType')->with('event')->with('profCat')->asArray()->one();
+                    $response['result'] = 'ok';
+                    return json_encode(['response' => 'ok', 'result' => $record]);
+                } catch (\Exception $e) {
+                    $transaction->rollBack();
+                    //throw $e;
+                    return json_encode(['response' => 'error', 'result' => 'Что-то пошло не так, перезагрузите страницу и попробуйте снова']);
+                }
+            }
+            
+            if(Yii::$app->request->post('trigger') == 'delete-event'){
+                $getEvent = ScheduleEvents::find()->where(['id' => Yii::$app->request->post('id')])->one();
+                Yii::$app->db->createCommand()->delete('prof_cat_in_schedule', ['schedule_id' => Yii::$app->request->post('id')])->execute();
+                if($getEvent->delete()){
+                    return json_encode(['response' => 'ok']);
+                }else{
+                    return json_encode(['response' => 'error', 'result' => 'Ошибка базы данных. Перезагрузите страницу и попробуйте снова']);
+                }
+            }
+            
+            
             return 0;
         }
         
         
         $rooms = Room::find()->where(['is_active' => 1])->asArray()->all();
         $profCategories = ProffCategories::find()->asArray()->all();
+        $eventType = EventType::find()->where(['is_active' => 1])->asArray()->all();
+        $events = Events::find()->where(['is_active' => 1])->asArray()->all();
+        $eventCategories = EventCategories::find()->asArray()->all();
         $users = User::find()->select('user.id, user.name, user.surname')
                 ->with('userProfessionJoinProf')
                 ->where(['user.is_active' => 1])
@@ -522,7 +596,10 @@ class ScheduleController extends AccessController
         return $this->render('three', [
             'rooms' => $rooms,
             'profCategories' => $profCategories,
-            'users' => $users
+            'users' => $users,
+            'eventType' => $eventType,
+            'events' => $events,
+            'eventCategories' => $eventCategories,
         ]);
     }
     

@@ -50,6 +50,94 @@ $this->params['breadcrumbs'][] = $this->title;
 </div>
 <br>
 
+<!-- Modal add event -->
+<div class="modal fade" id="addEventModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Добавить мероприятие</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-striped">
+                    <tbody>
+                        <tr>
+                            <th scope="row">Дата</th>
+                            <td id="add--date"></td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Время начала</th>
+                            <td>
+                                <div class="input-group mb-3">
+                                    <input type="text" class="form-control form-control-sm" id="add--time_from">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-sm btn-outline-danger clean-input" type="button" id="button-addon2"><i class="fas fa-times"></i></button>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">
+                                Время окончания
+                                <i class="fas fa-exclamation-circle my-tooltip" data-toggle="tooltip" data-placement="right" title="Можно не указывать, если окончание мероприятия неизвестно, но тогда не будут работать подсказки, предупреждающие о пересечениях времени."></i>
+                            </th>
+                            <td>
+                                <div class="input-group mb-3">
+                                    <input type="text" class="form-control form-control-sm" id="add--time_to">
+                                    <div class="input-group-append">
+                                        <button class="btn btn-sm btn-outline-danger clean-input" type="button" id="button-addon2"><i class="fas fa-times"></i></button>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Тип мероприятия</th>
+                            <td id="add--event_type">
+                                <div class="form-group">
+                                    <select id="select-event-type" class="form-control form-control-sm">
+                                        <?php foreach ($eventType as $key => $value): ?>
+                                            <option value="<?= $value['id'] ?>"><?= $value['name'] ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th scope="row">Мероприятие</th>
+                            <td id="add--event">
+                                <div>
+                                    <input type="checkbox" class="" id="add--without-event">
+                                    <label class="form-check-label" for="add--without-event">Без мероприятия</label>
+                                </div>
+                                <div id="add-div-category" class="form-group mrg-top15">
+                                    <select id="select-event-category" class="form-control form-control-sm">
+                                        <?php foreach ($eventCategories as $key => $value): ?>
+                                            <option value="<?= $value['id'] ?>"><?= $value['name'] ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div id="add-div-event" class="form-group">
+                                    <select id="select-event" class="form-control form-control-sm">
+                                        <?php foreach ($events as $key => $value): ?>
+                                            <option data-category="<?= $value['category_id'] ?>" data-other-name="<?= $value['other_name'] ?>" value="<?= $value['id'] ?>"><?= $value['name'] ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Отмена</button>
+                <button id="add-event-submit" type="button" class="btn btn-sm btn-success">Добавить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="three--right-more">
     <div class="col-12">
         <span id="three--right-more-close">&times;</span>
@@ -86,10 +174,37 @@ $this->params['breadcrumbs'][] = $this->title;
                     </tr>
                 </tbody>
             </table>
-            <div class="three--right-save-button">
+            <div class="three--copy-event">
+                <h5 class="text-info">Копировать запись на другой день</h5>
+                <div class="form-group mb-3">
+                    <label class="control-label">Зал</label>
+                    <select id="copy--select-room" class="form-control form-control-sm">
+                        <?php foreach ($rooms as $key => $value): ?>
+                            <option value="<?= $value['id'] ?>"><?= $value['name'] ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="form-group mb-3">
+                    <label class="control-label">Дата</label>
+                    <select id="copy--select-date" class="form-control form-control-sm">
+                        
+                    </select>
+                </div>
+                <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="copy--checkbox-move-users">
+                    <label class="form-check-label" for="copy--checkbox-move-users">Перенести сотрудников</label>
+                </div>
+                <div class="three--copy-buttons">
+                    <div id="copy--save-copy" class="btn btn-sm btn-success">Копировать</div>
+                    <div id="copy--cancel-copy" class="btn btn-sm btn-danger">Отмена</div>
+                </div>
+            </div>
+            <div class="three--right-save-button mrg-top15">
                 <div id="save--event-time" class="btn btn-sm btn-success">Сохранить</div>
+                <div id="copy--event" class="btn btn-sm btn-info">Копировать</div>
                 <div id="delete--event" class="btn btn-sm btn-danger">Удалить мероприятие</div>
             </div>
+            <hr>
             <div class="text-right mrg-top15">
                 <div id="add-prof-categories" class="btn btn-sm btn-success">Добавить службу <i class="fas fa-plus-circle"></i></div>
             </div>
@@ -196,6 +311,27 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 </div>
 
+<!-- Modal delete event --> 
+<div class="modal fade" id="deleteEventModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Удаление мероприятия</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Внимание! Мероприятие и все сотрудники в нем будут удалены без возможности восстановления
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Отмена</button>
+                <button id="delete-event-submit" type="button" class="btn btn-sm btn-success">Продолжить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     window.onload = function () {
 
@@ -275,6 +411,8 @@ $this->params['breadcrumbs'][] = $this->title;
 
         var scheduleData = false;
         var datePeriod = {};
+        var addNowDate = {}; // Выбранная дата
+        var addNowRoom = false; // выбранный зал
 
         var weekNumber = ['1', '2', '3', '4', '5', '6', '0'];
 
@@ -291,6 +429,55 @@ $this->params['breadcrumbs'][] = $this->title;
             nowDate.setDate(nowDate.getDate() - 7);
             renderCalendar(nowDate);
             loadSchedule(datePeriod);
+        });
+        
+        $('body').on('dblclick', '.room-cell', function (e) {
+            if (!e.target.classList.contains('room-cell')) {
+                return false;
+            }
+            addNowDate.day = this.parentNode.dataset.day;
+            addNowDate.month = this.parentNode.dataset.month;
+            addNowDate.year = this.parentNode.dataset.year;
+            addNowRoom = this.dataset.room;
+
+            $('#add--date').html(normalizeDate(addNowDate.day + "." + addNowDate.month + "." + addNowDate.year));
+            $('#addEventModal').modal('show');
+        });
+        
+        // Отображаем только те спектакли, категория которых выбрана
+        function eventCatSort() {
+            var eventCategory = $('#select-event-category').val();
+            var events = document.getElementById('select-event');
+            var z = 0;
+            for (var i = 0; i < events.options.length; i++) {
+                if (events.options[i].dataset.category == eventCategory) {
+                    events.options[i].style.display = 'block';
+                    if (z === 0) {
+                        events.options[i].selected = true;
+                        z++;
+                    }
+                } else {
+                    events.options[i].style.display = 'none';
+                }
+            }
+        }
+        eventCatSort();
+        
+        var withoutEvent = 0;
+        $('#add--without-event').click(function(){
+            if($(this).prop('checked')){
+                withoutEvent = 1;
+                $('#select-event-category').prop('disabled', true);
+                $('#select-event').prop('disabled', true);
+            }else{
+                withoutEvent = 0;
+                $('#select-event-category').prop('disabled', false);
+                $('#select-event').prop('disabled', false);
+            }
+        });
+
+        $('#select-event-category').change(function () {
+            eventCatSort();
         });
 
         function renderCalendar(dateObj) {
@@ -408,8 +595,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 room: result.room_id,
                 eventType: result.eventType.name,
                 eventTypeId: result.eventType.id,
-                eventName: result.event.name,
-                eventOtherName: (result.event.other_name !== null ? result.event.other_name : ''),
+                eventName: (result.event !== null ? result.event.name : ''),
+                eventOtherName: (result.event !== null && result.event.other_name !== null ? result.event.other_name : ''),
                 timeFrom: result.time_from,
                 timeTo: (result.time_to !== null ? result.time_to : ''),
                 profCat: result.profCat,
@@ -533,8 +720,8 @@ $this->params['breadcrumbs'][] = $this->title;
                             room: scheduleData[key].room_id,
                             eventType: scheduleData[key].eventType.name,
                             eventTypeId: scheduleData[key].eventType.id,
-                            eventName: scheduleData[key].event.name,
-                            eventOtherName: (scheduleData[key].event.other_name !== null ? scheduleData[key].event.other_name : ''),
+                            eventName: (scheduleData[key].event !== null ? scheduleData[key].event.name : ''),
+                            eventOtherName: (scheduleData[key].event !== null && scheduleData[key].event.other_name !== null? scheduleData[key].event.other_name : ''),
                             timeFrom: scheduleData[key].time_from,
                             timeTo: (scheduleData[key].time_to !== null ? scheduleData[key].time_to : ''),
                             profCat: scheduleData[key].profCat
@@ -556,7 +743,11 @@ $this->params['breadcrumbs'][] = $this->title;
         var editEventDate = false;
         var editEventRoom = false;
         $('body').on('click', '.event-cell', function (e) {
+            $('.three--right-save-button').slideDown(200);
+            $('.three--copy-event').slideUp(200);
             $('#prof-cat-right-button-container').empty();
+            $('#add-user-in-schedule-container').css({'display': 'none'});
+            $('#user-in-event-right-button-container').empty();
             editEventId = this.dataset.id;
             for (var key in scheduleData) {
                 if (scheduleData[key].id == editEventId) {
@@ -570,7 +761,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
                     $('#three--right-more-meta').html(normalizeDate(dateT.getDate() + "." + dateT.getMonth() + "." + dateT.getFullYear()) +
                             ", " + minuteToTime(scheduleData[key].time_from) +
-                            " / " + scheduleData[key].event.name + " (" + scheduleData[key].eventType.name + ")");
+                            " / " + (scheduleData[key].event !== null ? scheduleData[key].event.name : '') +" (" + scheduleData[key].eventType.name + ")");
                     
                     if(scheduleData[key].profCat){
                         addRightProfCatButton(scheduleData[key].profCat);
@@ -583,6 +774,11 @@ $this->params['breadcrumbs'][] = $this->title;
 
         $('#three--right-more-close').click(function () {
             $('.three--right-more').removeClass('zoomInRight').addClass('zoomOutRight');
+            $('.three--right-save-button').slideDown(200);
+            $('.three--copy-event').slideUp(200);
+            $('#prof-cat-right-button-container').empty();
+            $('#add-user-in-schedule-container').css({'display': 'none'});
+            $('#user-in-event-right-button-container').empty();
         });
 
         // Загружает всех пользователей на выбранном мероприятии
@@ -684,8 +880,8 @@ $this->params['breadcrumbs'][] = $this->title;
                                     room: scheduleData[key].room_id,
                                     eventType: scheduleData[key].eventType.name,
                                     eventTypeId: scheduleData[key].eventType.id,
-                                    eventName: scheduleData[key].event.name,
-                                    eventOtherName: (scheduleData[key].event.other_name !== null ? scheduleData[key].event.other_name : ''),
+                                    eventName: (scheduleData[key].event !== null ? scheduleData[key].event.name : ''),
+                                    eventOtherName: (scheduleData[key].event !== null && scheduleData[key].event.other_name !== null ? scheduleData[key].event.other_name : ''),
                                     timeFrom: scheduleData[key].time_from,
                                     timeTo: (scheduleData[key].time_to !== null ? scheduleData[key].time_to : ''),
                                     profCat: scheduleData[key].profCat
@@ -770,8 +966,8 @@ $this->params['breadcrumbs'][] = $this->title;
                                     room: scheduleData[key].room_id,
                                     eventType: scheduleData[key].eventType.name,
                                     eventTypeId: scheduleData[key].eventType.id,
-                                    eventName: scheduleData[key].event.name,
-                                    eventOtherName: (scheduleData[key].event.other_name !== null ? scheduleData[key].event.other_name : ''),
+                                    eventName: (scheduleData[key].event !== null ? scheduleData[key].event.name : ''),
+                                    eventOtherName: (scheduleData[key].event !== null && scheduleData[key].event.other_name !== null ? scheduleData[key].event.other_name : ''),
                                     timeFrom: scheduleData[key].time_from,
                                     timeTo: (scheduleData[key].time_to !== null ? scheduleData[key].time_to : ''),
                                     profCat: scheduleData[key].profCat
@@ -988,6 +1184,135 @@ $this->params['breadcrumbs'][] = $this->title;
                     } else {
                         showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
                     }
+                    stopPreloader();
+                },
+                error: function () {
+                    showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                    stopPreloader();
+                }
+            });
+        });
+        
+        $('#copy--event').click(function(){
+            var firstDate = new Date(datePeriod[0].year +"-" +datePeriod[0].month +"-" +datePeriod[0].day);
+            var lastDate = new Date(datePeriod[1].year +"-" +datePeriod[1].month +"-" +datePeriod[1].day);
+            $('#copy--select-date').empty();
+            for(var i = 0; i < 7; i++){
+                var createOption = document.createElement('option');
+                createOption.dataset.day = firstDate.getDate();
+                createOption.dataset.month = (firstDate.getMonth() +1);
+                createOption.dataset.year = firstDate.getFullYear();
+                createOption.innerHTML = firstDate.getDate() +" " +monthNameDec[firstDate.getMonth()] +" " +firstDate.getFullYear();
+                document.getElementById('copy--select-date').append(createOption);
+                firstDate.setDate(firstDate.getDate()+1);
+//                if(firstDate.getTime() === lastDate.getTime()){
+//                    alert('yes');
+//                }
+            }
+            var roomsSelect = document.getElementById('copy--select-room');
+            for (var i = 0; i < roomsSelect.options.length; i++) {
+                if (+roomsSelect.options[i].value == +editEventRoom) {
+                    roomsSelect.options[i].selected = true;
+                }
+            }
+            $('.three--right-save-button').slideUp(200);
+            $('.three--copy-event').slideDown(200);
+        });
+        
+        $('#copy--cancel-copy').click(function(){
+            $('.three--right-save-button').slideDown(200);
+            $('.three--copy-event').slideUp(200);
+        });
+        
+        // Копирование мероприятия
+        $('#copy--save-copy').click(function(){
+            var room = $('#copy--select-room').val();
+            var moveUsers = false;
+            var date = {
+                day: $('#copy--select-date').find(':selected').attr('data-day'),
+                month: (+$('#copy--select-date').find(':selected').attr('data-month') - 1),
+                year: $('#copy--select-date').find(':selected').attr('data-year')
+            };
+            if($('#copy--checkbox-move-users').prop('checked')){
+                moveUsers = 1;
+            }else{
+                moveUsers = 0;
+            }
+            var newTimeFrom = $('#edit--time_from').val();
+            var newTimeTo = $('#edit--time_to').val();
+            if (!newTimeFrom) {
+                showNotifications('Кажется вы не указали время начала мероприятия', 7000, NOTIF_RED);
+                return false;
+            }
+//            alert(editEventId);
+//            return false;
+            if (!checkTimesInterval(timeToMinute(newTimeFrom), timeToMinute(newTimeTo), date, room)) {
+                showNotifications("Изменяемое мероприятие пересекается с другими в этот день", 3000, NOTIF_RED);
+                return false;
+            }
+            goPreloader();
+            var data = {
+                trigger: 'copy-event',
+                id: editEventId,
+                date: date,
+                room: room,
+                moveUsers: moveUsers
+            };
+            data[csrfParam] = csrfToken;
+            $.ajax({
+                type: "POST",
+                url: '/schedule/three',
+                data: data,
+                success: function (data) {
+                    var result = JSON.parse(data);
+                    console.log(result);
+                    if(result.response == 'ok'){
+                        scheduleData[scheduleData.length] = result.result;
+                        addEventInCalendar(generateCellData(result.result));
+                    }else if(result.response == 'error'){
+                        showNotifications(result.result, 4000, NOTIF_RED);
+                    }
+                        
+                    stopPreloader();
+                },
+                error: function () {
+                    showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                    stopPreloader();
+                }
+            });
+        });
+        
+        // Удаление мероприятия
+        $('#delete--event').click(function(){
+           $('#deleteEventModal').modal('show');
+        });
+        
+        $('#delete-event-submit').click(function(){
+            goPreloader();
+            var data = {
+                trigger: 'delete-event',
+                id: editEventId,
+            };
+            data[csrfParam] = csrfToken;
+            $.ajax({
+                type: "POST",
+                url: '/schedule/three',
+                data: data,
+                success: function (data) {
+                    var result = JSON.parse(data);
+                    console.log(result);
+                    if(result.response == 'ok'){
+                        deleteEventInCalendar(editEventId);
+                        $('#deleteEventModal').modal('hide');
+                        $('.three--right-more').removeClass('zoomInRight').addClass('zoomOutRight');
+                        $('#prof-cat-right-button-container').empty();
+                        $('#add-user-in-schedule-container').css({'display': 'none'});
+                        $('#user-in-event-right-button-container').empty();
+                        showNotifications("Мероприятие удалено", 2000, NOTIF_GREEN);
+                    }else if(result.response == 'error'){
+                        showNotifications(result.result, 4000, NOTIF_RED);
+                    }
+                        
                     stopPreloader();
                 },
                 error: function () {
