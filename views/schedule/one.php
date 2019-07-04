@@ -637,6 +637,8 @@ $this->params['breadcrumbs'][] = $this->title;
         var editEventDate = false;
         var editEventRoom = false;
         $('body').on('click', '.event-cell', function (e) {
+            $('#edit--time_from').val('');
+            $('#edit--time_to').val('');
             editEventId = this.dataset.id;
             for (var key in scheduleData) {
                 if (scheduleData[key].id == editEventId) {
@@ -752,7 +754,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 timeFrom: normalizeTime(minuteToTime(scheduleData[key].time_from)),
                                 timeTo: (scheduleData[key].time_to !== null ? normalizeTime(minuteToTime(scheduleData[key].time_to)) : ''),
                                 eventType: scheduleData[key].eventType.id,
-                                event: scheduleData[key].event.id
+                                event: (scheduleData[key].event !== null ? scheduleData[key].event.id : "")
                             };
                             if (!checkTimesInterval(scheduleData[key].time_from, scheduleData[key].time_to, dateObj, event.target.dataset.room)) {
                                 showNotifications("Добавляемое мероприятие пересекается с другими в этот день", 3000, NOTIF_RED);

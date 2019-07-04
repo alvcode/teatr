@@ -395,6 +395,37 @@ class ScheduleController extends AccessController
     public function actionThree(){
         
         if(Yii::$app->request->isAjax){
+            if(Yii::$app->request->post('trigger') == 'add-schedule'){
+                $spectacleEventConfig = Config::getConfig('spectacle_event');
+                if(in_array(Yii::$app->request->post('eventType'), $spectacleEventConfig) && +Yii::$app->request->post('withoutEvent') > 0){
+                    return json_encode(['response' => 'error', 'result' => 'На спектакль обязательно нужно выбрать мероприятие']);
+                }
+                $scheduleEvent = new ScheduleEvents();
+                $scheduleEvent->event_type_id = Yii::$app->request->post('eventType');
+                if(+Yii::$app->request->post('withoutEvent') === 0){
+                    $scheduleEvent->event_id = Yii::$app->request->post('event');
+                }
+                $scheduleEvent->room_id = Yii::$app->request->post('room');
+                $scheduleEvent->date = date('Y-m-d', mktime(0, 0, 0, Yii::$app->request->post('date')['month'] + 1, Yii::$app->request->post('date')['day'], Yii::$app->request->post('date')['year']));
+                $scheduleEvent->time_from = \app\components\Formatt::timeToMinute(Yii::$app->request->post('timeFrom'));
+                if(\app\components\Formatt::timeToMinute(Yii::$app->request->post('timeTo'))){
+                    $scheduleEvent->time_to = \app\components\Formatt::timeToMinute(Yii::$app->request->post('timeTo'));
+                }
+                if($scheduleEvent->validate() && $scheduleEvent->save()){
+                    if(in_array($scheduleEvent->event_type_id, $spectacleEventConfig)){
+                        $actorsProfCat = Config::getConfig('actors_prof_cat');
+                        $profInSchedule = new ProfCatInSchedule();
+                        $profInSchedule->prof_cat_id = $actorsProfCat[0];
+                        $profInSchedule->schedule_id = $scheduleEvent->id;
+                        $profInSchedule->save();
+                    }
+                    $record = ScheduleEvents::find()
+                        ->where(['id' => $scheduleEvent->id])
+                        ->with('eventType')->with('event')->with('profCat')->asArray()->one();
+                    return json_encode(['response' => 'ok', 'result' => $record]);
+                }
+            }
+            
             if(Yii::$app->request->post('trigger') == 'load-schedule'){
                 $period = Yii::$app->request->post('period');
                 $startDate = date('Y-m-d', strtotime($period[0]['year'] ."-" .$period[0]['month'] ."-" .$period[0]['day']));

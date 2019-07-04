@@ -479,6 +479,56 @@ $this->params['breadcrumbs'][] = $this->title;
         $('#select-event-category').change(function () {
             eventCatSort();
         });
+        
+        // Добавляем мероприятие через стандартное добавление
+        $('#add-event-submit').click(function () {
+            var timeFrom = $('#add--time_from').val();
+            var timeTo = $('#add--time_to').val();
+            var eventType = $('#select-event-type').val();
+            var event = $('#select-event').val();
+            if (!timeFrom || timeFrom == '') {
+                showNotifications("Не выбрано время начала мероприятия", 3000, NOTIF_RED);
+                return false;
+            }
+            if (!checkTimesInterval(timeToMinute(timeFrom), timeToMinute(timeTo), addNowDate, addNowRoom)) {
+                showNotifications("Добавляемое мероприятие пересекается с другими в этот день", 3000, NOTIF_RED);
+                return false;
+            }
+            goPreloader();
+            var data = {
+                trigger: 'add-schedule',
+                date: addNowDate,
+                room: addNowRoom,
+                timeFrom: timeFrom,
+                timeTo: timeTo,
+                eventType: eventType,
+                event: event,
+                withoutEvent: withoutEvent
+            };
+            data[csrfParam] = csrfToken;
+            $.ajax({
+                type: "POST",
+                url: '/schedule/three',
+                data: data,
+                success: function (data) {
+                    var result = JSON.parse(data);
+                    console.log(result);
+                    if (result.response == 'ok') {
+                        scheduleData[scheduleData.length] = result.result;
+                        addEventInCalendar(generateCellData(result.result));
+                        $('#addEventModal').modal('hide');
+                        $('.clean-input').click();
+                    } else if (result.response == 'error'){
+                        showNotifications(result.result, 4000, NOTIF_RED);
+                    }
+                    stopPreloader();
+                },
+                error: function () {
+                    showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                    stopPreloader();
+                }
+            });
+        });
 
         function renderCalendar(dateObj) {
             $('#three--schedule-items').empty();
@@ -743,6 +793,8 @@ $this->params['breadcrumbs'][] = $this->title;
         var editEventDate = false;
         var editEventRoom = false;
         $('body').on('click', '.event-cell', function (e) {
+            $('#edit--time_from').val('');
+            $('#edit--time_to').val('');
             $('.three--right-save-button').slideDown(200);
             $('.three--copy-event').slideUp(200);
             $('#prof-cat-right-button-container').empty();

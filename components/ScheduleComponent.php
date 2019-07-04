@@ -9,6 +9,7 @@ use app\models\ScheduleEvents;
 use app\models\Casts;
 use app\models\UserInSchedule;
 use app\models\User;
+use app\models\Config;
 
 /**
  *
@@ -228,11 +229,19 @@ class ScheduleComponent extends Model{
         return $result;
     }
     
+    /**
+     * Проверяет расписание актеров на заполненность
+     * @param int $month
+     * @param int $year
+     * @return array
+     */
     public static function checkFullSchedule($month, $year){
+        $spectacleEventConfig = Config::getConfig('spectacle_event');
         $result = [];
         $schedule = ScheduleEvents::find()->select('*')
                 ->where(['=', 'year(date)', $year])
                 ->andWhere(['=', 'month(date)', $month])
+                ->andWhere(['event_type_id' => $spectacleEventConfig])
                 ->asArray()->all();
         
         $casts = Casts::find()->where(['year' => $year, 'month' => $month])->with('understudy')->asArray()->all();
