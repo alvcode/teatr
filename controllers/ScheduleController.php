@@ -634,5 +634,15 @@ class ScheduleController extends AccessController
         ]);
     }
     
+    
+    /**
+     * Action выгрузки в excel
+     */
+    public function actionExcel(){
+        
+        ScheduleComponent::excelWeekSchedule(Yii::$app->request->get('from'), Yii::$app->request->get('to'));
+        
+    }
+    
 
 }

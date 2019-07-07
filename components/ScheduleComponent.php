@@ -10,6 +10,9 @@ use app\models\Casts;
 use app\models\UserInSchedule;
 use app\models\User;
 use app\models\Config;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use app\models\Room;
 
 /**
  *
@@ -318,6 +321,159 @@ class ScheduleComponent extends Model{
         }
         
         return $result;
+    }
+    
+    /**
+     * Генерация недельного расписания в Excel 
+     * @param string $from
+     * @param string $to
+     * @return 
+     */
+    public static function excelWeekSchedule($from, $to){
+        $weekdayName = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+        $roomMatrix = []; // Соответствие комнаты к столбцу
+        $explodeFrom = explode('-', $from);
+        $explodeTo = explode('-', $to);
+        $dates = [];
+        for ($i = 0; $i < 7; $i++){
+            $cc = count($dates);
+            $dates[$cc]['day'] = date('d', mktime(0, 0, 0, $explodeFrom[1], ($explodeFrom[2] + $i), $explodeFrom[0]));
+            $dates[$cc]['month'] = date('m', mktime(0, 0, 0, $explodeFrom[1], ($explodeFrom[2] + $i), $explodeFrom[0]));
+            $dates[$cc]['year'] = date('Y', mktime(0, 0, 0, $explodeFrom[1], ($explodeFrom[2] + $i), $explodeFrom[0]));
+        }
+        
+        $dateFrom = date('d.m.Y', mktime(0, 0, 0, $explodeFrom[1], $explodeFrom[2], $explodeFrom[0]));
+        $dateTo = date('d.m.Y', mktime(0, 0, 0, $explodeTo[1], $explodeTo[2], $explodeTo[0]));
+
+        $schedule = ScheduleEvents::find()
+                ->where(['between', 'date', $from, $to])
+                ->with('eventType')->with('event')->with('profCat')->asArray()->all();
+        $activesRoom = [];
+        
+        foreach ($schedule as $key => $value){
+            if(!in_array($value['room_id'], $activesRoom)){
+                $activesRoom[] = $value['room_id'];
+            }
+        }
+        $rooms = Room::find()->where(['is_active' => 1, 'id' => $activesRoom])->asArray()->all();
+        
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        
+        // header
+        $sheet->getStyleByColumnAndRow(1, 1)->applyFromArray([
+            'borders' => [
+                'top' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM,
+                    'color' => array('argb' => '000000'),
+                ],
+                'left' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM,
+                    'color' => array('argb' => '000000'),
+                ],
+            ],
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                'wrapText' => true,
+            ],
+        ]);
+        $sheet->getStyleByColumnAndRow(count($rooms) + 1, 1)->applyFromArray([
+            'borders' => [
+                'right' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM,
+                    'color' => array('argb' => '000000'),
+                ]
+            ]
+        ]);
+        $sheet->setCellValueByColumnAndRow(1, 1, $dateFrom ." - " .$dateTo);
+//        $sheet->getStyleByColumnAndRow(1, 1)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->mergeCellsByColumnAndRow(1, 1, count($rooms) + 1, 1);
+        
+        $sheet->getStyleByColumnAndRow(1, 2)->applyFromArray([
+            'borders' => [
+                'bottom' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM,
+                    'color' => array('argb' => '000000'),
+                ],
+                'left' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM,
+                    'color' => array('argb' => '000000'),
+                ],
+            ],
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                'wrapText' => true,
+            ],
+        ]);
+        $sheet->getStyleByColumnAndRow(count($rooms) + 1, 2)->applyFromArray([
+            'borders' => [
+                'right' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM,
+                    'color' => array('argb' => '000000'),
+                ]
+            ]
+        ]);
+        $sheet->setCellValueByColumnAndRow(1, 2, "РАСПИСАНИЕ НА НЕДЕЛЮ");
+        $sheet->getStyleByColumnAndRow(1, 2)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->mergeCellsByColumnAndRow(1, 2, count($rooms) + 1, 2);
+        
+        // Rooms
+        $sheet->setCellValueByColumnAndRow(1, 4, 'Дата');
+        $sheet->getStyleByColumnAndRow(1, 4)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getColumnDimensionByColumn(1)->setAutoSize(true);
+        $roomCount = 2;
+        foreach ($rooms as $key => $value){
+            $roomMatrix[$value['id']] = $roomCount;
+            $sheet->setCellValueByColumnAndRow($roomCount, 4, $value['name']);
+            $sheet->getStyleByColumnAndRow($roomCount, 4)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $sheet->getColumnDimensionByColumn($roomCount)->setWidth(40);
+//            $sheet->getColumnDimensionByColumn($roomCount)->setAutoSize(true);
+            $roomCount++;
+        }
+        
+        $dayCount = 5;
+        foreach ($dates as $key => $value){
+            $dates[$key]['row'] = $dayCount;
+            $weekday = $weekdayName[date('w', mktime(0, 0, 0, $value['month'], $value['day'], $value['year']))];
+            $sheet->setCellValueByColumnAndRow(1, $dayCount, $value['day'] ."." .$value['month'] ."." .$value['year'] ."\n" .$weekday );
+            $sheet->getStyleByColumnAndRow(1, $dayCount)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $sheet->getRowDimension($dayCount)->setRowHeight(30);
+            $dayCount++;
+        }
+        
+        $scheduleSort = [];
+        foreach ($schedule as $key => $value){
+            foreach ($dates as $keyD => $valueD){
+                if(strtotime($value['date']) === mktime(0, 0, 0,$valueD['month'], $valueD['day'], $valueD['year'])){
+                    $scheduleSort[$valueD['row']][$roomMatrix[$value['room_id']]][intval($value['time_from'])] = $value;
+                }
+            }
+        }
+        
+        foreach ($scheduleSort as $keyRow => $valRow){
+            $eventMax = 0;
+            foreach ($valRow as $keyCol => $valCol){
+                $resultStr = '';
+                if(count($valCol) > $eventMax){
+                    $eventMax = count($valCol);
+                }
+                for($i = 0; $i <= 1440; $i++){
+                    if(isset($valCol[$i])){
+                        $resultStr .= $valCol[$i]['eventType']['name'] ." " .$valCol[$i]['event']['name'] ."\n \n";
+                    }
+                }
+                $sheet->setCellValueByColumnAndRow($keyCol, $keyRow, $resultStr);
+                $sheet->getStyleByColumnAndRow($keyCol, $keyRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            }
+        }
+        
+        $writer = new Xlsx($spreadsheet);
+        $writer->save('files/week_schedule/file.xlsx');
+        return \Yii::$app->response->sendFile('files/week_schedule/file.xlsx');
+        
+        
     }
    
 }

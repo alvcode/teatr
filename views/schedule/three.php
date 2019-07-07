@@ -43,6 +43,9 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
             <div id="three--schedule-items"></div>
         </div>
+        <br>
+        
+        <a href="/schedule/excel" id="excel-download" target="_blank" class="btn btn-sm btn-info">Выгрузить в Excel</a>
     </div>
 
 
@@ -413,6 +416,8 @@ $this->params['breadcrumbs'][] = $this->title;
         var datePeriod = {};
         var addNowDate = {}; // Выбранная дата
         var addNowRoom = false; // выбранный зал
+        
+//        document.getElementById('excel-download').setAttribute('href', '/schedule/excel?from=' +datePeriod[0].day);
 
         var weekNumber = ['1', '2', '3', '4', '5', '6', '0'];
 
@@ -552,10 +557,11 @@ $this->params['breadcrumbs'][] = $this->title;
             datePeriod[1].day = dateObj.getDate();
             datePeriod[1].month = (dateObj.getMonth() + 1);
             datePeriod[1].year = dateObj.getFullYear();
+            
+            document.getElementById('excel-download').setAttribute('href', '/schedule/excel?from=' +datePeriod[0].year +"-" +datePeriod[0].month +"-" +datePeriod[0].day +"&to="+datePeriod[1].year +"-" +datePeriod[1].month +"-" +datePeriod[1].day);
             return true;
-        }
-        ;
-
+        };
+        
         function returnScheduleRow(year, month, day, week, rooms) {
             var createContainer = document.createElement('div');
             createContainer.dataset.day = day;
