@@ -75,6 +75,7 @@ class ScheduleController extends AccessController
                 if(\app\components\Formatt::timeToMinute(Yii::$app->request->post('timeTo'))){
                     $scheduleEvent->time_to = \app\components\Formatt::timeToMinute(Yii::$app->request->post('timeTo'));
                 }
+                $scheduleEvent->is_modified = Yii::$app->request->post('modifiedEvent');
                 if($scheduleEvent->validate() && $scheduleEvent->save()){
                     if(in_array($scheduleEvent->event_type_id, $spectacleEventConfig)){
                         $actorsProfCat = Config::getConfig('actors_prof_cat');
@@ -115,6 +116,7 @@ class ScheduleController extends AccessController
                 }else{
                     $findEvent->time_to = '';
                 }
+                $findEvent->is_modified = Yii::$app->request->post('modifiedEvent');
                 if($findEvent->validate() && $findEvent->save()){
                     $record = ScheduleEvents::find()
                         ->where(['id' => $findEvent->id])
@@ -411,6 +413,7 @@ class ScheduleController extends AccessController
                 if(\app\components\Formatt::timeToMinute(Yii::$app->request->post('timeTo'))){
                     $scheduleEvent->time_to = \app\components\Formatt::timeToMinute(Yii::$app->request->post('timeTo'));
                 }
+                $scheduleEvent->is_modified = Yii::$app->request->post('modifiedEvent');
                 if($scheduleEvent->validate() && $scheduleEvent->save()){
                     if(in_array($scheduleEvent->event_type_id, $spectacleEventConfig)){
                         $actorsProfCat = Config::getConfig('actors_prof_cat');
@@ -536,6 +539,7 @@ class ScheduleController extends AccessController
                 }else{
                     $findEvent->time_to = '';
                 }
+                $findEvent->is_modified = Yii::$app->request->post('modifiedEvent');
                 if($findEvent->validate() && $findEvent->save()){
                     $record = ScheduleEvents::find()
                         ->where(['id' => $findEvent->id])
@@ -548,7 +552,7 @@ class ScheduleController extends AccessController
                 $configSpectacle = Config::getConfig('spectacle_event');
                 $getEvent = ScheduleEvents::find()->where(['id' => Yii::$app->request->post('id')])->asArray()->one();
                 if(in_array($getEvent['event_type_id'], $configSpectacle)){
-                    return json_encode(['response' => 'error', 'result' => 'Для управления спектаклями воспользуйтесь сводным расписанием']);
+                    return json_encode(['response' => 'error', 'result' => 'Спектакли можно копировать только в сводном расписании']);
                 }
                 $db = Yii::$app->db;
                 $transaction = $db->beginTransaction();
@@ -560,6 +564,7 @@ class ScheduleController extends AccessController
                     $newScheduleEvent->date = date('Y-m-d', mktime(0, 0, 0, Yii::$app->request->post('date')['month'] + 1, Yii::$app->request->post('date')['day'], Yii::$app->request->post('date')['year']));
                     $newScheduleEvent->time_from = $getEvent['time_from'];
                     $newScheduleEvent->time_to = $getEvent['time_to'];
+                    $newScheduleEvent->is_modified = Yii::$app->request->post('modifiedEvent');
                     if($newScheduleEvent->save()){
                         if(+Yii::$app->request->post('moveUsers') > 0){
                             $getUserInSchedule = UserInSchedule::find()->where([

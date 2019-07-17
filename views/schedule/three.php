@@ -10,6 +10,38 @@ $this->title = 'Расписание на неделю';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 
+<style>
+    @media print {
+        .board--top-sidebar{
+            display: none;
+        }
+        .board--left-sidebar{
+            display: none;
+        }
+        .board-content{
+            margin-left: 0;
+        }
+        .three--schedule-content{
+            width: 100%;
+        }
+        .three--title-row .room{
+            min-width: 0;
+        }
+        .three--date-row .room{
+            min-width: 0;
+        }
+        .arrow-left, .arrow-right{
+            display: none;
+        }
+        .badge-info{
+            color: #000;
+            background-color: #fff;
+        }
+        #excel-download{
+            display: none;
+        }
+}
+</style>
 
 <div class="container-fluid">
     <div class="row">
@@ -110,6 +142,10 @@ $this->params['breadcrumbs'][] = $this->title;
                         <tr>
                             <th scope="row">Мероприятие</th>
                             <td id="add--event">
+                                 <div>
+                                    <input type="checkbox" class="" id="add--modified-event">
+                                    <label class="form-check-label" for="add--modified-event">Измененное!</label>
+                                </div>
                                 <div>
                                     <input type="checkbox" class="" id="add--without-event">
                                     <label class="form-check-label" for="add--without-event">Без мероприятия</label>
@@ -177,6 +213,10 @@ $this->params['breadcrumbs'][] = $this->title;
                     </tr>
                 </tbody>
             </table>
+            <div>
+                <input type="checkbox" class="" id="edit--modified-event">
+                <label class="form-check-label" for="edit--modified-event">Измененное!</label>
+            </div>
             <div class="three--copy-event">
                 <h5 class="text-info">Копировать запись на другой день</h5>
                 <div class="form-group mb-3">
@@ -480,6 +520,15 @@ $this->params['breadcrumbs'][] = $this->title;
                 $('#select-event').prop('disabled', false);
             }
         });
+        
+        var modifiedEvent = 0;
+        $('#add--modified-event').click(function(){
+            if($(this).prop('checked')){
+                modifiedEvent = 1;
+            }else{
+                modifiedEvent = 0;
+            }
+        });
 
         $('#select-event-category').change(function () {
             eventCatSort();
@@ -508,7 +557,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 timeTo: timeTo,
                 eventType: eventType,
                 event: event,
-                withoutEvent: withoutEvent
+                withoutEvent: withoutEvent,
+                modifiedEvent: modifiedEvent
             };
             data[csrfParam] = csrfToken;
             $.ajax({
@@ -656,6 +706,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 timeFrom: result.time_from,
                 timeTo: (result.time_to !== null ? result.time_to : ''),
                 profCat: result.profCat,
+                is_modified: result.is_modified
             };
             return cellData;
         }
@@ -674,6 +725,9 @@ $this->params['breadcrumbs'][] = $this->title;
                         if (roomsCell[z].dataset.room == params.room) {
                             var createContainer = document.createElement('div');
                             createContainer.className = 'event-cell noselect';
+                            if(+params.is_modified > 0){
+                                createContainer.classList.add('text-danger', 'font-weight-bold');
+                            }
                             createContainer.dataset.id = params.id;
                             createContainer.dataset.timeFrom = params.timeFrom;
                             if (params.timeTo && params.timeTo != '') {
@@ -780,7 +834,8 @@ $this->params['breadcrumbs'][] = $this->title;
                             eventOtherName: (scheduleData[key].event !== null && scheduleData[key].event.other_name !== null? scheduleData[key].event.other_name : ''),
                             timeFrom: scheduleData[key].time_from,
                             timeTo: (scheduleData[key].time_to !== null ? scheduleData[key].time_to : ''),
-                            profCat: scheduleData[key].profCat
+                            profCat: scheduleData[key].profCat,
+                            is_modified: scheduleData[key].is_modified
                         };
                         addEventInCalendar(cellData);
                     }
@@ -798,6 +853,7 @@ $this->params['breadcrumbs'][] = $this->title;
         var editEventId = false;
         var editEventDate = false;
         var editEventRoom = false;
+        var editModifiedEvent = 0;
         $('body').on('click', '.event-cell', function (e) {
             $('#edit--time_from').val('');
             $('#edit--time_to').val('');
@@ -823,6 +879,13 @@ $this->params['breadcrumbs'][] = $this->title;
                     
                     if(scheduleData[key].profCat){
                         addRightProfCatButton(scheduleData[key].profCat);
+                    }
+                    if(+scheduleData[key].is_modified > 0){
+                        editModifiedEvent = 1;
+                        $('#edit--modified-event').prop('checked', true);
+                    }else{
+                        editModifiedEvent = 0;
+                        $('#edit--modified-event').prop('checked', false);
                     }
                 }
             }
@@ -1219,12 +1282,18 @@ $this->params['breadcrumbs'][] = $this->title;
                 showNotifications("Изменяемое мероприятие пересекается с другими в этот день", 3000, NOTIF_RED);
                 return false;
             }
+            if($('#edit--modified-event').prop('checked')){
+                editModifiedEvent = 1;
+            }else{
+                editModifiedEvent = 0;
+            }
             goPreloader();
             var data = {
                 trigger: 'edit-event',
                 id: editEventId,
                 timeFrom: newTimeFrom,
-                timeTo: newTimeTo
+                timeTo: newTimeTo,
+                modifiedEvent: editModifiedEvent
             };
             data[csrfParam] = csrfToken;
             $.ajax({
@@ -1308,13 +1377,19 @@ $this->params['breadcrumbs'][] = $this->title;
                 showNotifications("Изменяемое мероприятие пересекается с другими в этот день", 3000, NOTIF_RED);
                 return false;
             }
+            if($('#edit--modified-event').prop('checked')){
+                editModifiedEvent = 1;
+            }else{
+                editModifiedEvent = 0;
+            }
             goPreloader();
             var data = {
                 trigger: 'copy-event',
                 id: editEventId,
                 date: date,
                 room: room,
-                moveUsers: moveUsers
+                moveUsers: moveUsers,
+                modifiedEvent: editModifiedEvent
             };
             data[csrfParam] = csrfToken;
             $.ajax({

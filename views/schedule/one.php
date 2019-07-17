@@ -103,6 +103,10 @@ $this->params['breadcrumbs'][] = $this->title;
                             <th scope="row">Мероприятие</th>
                             <td id="add--event">
                                 <div>
+                                    <input type="checkbox" class="" id="add--modified-event">
+                                    <label class="form-check-label" for="add--modified-event">Измененное!</label>
+                                </div>
+                                <div>
                                     <input type="checkbox" class="" id="add--without-event">
                                     <label class="form-check-label" for="add--without-event">Без мероприятия</label>
                                 </div>
@@ -177,7 +181,11 @@ $this->params['breadcrumbs'][] = $this->title;
                         </tr>
                     </tbody>
                 </table>
-                <div class="btn btn-sm btn-danger" id="delete-event">Удалить мероприятие</div>
+                <div>
+                    <input type="checkbox" class="" id="edit--modified-event">
+                    <label class="form-check-label" for="edit--modified-event">Измененное!</label>
+                </div>
+                <div class="btn btn-sm btn-danger mrg-top15" id="delete-event">Удалить мероприятие</div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Отмена</button>
@@ -364,6 +372,16 @@ $this->params['breadcrumbs'][] = $this->title;
                 $('#select-event').prop('disabled', false);
             }
         });
+        
+        var modifiedEvent = 0;
+        $('#add--modified-event').click(function(){
+            if($(this).prop('checked')){
+                modifiedEvent = 1;
+            }else{
+                modifiedEvent = 0;
+            }
+        });
+        
 
         $('#select-event-category').change(function () {
             eventCatSort();
@@ -392,7 +410,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 timeTo: timeTo,
                 eventType: eventType,
                 event: event,
-                withoutEvent: withoutEvent
+                withoutEvent: withoutEvent,
+                modifiedEvent: modifiedEvent
             };
             data[csrfParam] = csrfToken;
             $.ajax({
@@ -484,6 +503,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 eventOtherName: (result.event !== null && result.event.other_name !== null ? result.event.other_name : ''),
                 timeFrom: result.time_from,
                 timeTo: (result.time_to !== null ? result.time_to : ''),
+                is_modified: result.is_modified
             };
             return cellData;
         }
@@ -502,6 +522,9 @@ $this->params['breadcrumbs'][] = $this->title;
                         if (roomsCell[z].dataset.room == params.room) {
                             var createContainer = document.createElement('div');
                             createContainer.className = 'event-cell noselect';
+                            if(+params.is_modified > 0){
+                                createContainer.classList.add('text-danger', 'font-weight-bold');
+                            }
                             createContainer.dataset.id = params.id;
                             createContainer.dataset.timeFrom = params.timeFrom;
                             if (params.timeTo && params.timeTo != '') {
@@ -618,6 +641,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             eventOtherName: (scheduleData[key].event !== null && scheduleData[key].event.other_name !== null? scheduleData[key].event.other_name : ''),
                             timeFrom: scheduleData[key].time_from,
                             timeTo: (scheduleData[key].time_to !== null ? scheduleData[key].time_to : ''),
+                            is_modified: scheduleData[key].is_modified
                         };
                         addEventInCalendar(cellData);
 
@@ -636,6 +660,7 @@ $this->params['breadcrumbs'][] = $this->title;
         var editEventId = false;
         var editEventDate = false;
         var editEventRoom = false;
+        var editModifiedEvent = 0;
         $('body').on('click', '.event-cell', function (e) {
             $('#edit--time_from').val('');
             $('#edit--time_to').val('');
@@ -652,6 +677,14 @@ $this->params['breadcrumbs'][] = $this->title;
                     
                     $('#edit--meta').html(normalizeDate(dateT.getDate() + "." + dateT.getMonth() + "." + dateT.getFullYear()) +
                             " / " + (scheduleData[key].event !== null ? scheduleData[key].event.name : '') + " (" + scheduleData[key].eventType.name + ")");
+                    
+                    if(+scheduleData[key].is_modified > 0){
+                        editModifiedEvent = 1;
+                        $('#edit--modified-event').prop('checked', true);
+                    }else{
+                        editModifiedEvent = 0;
+                        $('#edit--modified-event').prop('checked', false);
+                    }
                 }
             }
 
@@ -669,12 +702,18 @@ $this->params['breadcrumbs'][] = $this->title;
                 showNotifications("Добавляемое мероприятие пересекается с другими в этот день", 3000, NOTIF_RED);
                 return false;
             }
+            if($('#edit--modified-event').prop('checked')){
+                editModifiedEvent = 1;
+            }else{
+                editModifiedEvent = 0;
+            }
             goPreloader();
             var data = {
                 trigger: 'edit-event',
                 id: editEventId,
                 timeFrom: newTimeFrom,
-                timeTo: newTimeTo
+                timeTo: newTimeTo,
+                modifiedEvent: editModifiedEvent
             };
             data[csrfParam] = csrfToken;
             $.ajax({
@@ -754,7 +793,8 @@ $this->params['breadcrumbs'][] = $this->title;
                                 timeFrom: normalizeTime(minuteToTime(scheduleData[key].time_from)),
                                 timeTo: (scheduleData[key].time_to !== null ? normalizeTime(minuteToTime(scheduleData[key].time_to)) : ''),
                                 eventType: scheduleData[key].eventType.id,
-                                event: (scheduleData[key].event !== null ? scheduleData[key].event.id : "")
+                                event: (scheduleData[key].event !== null ? scheduleData[key].event.id : ""),
+                                modifiedEvent: scheduleData[key].is_modified
                             };
                             if (!checkTimesInterval(scheduleData[key].time_from, scheduleData[key].time_to, dateObj, event.target.dataset.room)) {
                                 showNotifications("Добавляемое мероприятие пересекается с другими в этот день", 3000, NOTIF_RED);
@@ -786,6 +826,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                             eventOtherName: (result.result.event !== null && result.result.event.other_name !== null ? result.result.event.other_name : ''),
                                             timeFrom: result.result.time_from,
                                             timeTo: (result.result.time_to !== null ? result.result.time_to : ''),
+                                            is_modified: result.result.is_modified
                                         };
                                         addEventInCalendar(cellData);
                                         $('#addEventModal').modal('hide');

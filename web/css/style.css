@@ -165,7 +165,7 @@ a:hover {
 }
 .event-cell .type {
   font-size: 14px;
-  color: #F97979;
+  /*color: #b8daff;*/
   font-weight: 700;
 }
 .event-cell .name {
@@ -383,5 +383,8 @@ a:hover {
 }
 #usersListModal .selected {
   color: #F97979;
+}
+.three--copy-event {
+  display: none;
 }
 /*# sourceMappingURL=style.css.map */
