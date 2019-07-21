@@ -473,6 +473,12 @@ class ScheduleController extends AccessController
                     return json_encode(['response' => 'error', 'result' => 'Для заполнения актеров в спектаклях, воспользуйтесь расписанием актеров']);
                 }
                 $users = Yii::$app->request->post('users');
+                foreach($users as $value){
+                    $checkIntersect = ScheduleComponent::checkIntersect(Yii::$app->request->post('eventSchedule'), $value);
+                    if($checkIntersect){
+                        return json_encode(['result' => 'intersect', 'data' => $checkIntersect]);
+                    }
+                }
                 $db = Yii::$app->db;
                 $transaction = $db->beginTransaction();
                 try{
@@ -540,11 +546,15 @@ class ScheduleController extends AccessController
                     $findEvent->time_to = '';
                 }
                 $findEvent->is_modified = Yii::$app->request->post('modifiedEvent');
+                $checkIntersect = ScheduleComponent::checkIntersectEdit($findEvent->id, $findEvent->date, $findEvent->time_from, $findEvent->time_to);
+                if($checkIntersect){
+                    return json_encode(['response' => 'intersect', 'data' => $checkIntersect]);
+                }
                 if($findEvent->validate() && $findEvent->save()){
                     $record = ScheduleEvents::find()
                         ->where(['id' => $findEvent->id])
                         ->with('eventType')->with('event')->with('profCat')->asArray()->one();
-                return json_encode($record);
+                return json_encode(['response' => 'ok', 'data' => $record]);
                 }
             }
             
@@ -553,6 +563,12 @@ class ScheduleController extends AccessController
                 $getEvent = ScheduleEvents::find()->where(['id' => Yii::$app->request->post('id')])->asArray()->one();
                 if(in_array($getEvent['event_type_id'], $configSpectacle)){
                     return json_encode(['response' => 'error', 'result' => 'Спектакли можно копировать только в сводном расписании']);
+                }
+                if(+Yii::$app->request->post('moveUsers') > 0){
+                    $checkIntersect = ScheduleComponent::checkIntersectEdit($getEvent['id'], date('Y-m-d', mktime(0, 0, 0, Yii::$app->request->post('date')['month'] + 1, Yii::$app->request->post('date')['day'], Yii::$app->request->post('date')['year'])), $getEvent['time_from'], $getEvent['time_to']);
+                    if($checkIntersect){
+                        return json_encode(['response' => 'intersect', 'data' => $checkIntersect]);
+                    }
                 }
                 $db = Yii::$app->db;
                 $transaction = $db->beginTransaction();

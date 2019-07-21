@@ -349,6 +349,7 @@ class UserController extends AccessController
             if(Yii::$app->request->post('trigger') == 'rename-category'){
                 $catModel = ProffCategories::findOne(Yii::$app->request->post('catId'));
                 $catModel->name = Yii::$app->request->post('categoryName');
+                $catModel->alias = Yii::$app->request->post('categoryAlias');
                 if($catModel->save()){
                     return 1;
                 }else{

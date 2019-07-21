@@ -99,7 +99,7 @@ class ScheduleComponent extends Model{
     }
     
     /**
-     * Проверка на пересечение времени. Передаем ID мероприятия из расписания на которое хотим поставить сотрудника
+     * Проверка на пересечение времени сотрудника. Передаем ID мероприятия из расписания на которое хотим поставить сотрудника
      * Функция берет все мероприятия где стоит сотрудник на сегодня и проверяет, чтобы время не пересекалось.
      * false - не пересекается, array - данные с пересечениями
      * 
@@ -110,39 +110,137 @@ class ScheduleComponent extends Model{
     public static function checkIntersect($scheduleId, $userId){
         $result = [];
         $findSchedule = ScheduleEvents::findOne($scheduleId);
-        $getAllEvents = ScheduleEvents::find()->select('events.name, schedule_events.time_from, schedule_events.time_to')
+        $getAllEvents = ScheduleEvents::find()->select('schedule_events.id, events.name, schedule_events.time_from, schedule_events.time_to, user.name user_name, user.surname')
                 ->leftJoin('user_in_schedule', 'schedule_events.id = user_in_schedule.schedule_event_id')
                 ->leftJoin('events', 'events.id = schedule_events.event_id')
+                ->leftJoin('user', 'user_in_schedule.user_id = user.id')
                 ->where(['date(schedule_events.date)' => $findSchedule->date, 'user_in_schedule.user_id' => $userId])
                 ->asArray()->all();
         if($getAllEvents){
-            if($findSchedule->time_to){
-                foreach ($getAllEvents as $key => $value){
-                    if($value['time_to']){
-                        if((($value['time_from'] < $findSchedule->time_to && $value['time_from'] >= $findSchedule->time_from))
-                                || ($value['time_to'] <= $findSchedule->time_to && $value['time_to'] > $findSchedule->time_from) 
-                                || ($value['time_from'] <= $findSchedule->time_from && $value['time_to'] >= $findSchedule->time_to)){
-                                    $result[] = $value;
-                                }
-                    }else{
-                        if(+$findSchedule->time_from == $value['time_from']){
-                            $result[] = $value;
-                        }
+            foreach ($getAllEvents as $key => $value){
+                if($value['time_to'] && $findSchedule->time_to && +$value['id'] != +$findSchedule->id){
+                    if(((+$value['time_from'] < +$findSchedule->time_to && +$value['time_from'] >= +$findSchedule->time_from))
+                        || (+$value['time_to'] <= +$findSchedule->time_to && +$value['time_to'] > +$findSchedule->time_from) 
+                        || (+$value['time_from'] <= +$findSchedule->time_from && +$value['time_to'] >= +$findSchedule->time_to)){
+                        $result[] = $value;
                     }
-                }
-            }else{
-                foreach ($getAllEvents as $key => $value){
-                    if(+$findSchedule->time_from == $value['time_from']){
+                }elseif($value['time_to'] && !$findSchedule->time_to && +$value['id'] != +$findSchedule->id){
+                    if(+$value['time_from'] <= +$findSchedule->time_from && +$value['time_to'] > +$findSchedule->time_from){
+                        $result[] = $value;
+                    }
+                }elseif(!$value['time_to'] && $findSchedule->time_to && +$value['id'] != +$findSchedule->id){
+                    if(+$findSchedule->time_from <= +$value['time_from'] && +$findSchedule->time_to > +$value['time_from']){
+                        $result[] = $value;
+                    }
+                }elseif(!$value['time_to'] && !$findSchedule->time_to && +$value['id'] != +$findSchedule->id){
+                    if(+$findSchedule->time_from == +$value['time_from']){
                         $result[] = $value;
                     }
                 }
             }
+//            if($findSchedule->time_to){
+//                foreach ($getAllEvents as $key => $value){
+//                    if($value['time_to']){
+//                        if(((+$value['time_from'] < +$findSchedule->time_to && +$value['time_from'] >= +$findSchedule->time_from))
+//                                || (+$value['time_to'] <= +$findSchedule->time_to && +$value['time_to'] > +$findSchedule->time_from) 
+//                                || (+$value['time_from'] <= +$findSchedule->time_from && +$value['time_to'] >= +$findSchedule->time_to)){
+//                                    $result[] = $value;
+//                        }
+//                    }else{
+//                        if(+$findSchedule->time_from == $value['time_from']){
+//                            $result[] = $value;
+//                        }
+//                    }
+//                }
+//            }else{
+//                foreach ($getAllEvents as $key => $value){
+//                    if(+$findSchedule->time_from == $value['time_from']){
+//                        $result[] = $value;
+//                    }
+//                }
+//            }
         }
         if($result){
             return $result;
         }else{
             return false;
         }
+    }
+    
+    /**
+     * Сверяет проставленных сотрудников на мероприятиях с пересекаемыми и выдает
+     * ответ, если есть конфликт
+     * @param integer $scheduleId
+     * @param string $dateParam
+     * @param integer $timeFrom
+     * @param integer $timeTo
+     * @return array
+     */
+    public static function checkIntersectEdit($scheduleId, $dateParam, $timeFrom, $timeTo = null){
+        $result = [];
+        $findSchedule = ScheduleEvents::findOne($scheduleId);
+        $findUsers = UserInSchedule::find()->where(['schedule_event_id' => $findSchedule->id])->with('user')->asArray()->all();
+        $findSchedule->time_from = $timeFrom;
+        $findSchedule->time_to = $timeTo;
+        
+        $allEvents = ScheduleEvents::find()->where(['date' => $dateParam])->with('event')->asArray()->all();
+        if($findUsers && $allEvents){
+            foreach ($allEvents as $key => $value){
+                if($value['time_to'] && $findSchedule->time_to && +$value['id'] != +$findSchedule->id){
+                    if(((+$value['time_from'] < +$findSchedule->time_to && +$value['time_from'] >= +$findSchedule->time_from))
+                        || (+$value['time_to'] <= +$findSchedule->time_to && +$value['time_to'] > +$findSchedule->time_from) 
+                        || (+$value['time_from'] <= +$findSchedule->time_from && +$value['time_to'] >= +$findSchedule->time_to)){
+
+                        $users = UserInSchedule::find()->where(['schedule_event_id' => $value['id']])->with('user')->asArray()->all();
+                        foreach ($users as $keyThis => $valueThis){
+                            foreach ($findUsers as $keyList => $valueList){
+                                if(+$valueThis['user']['id'] == +$valueList['user']['id']){
+                                    $valueThis['user']['user_name'] = $valueThis['user']['name'];
+                                    $result[] = array_merge($valueThis['user'], $value['event']);
+                                }
+                            }
+                        }
+                    }
+                }elseif($value['time_to'] && !$findSchedule->time_to && +$value['id'] != +$findSchedule->id){
+                    if(+$value['time_from'] <= +$findSchedule->time_from && +$value['time_to'] >= +$findSchedule->time_from){
+                        $users = UserInSchedule::find()->where(['schedule_event_id' => $value['id']])->with('user')->asArray()->all();
+                        foreach ($users as $keyThis => $valueThis){
+                            foreach ($findUsers as $keyList => $valueList){
+                                if(+$valueThis['user']['id'] == +$valueList['user']['id']){
+                                    $valueThis['user']['user_name'] = $valueThis['user']['name'];
+                                    $result[] = array_merge($valueThis['user'], $value['event']);
+                                }
+                            }
+                        }
+                    }
+                }elseif(!$value['time_to'] && $findSchedule->time_to && +$value['id'] != +$findSchedule->id){
+                    if(+$findSchedule->time_from <= +$value['time_from'] && +$findSchedule->time_to >= +$value['time_from']){
+                        $users = UserInSchedule::find()->where(['schedule_event_id' => $value['id']])->with('user')->asArray()->all();
+                        foreach ($users as $keyThis => $valueThis){
+                            foreach ($findUsers as $keyList => $valueList){
+                                if(+$valueThis['user']['id'] == +$valueList['user']['id']){
+                                    $valueThis['user']['user_name'] = $valueThis['user']['name'];
+                                    $result[] = array_merge($valueThis['user'], $value['event']);
+                                }
+                            }
+                        }
+                    }
+                }elseif(!$value['time_to'] && !$findSchedule->time_to && +$value['id'] != +$findSchedule->id){
+                    if(+$findSchedule->time_from == +$value['time_from']){
+                        $users = UserInSchedule::find()->where(['schedule_event_id' => $value['id']])->with('user')->asArray()->all();
+                        foreach ($users as $keyThis => $valueThis){
+                            foreach ($findUsers as $keyList => $valueList){
+                                if(+$valueThis['user']['id'] == +$valueList['user']['id']){
+                                    $valueThis['user']['user_name'] = $valueThis['user']['name'];
+                                    $result[] = array_merge($valueThis['user'], $value['event']);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return $result;
     }
     
     /**

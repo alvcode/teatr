@@ -85,7 +85,13 @@ $this->params['breadcrumbs'][] = $this->title;
                         <?php foreach ($prof as $key => $value): ?>
                             <ul class="list-group mrg-top30">
                                 <li class="list-group-item d-flex justify-content-between align-items-center cat-list" data-category="<?= $value['id'] ?>">
-                                    <div class="cat-name"><h4><b><?= $value['name'] ?></b></h4></div>
+                                    <div>
+                                        <div class="cat-name"><h4><b><?= $value['name'] ?></b></h4></div>
+                                        <div class="cat-alias mrg-top15"><b><?= $value['alias'] ?></b></div>
+                                    </div>
+                                    <div class="cat-edit-ok-container">
+                                        
+                                    </div>
                                     <div>
                                         <span class="badge badge-info badge-pill edit-cat-name cursor-pointer">Изменить</span>
                                         <span class="badge badge-danger badge-pill delete-cat cursor-pointer">Удалить</span>
@@ -318,25 +324,37 @@ $this->params['breadcrumbs'][] = $this->title;
         $('.edit-cat-name').click(function () {
             actionCat = this.parentNode.parentNode.dataset.category;
             var catName = this.parentNode.parentNode.getElementsByClassName('cat-name')[0].querySelector('b').innerHTML;
+            var aliasName = this.parentNode.parentNode.getElementsByClassName('cat-alias')[0].querySelector('b').innerHTML;
             var catNameObj = this.parentNode.parentNode.getElementsByClassName('cat-name')[0];
-            var createInput = document.createElement('input');
-            createInput.value = catName;
+            var catAliasObj = this.parentNode.parentNode.getElementsByClassName('cat-alias')[0];
+            var createInputName = document.createElement('input');
+            createInputName.value = catName;
+            createInputName.id = 'edit-name-input';
+            var createInputAlias = document.createElement('input');
+            createInputAlias.value = aliasName;
+            createInputAlias.id = 'edit-alias-input';
+            
             var createOk = document.createElement('div');
             createOk.className = 'btn btn-sm btn-success edit-cat-submit';
             createOk.innerHTML = 'ok';
+            
             catNameObj.innerHTML = '';
-            catNameObj.append(createInput);
-            catNameObj.append(createOk);
+            catAliasObj.innerHTML = '';
+            catNameObj.append(createInputName);
+            catAliasObj.append(createInputAlias);
+            this.parentNode.parentNode.getElementsByClassName('cat-edit-ok-container')[0].append(createOk);
         });
 
         $('body').on('click', '.edit-cat-submit', function () {
             goPreloader();
-            var catName = this.parentNode.getElementsByTagName('input')[0].value;
+            var catName = document.getElementById('edit-name-input').value;
+            var catAlias = document.getElementById('edit-alias-input').value;
             var self = this;
             var data = {
                 trigger: 'rename-category',
                 catId: actionCat,
                 categoryName: catName,
+                categoryAlias: catAlias
             };
             data[csrfParam] = csrfToken;
             $.ajax({
@@ -345,7 +363,9 @@ $this->params['breadcrumbs'][] = $this->title;
                 data: data,
                 success: function (data) {
                     if (data == 1) {
-                        self.parentNode.innerHTML = catName;
+                        self.parentNode.parentNode.getElementsByClassName('cat-name')[0].innerHTML = "<h4><b>" +catName +"</b></h4>";
+                        self.parentNode.parentNode.getElementsByClassName('cat-alias')[0].innerHTML = "<b>" +catAlias +"</b>";
+                        $('.cat-edit-ok-container').empty();
                         showNotifications("Категория успешно переименована", 3000, NOTIF_GREEN);
                     } else if (data == 0) {
                         showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
