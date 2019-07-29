@@ -128,6 +128,17 @@ $this->params['breadcrumbs'][] = $this->title;
                             </td>
                         </tr>
                         <tr>
+                            <th scope="row">
+                                Примечание
+                                <i class="fas fa-exclamation-circle my-tooltip" data-toggle="tooltip" data-placement="right" title="Дополнительная информация. Будет отображаться в расписании. До 1000 символов"></i>
+                            </th>
+                            <td>
+                                <div class="input-group mb-3">
+                                    <textarea type="text" class="form-control form-control-sm" id="add--add-info"></textarea>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
                             <th scope="row">Тип мероприятия</th>
                             <td id="add--event_type">
                                 <div class="form-group">
@@ -208,6 +219,17 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <div class="input-group-append">
                                     <button class="btn btn-sm btn-outline-danger clean-input" type="button" id="button-addon2"><i class="fas fa-times"></i></button>
                                 </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            Примечание
+                            <i class="fas fa-exclamation-circle my-tooltip" data-toggle="tooltip" data-placement="right" title="Дополнительная информация. Будет отображаться в расписании. До 1000 символов"></i>
+                        </th>
+                        <td>
+                            <div class="input-group mb-3">
+                                <textarea type="text" class="form-control form-control-sm" id="edit--add-info"></textarea>
                             </div>
                         </td>
                     </tr>
@@ -540,6 +562,7 @@ $this->params['breadcrumbs'][] = $this->title;
             var timeTo = $('#add--time_to').val();
             var eventType = $('#select-event-type').val();
             var event = $('#select-event').val();
+            var addInfo = $('#add--add-info').val();
             if (!timeFrom || timeFrom == '') {
                 showNotifications("Не выбрано время начала мероприятия", 3000, NOTIF_RED);
                 return false;
@@ -555,6 +578,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 room: addNowRoom,
                 timeFrom: timeFrom,
                 timeTo: timeTo,
+                addInfo: addInfo,
                 eventType: eventType,
                 event: event,
                 withoutEvent: withoutEvent,
@@ -706,7 +730,9 @@ $this->params['breadcrumbs'][] = $this->title;
                 timeFrom: result.time_from,
                 timeTo: (result.time_to !== null ? result.time_to : ''),
                 profCat: result.profCat,
-                is_modified: result.is_modified
+                is_modified: result.is_modified,
+                users: result.allUsersInEvent,
+                addInfo: result.add_info
             };
             return cellData;
         }
@@ -744,7 +770,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
                             var createEventName = document.createElement('span');
                             createEventName.className = 'name';
-                            createEventName.innerHTML = params.eventName + (params.eventOtherName && params.eventOtherName != '' ? " (" + params.eventOtherName + ")" : "");
+                            createEventName.innerHTML = (params.eventName && params.eventName != '' ? "\"" +params.eventName +"\"":"") + (params.eventOtherName && params.eventOtherName != '' ? " (" + params.eventOtherName + ")" : "");
 
                             createContainer.append(createBudgie);
                             createContainer.append(createEventType);
@@ -762,7 +788,25 @@ $this->params['breadcrumbs'][] = $this->title;
                                 createProfCat.innerHTML = profCatArr.join(', ');
                             }
                             createContainer.append(createProfCat);
-
+                            
+                            var userListArr = [];
+                            var createUserList = document.createElement('div');
+                            createUserList.className = 'three--user-actors-list';
+                            for(var key in params.users){
+                                userListArr[userListArr.length] = params.users[key].userWithProf.name[0] +". " + params.users[key].userWithProf.surname;
+                            }
+                            if(userListArr.length){
+                                createUserList.innerHTML = "(" +userListArr.join(', ') +")";
+                            }
+                            createContainer.append(createUserList);
+                            
+                            if(params.addInfo){
+                                var createAddInfo = document.createElement('div');
+                                createAddInfo.className = 'three--add-info-block';
+                                createAddInfo.innerHTML = "(" +params.addInfo +")";
+                                createContainer.append(createAddInfo);
+                            }
+                            
                             createContainer.append(returnHR());
 
                             var eventsCell = roomsCell[z].getElementsByClassName('event-cell');
@@ -797,6 +841,26 @@ $this->params['breadcrumbs'][] = $this->title;
                 }
             }
         }
+        
+        function updateUserListInEvent(users, prof_cat, eventId){
+            var eventCells = document.getElementsByClassName('event-cell');
+            for(var i = 0; i < eventCells.length; i++){
+                if(+eventCells[i].dataset.id == +eventId){
+                    var userListArr = [];
+                    var createUserList = document.createElement('div');
+                    var userListDiv = eventCells[i].getElementsByClassName('three--user-actors-list')[0];
+                    userListDiv.innerHTML = '';
+                    for(var key in users){
+                        if(+users[key].userWithProf.userProfession.prof.proff_cat_id == +prof_cat){
+                            userListArr[userListArr.length] = users[key].userWithProf.name[0] +". " + users[key].userWithProf.surname;
+                        }
+                    }
+                    if(userListArr.length){
+                        userListDiv.innerHTML = "(" +userListArr.join(', ') +")";
+                    }
+                }
+            }
+        }
 
 
         /**
@@ -820,24 +884,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     console.log(scheduleData);
                     for (var key in scheduleData) {
                         var dateT = new Date(scheduleData[key].date);
-                        var cellData = {
-                            id: scheduleData[key].id,
-                            date: {
-                                day: dateT.getDate(),
-                                month: dateT.getMonth(),
-                                year: dateT.getFullYear()
-                            },
-                            room: scheduleData[key].room_id,
-                            eventType: scheduleData[key].eventType.name,
-                            eventTypeId: scheduleData[key].eventType.id,
-                            eventName: (scheduleData[key].event !== null ? scheduleData[key].event.name : ''),
-                            eventOtherName: (scheduleData[key].event !== null && scheduleData[key].event.other_name !== null? scheduleData[key].event.other_name : ''),
-                            timeFrom: scheduleData[key].time_from,
-                            timeTo: (scheduleData[key].time_to !== null ? scheduleData[key].time_to : ''),
-                            profCat: scheduleData[key].profCat,
-                            is_modified: scheduleData[key].is_modified
-                        };
-                        addEventInCalendar(cellData);
+                            addEventInCalendar(generateCellData(scheduleData[key]));
                     }
                     stopPreloader();
                 },
@@ -869,6 +916,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     if (scheduleData[key].time_to) {
                         $('#edit--time_to').val(normalizeTime(minuteToTime(scheduleData[key].time_to)));
                     }
+                    $('#edit--add-info').val(scheduleData[key].add_info);
                     var dateT = new Date(scheduleData[key].date);
                     editEventDate = {day: dateT.getDate(), month: dateT.getMonth(), year: dateT.getFullYear()};
                     editEventRoom = scheduleData[key].room_id;
@@ -1076,6 +1124,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     }
                                 }
                                 scheduleData[key].profCat = result.result.profCat;
+                                scheduleData[key].allUsersInEvent = result.result.allUsersInEvent;
                                 var dateT = new Date(scheduleData[key].date);
                                 var cellData = {
                                     id: scheduleData[key].id,
@@ -1091,7 +1140,8 @@ $this->params['breadcrumbs'][] = $this->title;
                                     eventOtherName: (scheduleData[key].event !== null && scheduleData[key].event.other_name !== null ? scheduleData[key].event.other_name : ''),
                                     timeFrom: scheduleData[key].time_from,
                                     timeTo: (scheduleData[key].time_to !== null ? scheduleData[key].time_to : ''),
-                                    profCat: scheduleData[key].profCat
+                                    profCat: scheduleData[key].profCat,
+                                    users: scheduleData[key].allUsersInEvent
                                 };
                                 for(var i = 0; i < usersInEvent.length; i++){
                                     if(+usersInEvent[i].userWithProf.userProfession.prof.proff_cat_id === +deletedProfCat){
@@ -1209,6 +1259,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 document.getElementById('user-in-event-right-button-container').append(createContainer);
                             }
                         }
+                        updateUserListInEvent(usersInEvent, result.actors_prof_cat, result.event_schedule);
                         $('#usersListModal').modal('hide');
                     }else if(result.result == 'intersect'){
                         var textNotification = '';
@@ -1244,7 +1295,7 @@ $this->params['breadcrumbs'][] = $this->title;
             goPreloader();
             var data = {
                 trigger: 'delete-in-schedule',
-                eventSchedule: deletedUserInSchedule
+                userInSchedule: deletedUserInSchedule
             };
             data[csrfParam] = csrfToken;
             $.ajax({
@@ -1270,6 +1321,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 document.getElementById('user-in-event-right-button-container').append(createContainer);
                             }
                         }
+                        updateUserListInEvent(result.result, result.actors_prof_cat, result.event_schedule);
                     }else if(result.response == 'error'){
                         showNotifications(result.result, 4000, NOTIF_RED);
                     }
@@ -1286,6 +1338,7 @@ $this->params['breadcrumbs'][] = $this->title;
         $('#save--event-time').click(function(){
             var newTimeFrom = $('#edit--time_from').val();
             var newTimeTo = $('#edit--time_to').val();
+            var addInfo = $('#edit--add-info').val();
             if (!newTimeFrom) {
                 showNotifications('Кажется вы не указали время начала мероприятия', 7000, NOTIF_RED);
                 return false;
@@ -1305,6 +1358,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 id: editEventId,
                 timeFrom: newTimeFrom,
                 timeTo: newTimeTo,
+                addInfo: addInfo,
                 modifiedEvent: editModifiedEvent
             };
             data[csrfParam] = csrfToken;

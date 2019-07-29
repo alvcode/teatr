@@ -34,6 +34,7 @@ class ScheduleEvents extends \yii\db\ActiveRecord
         return [
             [['event_type_id', 'date', 'time_from', 'room_id'], 'required'],
             [['event_type_id', 'event_id', 'time_from', 'time_to', 'room_id', 'is_modified'], 'integer'],
+            [['add_info'], 'string', 'max' => 1000],
             [['date'], 'safe'],
         ];
     }
@@ -52,6 +53,11 @@ class ScheduleEvents extends \yii\db\ActiveRecord
     public function getProfCat()
     {
         return $this->hasMany(ProfCatInSchedule::className(), ['schedule_id' => 'id'])->with('profCat');
+    }
+    
+    public function getAllUsersInEvent()
+    {
+        return $this->hasMany(UserInSchedule::className(), ['schedule_event_id' => 'id'])->with('userWithProf');
     }
 
     /**

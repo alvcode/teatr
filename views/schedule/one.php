@@ -721,14 +721,22 @@ $this->params['breadcrumbs'][] = $this->title;
                 url: '/schedule/one',
                 data: data,
                 success: function (data) {
-                    if (data != 0) {
-                        var result = JSON.parse(data);
+                    var result = JSON.parse(data);
+                    console.log(result);
+                    if(result.response == 'ok'){
                         deleteEventInCalendar(editEventId);
-                        scheduleData[scheduleData.length] = result;
-                        addEventInCalendar(generateCellData(result));
+                        scheduleData[scheduleData.length] = result.data;
+                        addEventInCalendar(generateCellData(result.data));
                         $('#editEventModal').modal('hide');
-                    } else {
-                        showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                    } else if(result.response == 'intersect'){
+                        var textNotification = '';
+                        for(var key in result.data){
+                            textNotification += "Конфликт! "+ result.data[key].user_name +" " +result.data[key].surname +" стоит на \n\
+                                "+ (result.data[key].name?result.data[key].name:"другом мероприятии") +" в это время";
+                        }
+                        showNotifications(textNotification, 7000, NOTIF_RED);
+                    }else if(result.response == 'error'){
+                        showNotifications(result.data, 7000, NOTIF_RED);
                     }
                     stopPreloader();
                 },

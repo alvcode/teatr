@@ -116,12 +116,16 @@ class ScheduleController extends AccessController
                 }else{
                     $findEvent->time_to = '';
                 }
+                $checkIntersect = ScheduleComponent::checkIntersectEdit($findEvent->id, $findEvent->date, $findEvent->time_from, $findEvent->time_to);
+                if($checkIntersect){
+                    return json_encode(['response' => 'intersect', 'data' => $checkIntersect]);
+                }
                 $findEvent->is_modified = Yii::$app->request->post('modifiedEvent');
                 if($findEvent->validate() && $findEvent->save()){
                     $record = ScheduleEvents::find()
                         ->where(['id' => $findEvent->id])
                         ->with('eventType')->with('event')->asArray()->one();
-                return json_encode($record);
+                return json_encode(['response' => 'ok', 'data' => $record]);
                 }
             }
             
@@ -413,6 +417,7 @@ class ScheduleController extends AccessController
                 if(\app\components\Formatt::timeToMinute(Yii::$app->request->post('timeTo'))){
                     $scheduleEvent->time_to = \app\components\Formatt::timeToMinute(Yii::$app->request->post('timeTo'));
                 }
+                $scheduleEvent->add_info = Yii::$app->request->post('addInfo');
                 $scheduleEvent->is_modified = Yii::$app->request->post('modifiedEvent');
                 if($scheduleEvent->validate() && $scheduleEvent->save()){
                     if(in_array($scheduleEvent->event_type_id, $spectacleEventConfig)){
@@ -435,7 +440,20 @@ class ScheduleController extends AccessController
                 $endDate = date('Y-m-d', strtotime($period[1]['year'] ."-" .$period[1]['month'] ."-" .$period[1]['day']));
                 $schedule = ScheduleEvents::find()
                         ->where(['between', 'date', $startDate, $endDate])
-                        ->with('eventType')->with('event')->with('profCat')->asArray()->all();
+                        ->with('eventType')->with('event')->with('profCat')->with('allUsersInEvent')->asArray()->all();
+                $spectacleEventConfig = Config::getConfig('spectacle_event');
+                $actorsProfCat = Config::getConfig('actors_prof_cat');
+                foreach ($schedule as $key => $value){
+                    if(!in_array($value['event_type_id'], $spectacleEventConfig)){
+                        foreach ($value['allUsersInEvent'] as $allKey => $allVal){
+                            if(!in_array($allVal['userWithProf']['userProfession']['prof']['proff_cat_id'], $actorsProfCat)){
+                                unset($schedule[$key]['allUsersInEvent'][$allKey]);
+                            }
+                        }
+                    }else{
+                        $schedule[$key]['allUsersInEvent'] = [];
+                    }
+                }
                 return json_encode($schedule);
             }
             
@@ -493,9 +511,13 @@ class ScheduleController extends AccessController
                         ->where(['schedule_event_id' => Yii::$app->request->post('eventSchedule')])
                         ->with('userWithProf')->asArray()->all();
                     $transaction->commit();
+                    // Определяем, добавлялись актеры или нет и проставляем соответствующий флаг
+                    $actorsProfCat = Config::getConfig('actors_prof_cat');
                     return json_encode([
                         'response' => 'ok',
-                        'result' => $userInSchedule
+                        'result' => $userInSchedule,
+                        'actors_prof_cat' => $actorsProfCat[0],
+                        'event_schedule' => Yii::$app->request->post('eventSchedule')
                     ]);
                 }catch (\Exception $e) {
                     $transaction->rollBack();
@@ -505,9 +527,14 @@ class ScheduleController extends AccessController
             }
             
             if(Yii::$app->request->post('trigger') == 'delete-in-schedule'){
-                Yii::$app->db->createCommand()->delete('user_in_schedule', ['id' => Yii::$app->request->post('eventSchedule')])
-                        ->execute();
-                return json_encode(['response' => 'ok']);
+                $userInSchedule = UserInSchedule::find()->where(['id' => Yii::$app->request->post('userInSchedule')])->one();
+                $eventId = $userInSchedule['schedule_event_id'];
+                $userInSchedule->delete();
+                $userInSchedule = UserInSchedule::find()->select('user_in_schedule.*')
+                        ->where(['schedule_event_id' => $eventId])
+                        ->with('userWithProf')->asArray()->all();
+                $actorsProfCat = Config::getConfig('actors_prof_cat');
+                return json_encode(['response' => 'ok', 'result' => $userInSchedule, 'actors_prof_cat' => $actorsProfCat[0], 'event_schedule' => $eventId]);
             }
             
             if(Yii::$app->request->post('trigger') == 'delete-prof-cat'){
@@ -528,12 +555,23 @@ class ScheduleController extends AccessController
                     'prof_cat_id' => Yii::$app->request->post('profCat'),
                     'schedule_id' => Yii::$app->request->post('eventSchedule')
                 ])->execute();
-                $getProfCat = ScheduleEvents::find()
+                $schedule = ScheduleEvents::find()
                         ->where(['id' => Yii::$app->request->post('eventSchedule')])
-                        ->with('profCat')->asArray()->one();
+                        ->with('eventType')->with('event')->with('profCat')->with('allUsersInEvent')->asArray()->one();
+                $spectacleEventConfig = Config::getConfig('spectacle_event');
+                $actorsProfCat = Config::getConfig('actors_prof_cat');
+                if(!in_array($schedule['event_type_id'], $spectacleEventConfig)){
+                    foreach ($schedule['allUsersInEvent'] as $allKey => $allVal){
+                        if(!in_array($allVal['userWithProf']['userProfession']['prof']['proff_cat_id'], $actorsProfCat)){
+                            unset($schedule['allUsersInEvent'][$allKey]);
+                        }
+                    }
+                }else{
+                    $schedule['allUsersInEvent'] = [];
+                }
                 return json_encode([
                     'response' => 'ok',
-                    'result' => $getProfCat
+                    'result' => $schedule,
                 ]);
             }
             
@@ -545,6 +583,7 @@ class ScheduleController extends AccessController
                 }else{
                     $findEvent->time_to = '';
                 }
+                $findEvent->add_info = Yii::$app->request->post('addInfo');
                 $findEvent->is_modified = Yii::$app->request->post('modifiedEvent');
                 $checkIntersect = ScheduleComponent::checkIntersectEdit($findEvent->id, $findEvent->date, $findEvent->time_from, $findEvent->time_to);
                 if($checkIntersect){
@@ -553,7 +592,7 @@ class ScheduleController extends AccessController
                 if($findEvent->validate() && $findEvent->save()){
                     $record = ScheduleEvents::find()
                         ->where(['id' => $findEvent->id])
-                        ->with('eventType')->with('event')->with('profCat')->asArray()->one();
+                        ->with('eventType')->with('event')->with('profCat')->with('allUsersInEvent')->asArray()->one();
                 return json_encode(['response' => 'ok', 'data' => $record]);
                 }
             }
@@ -609,7 +648,17 @@ class ScheduleController extends AccessController
                     $transaction->commit();
                     $record = ScheduleEvents::find()
                         ->where(['id' => $newScheduleEvent->id])
-                        ->with('eventType')->with('event')->with('profCat')->asArray()->one();
+                        ->with('eventType')->with('event')->with('profCat')->with('allUsersInEvent')->asArray()->one();
+                    $actorsProfCat = Config::getConfig('actors_prof_cat');
+                    if(!in_array($record['event_type_id'], $configSpectacle)){
+                        foreach ($record['allUsersInEvent'] as $allKey => $allVal){
+                            if(!in_array($allVal['userWithProf']['userProfession']['prof']['proff_cat_id'], $actorsProfCat)){
+                                unset($record['allUsersInEvent'][$allKey]);
+                            }
+                        }
+                    }else{
+                        $record['allUsersInEvent'] = [];
+                    }
                     $response['result'] = 'ok';
                     return json_encode(['response' => 'ok', 'result' => $record]);
                 } catch (\Exception $e) {

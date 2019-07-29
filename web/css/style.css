@@ -308,17 +308,23 @@ a:hover {
   font-weight: 700;
   text-align: center;
   box-sizing: border-box;
+  width: 100%;
 }
 .three--title-row .date {
-  min-width: 150px;
+  width: 250px;
+  /*min-width: 150px;*/
   border: 1px solid #000;
+  padding: 4px;
+  box-sizing: border-box;
 }
 .three--title-row .room {
-  width: 750px;
-  min-width: 300px;
+  width: 250px;
+  /*min-width: 300px;*/
+  padding: 4px;
   border-top: 1px solid #000;
   border-right: 1px solid #000;
   border-bottom: 1px solid #000;
+  box-sizing: border-box;
 }
 .three--date-row {
   display: flex;
@@ -334,23 +340,27 @@ a:hover {
   /*font-weight: 700;*/
   text-align: center;
   box-sizing: border-box;
+  width: 100%;
 }
 .three--date-row .date {
-  min-width: 150px;
+  width: 250px;
+  /*min-width: 150px;*/
   border-left: 1px solid #000;
   border-bottom: 1px solid #000;
   border-right: 1px solid #000;
   font-size: 17px;
   padding: 4px;
+  box-sizing: border-box;
 }
 .three--date-row .room {
-  width: 750px;
-  min-width: 300px;
-  padding: 8px;
+  width: 250px;
+  /*min-width: 300px;*/
+  padding: 4px;
   /*        border-top: 1px solid #000;*/
   border-right: 1px solid #000;
   border-bottom: 1px solid #000;
   font-size: 14px;
+  box-sizing: border-box;
 }
 .three--right-more {
   width: 460px;
@@ -374,6 +384,11 @@ a:hover {
 }
 .three--prof-cat-cell {
   font-weight: 700;
+}
+.three--user-actors-list,
+.three--add-info-block {
+  font-size: 12px;
+  color: #1C6C80;
 }
 #profCatModal .selected {
   color: #F97979;

@@ -168,8 +168,8 @@ class ScheduleComponent extends Model{
     }
     
     /**
-     * Сверяет проставленных сотрудников на мероприятиях с пересекаемыми и выдает
-     * ответ, если есть конфликт
+     * Функция подобная checkIntersect, но принимает на вход новое время, т.к используется
+     * для поиска конфликтов при изменении времени мероприятия
      * @param integer $scheduleId
      * @param string $dateParam
      * @param integer $timeFrom
@@ -202,7 +202,7 @@ class ScheduleComponent extends Model{
                         }
                     }
                 }elseif($value['time_to'] && !$findSchedule->time_to && +$value['id'] != +$findSchedule->id){
-                    if(+$value['time_from'] <= +$findSchedule->time_from && +$value['time_to'] >= +$findSchedule->time_from){
+                    if(+$value['time_from'] <= +$findSchedule->time_from && +$value['time_to'] > +$findSchedule->time_from){
                         $users = UserInSchedule::find()->where(['schedule_event_id' => $value['id']])->with('user')->asArray()->all();
                         foreach ($users as $keyThis => $valueThis){
                             foreach ($findUsers as $keyList => $valueList){
@@ -214,7 +214,7 @@ class ScheduleComponent extends Model{
                         }
                     }
                 }elseif(!$value['time_to'] && $findSchedule->time_to && +$value['id'] != +$findSchedule->id){
-                    if(+$findSchedule->time_from <= +$value['time_from'] && +$findSchedule->time_to >= +$value['time_from']){
+                    if(+$findSchedule->time_from <= +$value['time_from'] && +$findSchedule->time_to > +$value['time_from']){
                         $users = UserInSchedule::find()->where(['schedule_event_id' => $value['id']])->with('user')->asArray()->all();
                         foreach ($users as $keyThis => $valueThis){
                             foreach ($findUsers as $keyList => $valueList){
@@ -464,6 +464,7 @@ class ScheduleComponent extends Model{
         
         $sheet->setCellValueByColumnAndRow(1, 2, "РАСПИСАНИЕ НА НЕДЕЛЮ");
         $sheet->getStyleByColumnAndRow(1, 2)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $sheet->getStyleByColumnAndRow(1, 2)->getFont()->setSize(20)->setBold(700);
         $sheet->mergeCellsByColumnAndRow(1, 2, count($rooms) + 1, 2);
         // header
         $sheet->getStyleByColumnAndRow(1, 1)->applyFromArray([
@@ -569,6 +570,7 @@ class ScheduleComponent extends Model{
                 ]
             ]
         ]);
+        $sheet->getStyleByColumnAndRow(1, 4)->getFont()->setBold(700);
         $sheet->getStyleByColumnAndRow(1, 4)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
         $sheet->getColumnDimensionByColumn(1)->setAutoSize(true);
         $roomCount = 2;
@@ -591,38 +593,83 @@ class ScheduleComponent extends Model{
                     ]
                 ]
             ]);
+            $sheet->getStyleByColumnAndRow($roomCount, 4)->getFont()->setBold(700);
             $sheet->getStyleByColumnAndRow($roomCount, 4)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
             $sheet->getColumnDimensionByColumn($roomCount)->setWidth(40);
 //            $sheet->getColumnDimensionByColumn($roomCount)->setAutoSize(true);
             $roomCount++;
         }
         
+//        echo "<pre>";
+//        var_dump($dates); exit();
+        
+//        $dayCount = 5;
+//        foreach ($dates as $key => $value){
+//            $dates[$key]['row'] = $dayCount;
+//            $weekday = $weekdayName[date('w', mktime(0, 0, 0, $value['month'], $value['day'], $value['year']))];
+//            $sheet->getStyleByColumnAndRow(1, $dayCount)->getAlignment()->setWrapText(true);
+//            $sheet->setCellValueByColumnAndRow(1, $dayCount, $value['day'] ."." .$value['month'] ."." .$value['year'] ."\n" .$weekday );
+//            $sheet->getStyleByColumnAndRow(1, $dayCount)->applyFromArray([
+//                'borders' => [
+//                    'left' => [
+//                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+//                        'color' => array('argb' => '000000'),
+//                    ],
+//                    'bottom' => [
+//                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+//                        'color' => array('argb' => '000000'),
+//                    ],
+//                    'right' => [
+//                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+//                        'color' => array('argb' => '000000'),
+//                    ]
+//                ]
+//            ]);
+//            $roomCount = 2;
+//            foreach ($rooms as $key => $value){
+//                $sheet->getStyleByColumnAndRow($roomCount, $dayCount)->applyFromArray([
+//                    'borders' => [
+//                        'bottom' => [
+//                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+//                            'color' => array('argb' => '000000'),
+//                        ],
+//                        'right' => [
+//                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+//                            'color' => array('argb' => '000000'),
+//                        ]
+//                    ]
+//                ]);
+//                $roomCount++;
+//            }
+//            $sheet->getStyleByColumnAndRow(1, $dayCount)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+//            $sheet->getStyleByColumnAndRow(1, $dayCount)->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+//            $sheet->getRowDimension($dayCount)->setRowHeight(30);
+//            $dayCount++;
+//        }
+        
+        $scheduleSort = [];
+        foreach ($schedule as $key => $value){
+            foreach ($dates as $keyD => $valueD){
+                if(strtotime($value['date']) === mktime(0, 0, 0,$valueD['month'], $valueD['day'], $valueD['year'])){
+                    $scheduleSort[strtotime($value['date'])][$roomMatrix[$value['room_id']]][intval($value['time_from'])] = $value;
+                }
+            }
+        }
+        
         $dayCount = 5;
         foreach ($dates as $key => $value){
-            $dates[$key]['row'] = $dayCount;
-            $weekday = $weekdayName[date('w', mktime(0, 0, 0, $value['month'], $value['day'], $value['year']))];
-            $sheet->getStyleByColumnAndRow(1, $dayCount)->getAlignment()->setWrapText(true);
-            $sheet->setCellValueByColumnAndRow(1, $dayCount, $value['day'] ."." .$value['month'] ."." .$value['year'] ."\n" .$weekday );
-            $sheet->getStyleByColumnAndRow(1, $dayCount)->applyFromArray([
-                'borders' => [
-                    'left' => [
-                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                        'color' => array('argb' => '000000'),
-                    ],
-                    'bottom' => [
-                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                        'color' => array('argb' => '000000'),
-                    ],
-                    'right' => [
-                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                        'color' => array('argb' => '000000'),
-                    ]
-                ]
-            ]);
-            $roomCount = 2;
-            foreach ($rooms as $key => $value){
-                $sheet->getStyleByColumnAndRow($roomCount, $dayCount)->applyFromArray([
+            $timeDate = mktime(0, 0, 0,$value['month'], $value['day'], $value['year']);
+            $maxCount = 5;
+            if(isset($scheduleSort[$timeDate])){
+                $weekday = $weekdayName[date('w', $timeDate)];
+                $sheet->getStyleByColumnAndRow(1, $dayCount)->getAlignment()->setWrapText(true);
+                $sheet->setCellValueByColumnAndRow(1, $dayCount, $value['day'] ."." .$value['month'] ."." .$value['year'] ."\n" .$weekday );
+                $sheet->getStyleByColumnAndRow(1, $dayCount)->applyFromArray([
                     'borders' => [
+                        'left' => [
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                            'color' => array('argb' => '000000'),
+                        ],
                         'bottom' => [
                             'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
                             'color' => array('argb' => '000000'),
@@ -633,48 +680,153 @@ class ScheduleComponent extends Model{
                         ]
                     ]
                 ]);
-                $roomCount++;
-            }
-            $sheet->getStyleByColumnAndRow(1, $dayCount)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-            $sheet->getStyleByColumnAndRow(1, $dayCount)->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
-            $sheet->getRowDimension($dayCount)->setRowHeight(30);
-            $dayCount++;
-        }
-        
-        $scheduleSort = [];
-        foreach ($schedule as $key => $value){
-            foreach ($dates as $keyD => $valueD){
-                if(strtotime($value['date']) === mktime(0, 0, 0,$valueD['month'], $valueD['day'], $valueD['year'])){
-                    $scheduleSort[$valueD['row']][$roomMatrix[$value['room_id']]][intval($value['time_from'])] = $value;
-                }
-            }
-        }
-        
-        foreach ($scheduleSort as $keyRow => $valRow){
-            $eventMax = 0;
-            foreach ($valRow as $keyCol => $valCol){
-                $resultStr = '';
-                $repeatArr = [];
-                if(count($valCol) > $eventMax){
-                    $eventMax = count($valCol);
-                }
-                for($i = 0; $i <= 1440; $i++){
-                    if(isset($valCol[$i]) && !in_array($valCol[$i]['event']['id'] ."-" .$valCol[$i]['eventType']['id'], $repeatArr)){
-                        $repeatArr[] = $valCol[$i]['event']['id'] ."-" .$valCol[$i]['eventType']['id'];
-                        for($z = 0; $z <= 1440; $z++){
-                            if(isset($valCol[$z]) && $valCol[$i]['event']['id'] == $valCol[$z]['event']['id'] && $valCol[$i]['eventType']['id'] == $valCol[$z]['eventType']['id']){
-                                $resultStr .= self::minuteToTime($valCol[$z]['time_from']) ." ";
+                foreach ($scheduleSort[$timeDate] as $col => $events){
+                    $gapCount = $dayCount;
+                    $repeatArr = [];
+                    for($i = 0; $i <= 1440; $i++){
+                        $resultStr = '';
+                        if(isset($events[$i]) && !in_array($events[$i]['event']['id'] ."-" .$events[$i]['eventType']['id'], $repeatArr)){
+                            $repeatArr[] = $events[$i]['event']['id'] ."-" .$events[$i]['eventType']['id'];
+                            for($z = 0; $z <= 1440; $z++){
+                                if(isset($events[$z]) && +$events[$i]['event']['id'] == +$events[$z]['event']['id'] && +$events[$i]['eventType']['id'] == +$events[$z]['eventType']['id']){
+                                    $resultStr .= self::minuteToTime($events[$z]['time_from']) ." ";
+                                }
                             }
+                            $resultStr .= "(" .$events[$i]['eventType']['name'] .") " .$events[$i]['event']['name'];
+                            
+                            $sheet->getStyleByColumnAndRow($col, $gapCount)->getAlignment()->setWrapText(true);
+                            $sheet->setCellValueByColumnAndRow($col, $gapCount, $resultStr);
+                            $sheet->getStyleByColumnAndRow($col, $gapCount)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                            $sheet->getStyleByColumnAndRow($col, $gapCount)->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+                            $gapCount++;
                         }
-                        $resultStr .= "(" .$valCol[$i]['eventType']['name'] .") " .$valCol[$i]['event']['name'] ."\n \n";
+                    }
+                    if($gapCount > $maxCount){
+                        $maxCount = $gapCount;
                     }
                 }
-                $sheet->getStyleByColumnAndRow($keyCol, $keyRow)->getAlignment()->setWrapText(true);
-                $sheet->setCellValueByColumnAndRow($keyCol, $keyRow, $resultStr);
-                $sheet->getStyleByColumnAndRow($keyCol, $keyRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-                $sheet->getStyleByColumnAndRow($keyCol, $keyRow)->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+//                var_dump($maxCount);
+                $sheet->mergeCellsByColumnAndRow(1, $dayCount, 1, ($maxCount - 1));
+                $roomCount = 2;
+                foreach ($rooms as $key => $value){
+                    $sheet->getStyleByColumnAndRow($roomCount, $dayCount)->applyFromArray([
+                        'borders' => [
+                            'right' => [
+                                'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                                'color' => array('argb' => '000000'),
+                            ]
+                        ]
+                    ]);
+                    if($maxCount - $dayCount > 1){
+                        for($k = $dayCount; $k <= $maxCount; $k++){
+                            $sheet->getStyleByColumnAndRow($roomCount, $k)->applyFromArray([
+                                'borders' => [
+                                    'right' => [
+                                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                                        'color' => array('argb' => '000000'),
+                                    ]
+                                ]
+                            ]);
+                        }
+                    }
+                    $sheet->getStyleByColumnAndRow($roomCount, ($maxCount -1))->applyFromArray([
+                        'borders' => [
+                            'bottom' => [
+                                'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                                'color' => array('argb' => '000000'),
+                            ],
+                            'right' => [
+                                'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                                'color' => array('argb' => '000000'),
+                            ]
+                        ]
+                    ]);
+                    $roomCount++;
+                }
+                $sheet->getStyleByColumnAndRow(1, ($maxCount -1))->applyFromArray([
+                    'borders' => [
+                        'bottom' => [
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                            'color' => array('argb' => '000000'),
+                        ],
+                    ]
+                ]);
+                $sheet->getStyleByColumnAndRow(1, $dayCount)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyleByColumnAndRow(1, $dayCount)->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+                $sheet->getRowDimension($dayCount)->setRowHeight(30);
+                $dayCount = $maxCount;
+            }else{
+                $weekday = $weekdayName[date('w', $timeDate)];
+                $sheet->getStyleByColumnAndRow(1, $dayCount)->getAlignment()->setWrapText(true);
+                $sheet->setCellValueByColumnAndRow(1, $dayCount, $value['day'] ."." .$value['month'] ."." .$value['year'] ."\n" .$weekday );
+                $sheet->getStyleByColumnAndRow(1, $dayCount)->applyFromArray([
+                    'borders' => [
+                        'left' => [
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                            'color' => array('argb' => '000000'),
+                        ],
+                        'bottom' => [
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                            'color' => array('argb' => '000000'),
+                        ],
+                        'right' => [
+                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                            'color' => array('argb' => '000000'),
+                        ]
+                    ]
+                ]);
+                $roomCount = 2;
+                foreach ($rooms as $key => $value){
+                    $sheet->getStyleByColumnAndRow($roomCount, $dayCount)->applyFromArray([
+                        'borders' => [
+                            'bottom' => [
+                                'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                                'color' => array('argb' => '000000'),
+                            ],
+                            'right' => [
+                                'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                                'color' => array('argb' => '000000'),
+                            ]
+                        ]
+                    ]);
+                    $roomCount++;
+                }
+                $sheet->getStyleByColumnAndRow(1, $dayCount)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyleByColumnAndRow(1, $dayCount)->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+                $sheet->getRowDimension($dayCount)->setRowHeight(30);
+                $dayCount++;
             }
         }
+        
+//        exit();
+//        echo "<pre>";
+//        var_dump($scheduleSort); exit();
+//        
+//        foreach ($scheduleSort as $keyRow => $valRow){
+//            $eventMax = 0;
+//            foreach ($valRow as $keyCol => $valCol){
+//                $resultStr = '';
+//                $repeatArr = [];
+//                if(count($valCol) > $eventMax){
+//                    $eventMax = count($valCol);
+//                }
+//                for($i = 0; $i <= 1440; $i++){
+//                    if(isset($valCol[$i]) && !in_array($valCol[$i]['event']['id'] ."-" .$valCol[$i]['eventType']['id'], $repeatArr)){
+//                        $repeatArr[] = $valCol[$i]['event']['id'] ."-" .$valCol[$i]['eventType']['id'];
+//                        for($z = 0; $z <= 1440; $z++){
+//                            if(isset($valCol[$z]) && $valCol[$i]['event']['id'] == $valCol[$z]['event']['id'] && $valCol[$i]['eventType']['id'] == $valCol[$z]['eventType']['id']){
+//                                $resultStr .= self::minuteToTime($valCol[$z]['time_from']) ." ";
+//                            }
+//                        }
+//                        $resultStr .= "(" .$valCol[$i]['eventType']['name'] .") " .$valCol[$i]['event']['name'] ."\n \n";
+//                    }
+//                }
+//                $sheet->getStyleByColumnAndRow($keyCol, $keyRow)->getAlignment()->setWrapText(true);
+//                $sheet->setCellValueByColumnAndRow($keyCol, $keyRow, $resultStr);
+//                $sheet->getStyleByColumnAndRow($keyCol, $keyRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+//                $sheet->getStyleByColumnAndRow($keyCol, $keyRow)->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+//            }
+//        }
         
 //        $dayCount = 5;
 //        foreach ($dates as $key => $value){

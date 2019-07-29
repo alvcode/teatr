@@ -45,7 +45,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     </div>
                     <br>
                     <div class="card border-info">
-                        <div class="card-header"><h5 class="card-title">Добавить спектакль</h5></div>
+                        <div class="card-header"><h5 class="card-title">Добавить спектакль (<span class="text-danger">! кавычки в названии не ставить</span>)</h5></div>
                         <div class="card-body">
                             <?php $form = ActiveForm::begin() ?>
 
