@@ -16,6 +16,8 @@ use app\models\AuthItemChild;
 use app\models\ProffCategories;
 use app\models\Profession;
 use app\models\UserProfession;
+use app\models\EventType;
+use app\models\TimesheetConfig;
 
 class UserController extends AccessController
 {
@@ -59,13 +61,32 @@ class UserController extends AccessController
         $userProfModel = new UserProfession();
         
         if(Yii::$app->request->isAjax){
-            if($userModel->load(Yii::$app->request->post())){
-                $userModel->number = preg_replace("/[^0-9]/iu", '', $userModel->number);
+            if(Yii::$app->request->post('trigger') == 'new-user'){
+                $timesheetArr = Yii::$app->request->post('timesheet');
+                $uniqueTimesheet = array_unique(\yii\helpers\ArrayHelper::getColumn($timesheetArr, 'eventType'));
+                if(count($uniqueTimesheet) < count($timesheetArr)){
+                    return json_encode(['result' => 'error', 'data' => 'В настройке для табелей имеются повторяющиеся типы мероприятий']);
+                }
+                $userModel->name = Yii::$app->request->post('name');
+                $userModel->surname = Yii::$app->request->post('surname');
+                $userModel->email = Yii::$app->request->post('email');
+                $userModel->number = preg_replace("/[^0-9]/iu", '', Yii::$app->request->post('number'));
+                $userModel->password = Yii::$app->request->post('password');
+                $userModel->user_role = Yii::$app->request->post('userRole');
+                
                 if($userModel->save()){
-                    if($userProfModel->load(Yii::$app->request->post())){
-                        $userProfModel->user_id = $userModel->id;
-                        $userProfModel->save();
+                    $userProfModel->user_id = $userModel->id;
+                    $userProfModel->prof_id = Yii::$app->request->post('profId');
+                    $userProfModel->save();
+                    
+                    foreach ($timesheetArr as $key => $value){
+                        Yii::$app->db->createCommand()->insert('timesheet_config', [
+                            'user_id' => $userModel->id,
+                            'event_type_id' => $value['eventType'],
+                            'method' => $value['method']
+                        ])->execute();
                     }
+                    
                     if($userModel->user_role) {
                         $getRole = Yii::$app->authManager->getRole($userModel->user_role);
                         Yii::$app->authManager->assign($getRole, $userModel->id);
@@ -73,9 +94,9 @@ class UserController extends AccessController
                         $getRole = Yii::$app->authManager->getRole('user');
                         Yii::$app->authManager->assign($getRole, $userModel->id);
                     }
-                    return 1;
+                    return json_encode(['result' => 'ok']);
                 }else{
-                    return 0;
+                    return json_encode(['result' => 'error', 'data' => 'Что-то пошло не так. Проверьте правильность заполнения полей']);
                 }
             }
             
@@ -98,6 +119,11 @@ class UserController extends AccessController
                         ->with('role')->limit('8')->asArray()->all();
                 
                 return json_encode($findUser);
+            }
+            
+            if(Yii::$app->request->post('trigger') == 'get-timesheet'){
+                $getTimesheet = TimesheetConfig::find()->where(['user_id' => Yii::$app->request->post('userId')])->with('eventType')->asArray()->all();
+                return json_encode(['result' => 'ok', 'data' => $getTimesheet]);
             }
             
         }
@@ -149,6 +175,7 @@ class UserController extends AccessController
             }
         }
         
+        $eventsType = EventType::find()->where(['is_active' => 1])->asArray()->all();
         
         return $this->render('index', [
             'users' => $users,
@@ -157,6 +184,7 @@ class UserController extends AccessController
             'categories' => $categories,
             'profModel' => $userProfModel,
             'authAssignment' => $authAssignment,
+            'eventType' => $eventsType,
             'sort' => $sort,
         ]);
     }

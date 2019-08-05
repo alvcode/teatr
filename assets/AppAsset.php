@@ -27,9 +27,9 @@ class AppAsset extends AssetBundle
         'css/animate.css',
         'css/croppie.css',
         'https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/smoothness/jquery-ui.css',
-        'css/board.css',
+        'less/board.less',
         'css/bootstrap-material-datetimepicker.css',
-        'css/style.css',
+        'less/style.less',
     ];
     public $js = [
         'js/jquery_cookie_1.4.1.js',

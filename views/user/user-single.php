@@ -36,23 +36,24 @@ $this->params['breadcrumbs'][] = $this->title;
                 ]);
                 ?>
 
-                <?= $form->field($user, 'name', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])->textInput() ?>
+                <?= $form->field($user, 'name', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])->textInput(['class' => 'form-control form-control-sm']) ?>
 
-                <?= $form->field($user, 'surname', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])->textInput() ?>
+                <?= $form->field($user, 'surname', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])->textInput(['class' => 'form-control form-control-sm']) ?>
 
-                <?= $form->field($user, 'email', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])->textInput() ?>
+                <?= $form->field($user, 'email', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])->textInput(['class' => 'form-control form-control-sm']) ?>
 
                 <?=
                     $form->field($user, 'number', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
-                        ->textInput(['class' => 'p--number form-control', 'inputmode' => 'numeric', 'pattern' => '\+7?[\(][0-9]{3}[\)]{0,1}\s?\d{3}[-]{0,1}\d{4}'])
+                        ->textInput(['class' => 'p--number form-control form-control-sm', 'inputmode' => 'numeric', 'pattern' => '\+7?[\(][0-9]{3}[\)]{0,1}\s?\d{3}[-]{0,1}\d{4}'])
                 ?>
 
-                <?= $form->field($user, 'password', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])->textInput()
+                <?= $form->field($user, 'password', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])->textInput(['class' => 'form-control form-control-sm'])
                         ->label("Пароль (если требуется сменить)") ?>
 
                 <?=
                 $form->field($user, 'user_role')->dropDownList(\yii\helpers\ArrayHelper::map($roleList, 'name', 'description'), [
                     'prompt' => 'Выберите роль',
+                    'class' => 'form-control form-control-sm',
                     'options' => [
                         $roleUser ? $roleUser->name : "0" => ['Selected' => true]
                     ]
@@ -63,17 +64,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 <?=
                 $form->field($profModel, 'prof_id', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])->dropDownList(\yii\helpers\ArrayHelper::map($categories, 'id', 'name'), [
                     'prompt' => 'Должность',
+                    'class' => 'form-control form-control-sm',
                 ])->label("Должность")
-                ?>
-            
-                <?=
-                $form->field($user, 'timesheet', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
-                    ->dropDownList([
-                        '0' => 'Не задано',
-                        '1' => 'Учитывать часы',
-                        '2' => 'Учитывать выходы',
-                        '3' => 'Дети (часы)'
-                    ], ['class' => 'form-control form-control-sm'])->label("Метод расчета табеля")
                 ?>
             
                 <div class="form-group">

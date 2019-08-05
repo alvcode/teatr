@@ -18,7 +18,6 @@ use Yii;
  * @property string $date_register
  * @property string $last_login
  * @property int $is_active
- * @property int $timesheet
  */
 class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
 {
@@ -53,7 +52,7 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
     public function rules()
     {
         return [
-            [['email', 'name', 'surname', 'timesheet'], 'required'],
+            [['email', 'name', 'surname'], 'required'],
             [['password'], 'trim'],
 //            [['date_register', 'last_login'], 'datetime'],
             [['email'], 'email'],

@@ -10,8 +10,6 @@ use Yii;
  * @property int $id
  * @property string $name
  * @property int $is_active
- * @property int $timesheet_hour
- * @property int $timesheet_count
  */
 class EventType extends \yii\db\ActiveRecord
 {
@@ -29,8 +27,8 @@ class EventType extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['name', 'is_active', 'timesheet_hour', 'timesheet_count'], 'required'],
-            [['is_active', 'timesheet_hour', 'timesheet_count'], 'integer'],
+            [['name', 'is_active'], 'required'],
+            [['is_active'], 'integer'],
             [['name'], 'string', 'max' => 45],
         ];
     }
@@ -42,9 +40,7 @@ class EventType extends \yii\db\ActiveRecord
     {
         return [
             'id' => 'ID',
-            'name' => 'Name',
-            'timesheet_hour' => 'Участвует в расчете табелей по часам',
-            'timesheet_count' => 'Участвует в расчете табелей по выходам',
+            'name' => 'Тип мероприятия',
         ];
     }
 }

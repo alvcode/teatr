@@ -104,15 +104,9 @@ class PanelController extends AccessController
                 }
             }
             
-            if(Yii::$app->request->post('trigger') == 'edit-timesheet'){
-                $eventTypeModel = EventType::findOne(Yii::$app->request->post('eventTypeId'));
-                $eventTypeModel->timesheet_hour = Yii::$app->request->post('timesheetHour');
-                $eventTypeModel->timesheet_count = Yii::$app->request->post('timesheetCount');
-                if($eventTypeModel->save()){
-                    return 1;
-                }else{
-                    return 0;
-                }
+            if(Yii::$app->request->post('trigger') == 'edit-other-name'){
+                Yii::$app->db->createCommand()->update('events', ['other_name' => Yii::$app->request->post('otherName')], ['id' => Yii::$app->request->post('eventId')])->execute();
+                return 1;
             }
         }
         
@@ -143,7 +137,6 @@ class PanelController extends AccessController
             }
             return $this->redirect('/panel/room-event/');
         }
-        
         
         $rooms = Room::find()->where(['is_active' => '1'])->asArray()->all();
         $eventType = EventType::find()->where(['is_active' => '1'])->asArray()->all();

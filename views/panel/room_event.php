@@ -31,11 +31,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     ->label("Новый тип мероприятия <span class='text-danger'>*</span>")
                             ?>
 
-                            <?= $form->field($eventTypeModel, 'timesheet_hour')->checkbox() ?>
-
-                            <?= $form->field($eventTypeModel, 'timesheet_count')->checkbox() ?>
-
-                            <div class="form-group">
+                           <div class="form-group">
                                 <div class="col-lg-offset-1 col-lg-11">
                                     <?= Html::submitButton('Добавить', ['class' => 'btn btn-success btn-sm']) ?>
                                 </div>
@@ -65,7 +61,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             <?=
                                     $form->field($eventsModel, 'other_name', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
                                     ->textInput(['class' => 'form-control form-control-sm'])
-                                    ->hint('Неофициальное название спектакля, если оно должно отображаться в расписании', ['class' => 'hint-block'])
+                                    ->hint('Дополнительная информация, будет отображаться рядом с названием', ['class' => 'hint-block'])
                             ?>
 
                             <div class="form-group">
@@ -88,16 +84,11 @@ $this->params['breadcrumbs'][] = $this->title;
                             <li class="list-group-item">
                                 <ul class="list-group proff-list">
                                     <?php foreach ($eventType as $key => $value): ?>
-                                        <li data-timesheet-count="<?= $value['timesheet_count'] ?>" data-timesheet-hour="<?= $value['timesheet_hour'] ?>" data-eventtype="<?= $value['id'] ?>" class="list-group-item d-flex justify-content-between align-items-center event-type-li">
+                                        <li data-eventtype="<?= $value['id'] ?>" class="list-group-item d-flex justify-content-between align-items-center event-type-li">
                                             <div class="event-type-name">
                                                 <?= $value['name'] ?>
-                                                <span class="small">
-                                                    <?= $value['timesheet_hour'] ? "(табель по часам)" : "" ?>
-                                                    <?= $value['timesheet_count'] ? "(табель по выходам)" : "" ?>
-                                                </span>
                                             </div>
                                             <div>
-                                                <span class="badge badge-info badge-pill edit-event-type cursor-pointer">Ред.</span>
                                                 <span class="badge badge-danger badge-pill delete-event-type cursor-pointer">Удалить</span>
                                             </div>
                                         </li>
@@ -123,10 +114,16 @@ $this->params['breadcrumbs'][] = $this->title;
                                                 <ul class="list-group proff-list">
                                                     <?php foreach ($events[$key]['events'] as $keyE => $valueE): ?>
                                                         <li data-event="<?= $valueE['id'] ?>" class="list-group-item d-flex justify-content-between align-items-center event-li">
-                                                            <div class="proff-name">
-                                                                <?= $valueE['name'] ?> <?= $valueE['other_name'] ? "(" . $valueE['other_name'] . ")" : "" ?>
+                                                            <div>
+                                                                <div class="proff-name">
+                                                                    <?= $valueE['name'] ?>
+                                                                </div>
+                                                                <div class="other-name">
+                                                                    <?= $valueE['other_name'] ? $valueE['other_name']: "" ?>
+                                                                </div>
                                                             </div>
                                                             <div>
+                                                                <span class="badge badge-info badge-pill edit-event-other-name cursor-pointer">Ред.</span>
                                                                 <span class="badge badge-danger badge-pill delete-event cursor-pointer">Удалить</span>
                                                             </div>
                                                         </li>
@@ -249,42 +246,6 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 </div>
 
-<!-- Modal timesheet event -->
-<div class="modal fade" id="timesheetEventModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Изменить настройку расчета табеля</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <h4>Тип мероприятия: <span id="timesheet-edit-title">Спектакль</span></h4>
-                <div class="form-group">
-                    <div class="checkbox">
-                        <label>
-                            <input id="timesheet-hour-edit" type="checkbox">
-                            Участвует в расчете табелей по часам
-                        </label>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <div class="checkbox">
-                        <label>
-                            <input id="timesheet-count-edit" type="checkbox">
-                            Участвует в расчете табелей по выходам
-                        </label>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Отмена</button>
-                <button id="timesheet-event-submit" type="button" class="btn btn-sm btn-success">Применить</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 <script>
     window.onload = function () {
@@ -438,34 +399,29 @@ $this->params['breadcrumbs'][] = $this->title;
             });
         });
 
-        var eventTypeTimesheet = false;
-        $('.edit-event-type').click(function () {
-            $('#timesheet-hour-edit, #timesheet-count-edit').removeAttr('checked');
-            eventTypeTimesheet = this.parentNode.parentNode.dataset.eventtype;
-            var nameNode = this.parentNode.parentNode.getElementsByClassName('event-type-name')[0];
-            var dupNode = nameNode.cloneNode(true);
-            dupNode.getElementsByTagName('span')[0].remove();
-            $('#timesheet-edit-title').html(dupNode.innerHTML.trim());
-            var timesheetHour = this.parentNode.parentNode.dataset.timesheetHour;
-            var timesheetCount = this.parentNode.parentNode.dataset.timesheetCount;
-            if (timesheetHour === '1') {
-                $('#timesheet-hour-edit').attr('checked', 'true');
-            }
-            if (timesheetCount === '1') {
-                $('#timesheet-count-edit').attr('checked', 'true');
-            }
-            $('#timesheetEventModal').modal('show');
+        
+        var otherNameEvent = false;
+        $('.edit-event-other-name').click(function(){
+            otherNameEvent = this.parentNode.parentNode.dataset.event;
+            var otherName = this.parentNode.parentNode.getElementsByClassName('other-name')[0];
+            var createInput = document.createElement('input');
+            createInput.value = otherName.innerHTML.trim();
+            otherName.innerHTML = '';
+            var createOk = document.createElement('div');
+            createOk.className = 'btn btn-sm btn-success edit-other-name-submit';
+            createOk.innerHTML = 'ok';
+            otherName.append(createInput);
+            otherName.append(createOk);
         });
-
-        $('#timesheet-event-submit').click(function () {
-            goPreloader();
-            var timesheetHourVal = $('#timesheet-hour-edit').prop('checked') ? '1' : '0';
-            var timesheetCountVal = $('#timesheet-count-edit').prop('checked') ? '1' : '0';
+        
+        $('body').on('click', '.edit-other-name-submit', function(){
+            var otherName = this.parentNode.querySelector('input');
+//            var otherName = $(this).parent().find('input');
+            var self = this;
             var data = {
-                trigger: 'edit-timesheet',
-                eventTypeId: eventTypeTimesheet,
-                timesheetHour: timesheetHourVal,
-                timesheetCount: timesheetCountVal,
+                trigger: 'edit-other-name',
+                eventId: otherNameEvent,
+                otherName: otherName.value,
             };
             data[csrfParam] = csrfToken;
             $.ajax({
@@ -474,12 +430,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 data: data,
                 success: function (data) {
                     if (data == 1) {
-                        var elemLi = $('li[data-eventtype=' + eventTypeTimesheet + ']');
-                        elemLi.attr('data-timesheet-hour', timesheetHourVal);
-                        elemLi.attr('data-timesheet-count', timesheetCountVal);
-                        elemLi.find('.event-type-name').find('.small').html((timesheetHourVal == '0' ? "" : "(табель по часам)") + (timesheetCountVal == '0' ? "" : "(табель по выходам)"));
-                        $('#timesheetEventModal').modal('hide');
-                        showNotifications("Настройка расчета табелей успешно выполнена", 3000, NOTIF_GREEN);
+                        self.parentNode.innerHTML = otherName.value;
+                        showNotifications("Поле успешно изменено!", 2000, NOTIF_GREEN);
                     } else if (data == 0) {
                         showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
                     }

@@ -12,6 +12,26 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 <!--<div class="site-login">-->
 <div class="container-fluid">
+    <div class="hidden" hidden>
+        <div class="row timesheet-item">
+            <div class="col-5">
+                <select class="form-control form-control-sm timesheet-event-type">
+                    <?php foreach ($eventType as $key => $value): ?>
+                        <option value="<?= $value['id'] ?>"><?= $value['name'] ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="col-5">
+                <select class="form-control form-control-sm timesheet-method">
+                    <option value="1">Часы</option>
+                    <option value="2">Выходы</option>
+                </select>
+            </div>
+            <div class="col-2">
+                <div class="btn btn-sm btn-outline-danger timesheet-delete"><i class="fas fa-times"></i></div>
+            </div>
+        </div>
+    </div>
     <div class="row">
         <div class="col-lg-12">
             <div class="main--page-title">
@@ -89,7 +109,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
                     </div>
                 </div>
-                <table class="table table-sm table-striped mt-2">
+                <table class="table table-sm table-striped text-center mt-2">
                     <thead>
                         <tr>
                             <th scope="col">ID</th>
@@ -99,12 +119,13 @@ $this->params['breadcrumbs'][] = $this->title;
                             <th scope="col">Телефон</th>
                             <th scope="col">Роль</th>
                             <th scope="col">Должность</th>
+                            <th scope="col">Табель</th>
                             <th scope="col">Создан</th>
                             <th scope="col">Последний визит</th>
                             <th scope="col">Action</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="f-s13">
                         <?php foreach ($users as $key => $value): ?>
                             <tr class="user-row" data-user="<?= $value['id'] ?>">
                                 <th scope="row"><?= $value['id'] ?></th>
@@ -120,6 +141,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     </span>
                                 </td>
                                 <td><?= $value['userProfession']['prof']['name'] ?></td>
+                                <td class="cursor-pointer text-secondary get-timesheet"><i class="fas fa-hand-point-up"></i></td>
                                 <td><?= Formatt::dateMysqlToForm($value['date_register']) ? Formatt::dateMysqlToForm($value['date_register']) : "-" ?></td>
                                 <td><?= Formatt::dateMysqlToForm($value['last_login']) ? Formatt::dateMysqlToForm($value['last_login']) : "-" ?></td>
                                 <td>
@@ -156,22 +178,22 @@ $this->params['breadcrumbs'][] = $this->title;
 
                 <?=
                         $form->field($userModel, 'name', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
-                        ->textInput(['class' => 'form-control form-control-sm'])
+                        ->textInput(['class' => 'form-control form-control-sm', 'id' => 'new-name'])
                 ?>
 
                 <?=
                         $form->field($userModel, 'surname', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
-                        ->textInput(['class' => 'form-control form-control-sm'])
+                        ->textInput(['class' => 'form-control form-control-sm', 'id' => 'new-surname'])
                 ?>
 
                 <?=
                         $form->field($userModel, 'email', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
-                        ->textInput(['class' => 'form-control form-control-sm'])
+                        ->textInput(['class' => 'form-control form-control-sm', 'id' => 'new-email'])
                 ?>
 
                 <?=
                         $form->field($userModel, 'number', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
-                        ->textInput(['class' => 'p--number form-control form-control-sm', 'inputmode' => 'numeric', 'pattern' => '\+7?[\(][0-9]{3}[\)]{0,1}\s?\d{3}[-]{0,1}\d{4}'])
+                        ->textInput(['class' => 'p--number form-control form-control-sm', 'id' => 'new-number', 'inputmode' => 'numeric', 'pattern' => '\+7?[\(][0-9]{3}[\)]{0,1}\s?\d{3}[-]{0,1}\d{4}'])
                 ?>
 
                 <?=
@@ -194,16 +216,14 @@ $this->params['breadcrumbs'][] = $this->title;
                     'id' => 'new-prof',
                 ])->label("Должность")
                 ?>
-
-                <?=
-                        $form->field($userModel, 'timesheet', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
-                        ->dropDownList([
-                            '0' => 'Не задано',
-                            '1' => 'Учитывать часы',
-                            '2' => 'Учитывать выходы',
-                            '3' => 'Дети (часы)'
-                                ], ['class' => 'form-control form-control-sm', 'id' => 'new-timesheet'])->label("Метод расчета табеля")
-                ?>
+                
+                <div class="form-group">
+                    <label class="control-label">Расчет табеля</label>
+                    <div id="add-timesheet-icon" class="btn btn-sm btn-outline-info"><i class="fas fa-plus-circle"></i></div>
+                    <div class="timesheet-blocks mrg-top15">
+                        
+                    </div>
+                </div>
 
 <?php ActiveForm::end(); ?>
             </div>
@@ -236,6 +256,31 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 </div>
 
+<!-- Modal timesheet user -->
+<div class="modal fade" id="timesheetUserModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Конфигурация расчета табеля для сотрудника</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="get-timesheet-name text-center font-weight-bold"></div>
+                <div>
+                    <div id="add-timesheet-get" class="btn btn-sm btn-outline-info"><i class="fas fa-plus-circle"></i></div>
+                </div>
+                <div class="get-timesheet-content"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Отмена</button>
+                <button id="timesheet-user-submit" type="button" class="btn btn-sm btn-success">Сохранить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script>
     window.onload = function () {
@@ -252,9 +297,27 @@ $this->params['breadcrumbs'][] = $this->title;
                 $(this).val("+7");
             }
         });
+        
+        $('#add-timesheet-icon').click(function(){
+            var cloneItem = document.getElementsByClassName('timesheet-item')[0].cloneNode(true);
+            document.getElementsByClassName('timesheet-blocks')[0].append(cloneItem);
+        });
+        
+        $('body').on('click', '.timesheet-delete', function(){
+            this.parentNode.parentNode.remove();
+        });
 
         $('#users--new-user-button').click(function (e) {
             e.preventDefault();
+            var timesheetItems = document.getElementsByClassName('timesheet-blocks')[0].getElementsByClassName('timesheet-item');
+            var timesheetConfig = [];
+            for(var i = 0; i < timesheetItems.length; i++){
+                var k = timesheetConfig.length;
+                timesheetConfig[k] = {};
+                timesheetConfig[k].eventType = timesheetItems[i].getElementsByClassName('timesheet-event-type')[0].value;
+                timesheetConfig[k].method = timesheetItems[i].getElementsByClassName('timesheet-method')[0].value;
+            }
+            console.log(timesheetConfig);
             if (!$('#new-password').val()) {
                 showNotifications("Не заполнен пароль", 3000, NOTIF_RED);
                 return false;
@@ -267,22 +330,34 @@ $this->params['breadcrumbs'][] = $this->title;
                 showNotifications("Не выбрана профессия", 3000, NOTIF_RED);
                 return false;
             }
-//            if(!$('#new-timesheet').val()){
-//                showNotifications("Не выбран метод расчета табеля", 3000, NOTIF_RED);
-//                return false;
-//            }
+            if(!timesheetConfig.length){
+                showNotifications("Не заполнена настройка табелей", 3000, NOTIF_RED);
+                return false;
+            }
+            var data = {
+                trigger: 'new-user',
+                name: $('#new-name').val(),
+                surname: $('#new-surname').val(),
+                email: $('#new-email').val(),
+                number: $('#new-number').val(),
+                password: $('#new-password').val(),
+                userRole: $('#new-role').val(),
+                profId: $('#new-prof').val(),
+                timesheet: timesheetConfig
+            };
+            data[csrfParam] = csrfToken;
             var self = $(this);
             self.prop('disabled', true);
-            var data = $('#new-user-form').serialize();
             $.ajax({
                 type: "POST",
                 url: '/user/index',
                 data: data,
                 success: function (data) {
-                    if (data == 1) {
+                    var result = JSON.parse(data);
+                    if (result.result == 'ok') {
                         window.location.reload();
-                    } else if (data == 0) {
-                        showNotifications("Кажется форма не прошла валидацию, проверьте, все ли было заполнено", 7000, NOTIF_RED);
+                    } else if (result.result == 'error') {
+                        showNotifications(result.data, 7000, NOTIF_RED);
                     }
                     self.prop('disabled', false);
                 },
@@ -296,6 +371,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
         $('#newUserModal').on('hidden.bs.modal', function (e) {
             $('#new-user-form')[0].reset();
+            $('.timesheet-blocks').empty();
         });
 
         // Удаление юзера
@@ -416,6 +492,42 @@ $this->params['breadcrumbs'][] = $this->title;
                     } else {
                         document.getElementById('search-result-tbody').innerHTML = '';
                         document.getElementById('user--search-result').style.display = 'none';
+                        showNotifications('Поиск не дал результатов', 3000, NOTIF_RED);
+                    }
+                    stopPreloader();
+                },
+                error: function () {
+                    showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                    stopPreloader();
+                }
+            });
+        });
+        
+        $('.get-timesheet').dblclick(function(){
+            var userId = this.parentNode.dataset.user;
+            var fullName = this.parentNode.getElementsByTagName('td')[0].innerHTML +" " +this.parentNode.getElementsByTagName('td')[1].innerHTML;
+//            alert(fullName); return false;
+            var data = {
+                trigger: 'get-timesheet',
+                userId: userId,
+            };
+            data[csrfParam] = csrfToken;
+            $.ajax({
+                type: "POST",
+                url: '/user/index',
+                data: data,
+                success: function (data) {
+                    var result = JSON.parse(data);
+                    if (result.result == 'ok') {
+                        console.log(result.data);
+                        if(!result.data.length){
+                            $('.get-timesheet-name').html(fullName);
+                            $('.get-timesheet-content').html('Настройка табеля отсутствует');
+                        }else{
+                            $('.get-timesheet-name').html(fullName);
+                        }
+                        $('#timesheetUserModal').modal('show');
+                    } else if(result.result == 'error') {
                         showNotifications('Поиск не дал результатов', 3000, NOTIF_RED);
                     }
                     stopPreloader();

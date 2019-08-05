@@ -600,52 +600,6 @@ class ScheduleComponent extends Model{
             $roomCount++;
         }
         
-//        echo "<pre>";
-//        var_dump($dates); exit();
-        
-//        $dayCount = 5;
-//        foreach ($dates as $key => $value){
-//            $dates[$key]['row'] = $dayCount;
-//            $weekday = $weekdayName[date('w', mktime(0, 0, 0, $value['month'], $value['day'], $value['year']))];
-//            $sheet->getStyleByColumnAndRow(1, $dayCount)->getAlignment()->setWrapText(true);
-//            $sheet->setCellValueByColumnAndRow(1, $dayCount, $value['day'] ."." .$value['month'] ."." .$value['year'] ."\n" .$weekday );
-//            $sheet->getStyleByColumnAndRow(1, $dayCount)->applyFromArray([
-//                'borders' => [
-//                    'left' => [
-//                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-//                        'color' => array('argb' => '000000'),
-//                    ],
-//                    'bottom' => [
-//                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-//                        'color' => array('argb' => '000000'),
-//                    ],
-//                    'right' => [
-//                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-//                        'color' => array('argb' => '000000'),
-//                    ]
-//                ]
-//            ]);
-//            $roomCount = 2;
-//            foreach ($rooms as $key => $value){
-//                $sheet->getStyleByColumnAndRow($roomCount, $dayCount)->applyFromArray([
-//                    'borders' => [
-//                        'bottom' => [
-//                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-//                            'color' => array('argb' => '000000'),
-//                        ],
-//                        'right' => [
-//                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-//                            'color' => array('argb' => '000000'),
-//                        ]
-//                    ]
-//                ]);
-//                $roomCount++;
-//            }
-//            $sheet->getStyleByColumnAndRow(1, $dayCount)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-//            $sheet->getStyleByColumnAndRow(1, $dayCount)->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
-//            $sheet->getRowDimension($dayCount)->setRowHeight(30);
-//            $dayCount++;
-//        }
         
         $scheduleSort = [];
         foreach ($schedule as $key => $value){
@@ -696,6 +650,9 @@ class ScheduleComponent extends Model{
                             
                             $sheet->getStyleByColumnAndRow($col, $gapCount)->getAlignment()->setWrapText(true);
                             $sheet->setCellValueByColumnAndRow($col, $gapCount, $resultStr);
+                            if((int)$events[$i]['is_modified'] === 1){
+                                $sheet->getStyleByColumnAndRow($col, $gapCount)->getFont()->getColor()->setARGB(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_RED);
+                            }
                             $sheet->getStyleByColumnAndRow($col, $gapCount)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
                             $sheet->getStyleByColumnAndRow($col, $gapCount)->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
                             $gapCount++;
@@ -724,8 +681,13 @@ class ScheduleComponent extends Model{
                                     'right' => [
                                         'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
                                         'color' => array('argb' => '000000'),
+                                    ],
+                                    'left' => [
+                                        'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                                        'color' => array('argb' => '000000'),
                                     ]
                                 ]
+                                
                             ]);
                         }
                     }

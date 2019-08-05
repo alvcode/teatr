@@ -156,9 +156,11 @@ class ScheduleController extends AccessController
             if(Yii::$app->request->post('trigger') == 'load-schedule'){
                 $configEventType = Config::getConfig('schedule_two_event_type');
                 $schedule = ScheduleEvents::find()
+                        ->leftJoin('events', 'schedule_events.event_id = events.id')
                         ->where(['=', 'year(date)', Yii::$app->request->post('year')])
                         ->andWhere(['=', 'month(date)', Yii::$app->request->post('month')])
                         ->andWhere(['event_type_id' => $configEventType])
+                        ->andWhere(['events.category_id' => 1])
                         ->with('eventType')->with('event')->asArray()->all();
                 return json_encode(ScheduleComponent::transformEventsToTwo($schedule));
             }

@@ -48,7 +48,7 @@ class Events extends \yii\db\ActiveRecord
         return [
             'id' => 'ID',
             'name' => 'Название',
-            'other_name' => 'Дополнительное название',
+            'other_name' => 'Дополнительные сведения',
             'is_active' => 'Is Active',
             'category_id' => 'Категория спектакля',
         ];
