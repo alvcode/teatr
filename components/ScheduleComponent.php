@@ -12,6 +12,7 @@ use app\models\User;
 use app\models\Config;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\RichText\RichText;
 use app\models\Room;
 
 /**
@@ -445,7 +446,22 @@ class ScheduleComponent extends Model{
 
         $schedule = ScheduleEvents::find()
                 ->where(['between', 'date', $from, $to])
-                ->with('eventType')->with('event')->with('profCat')->asArray()->all();
+                ->with('eventType')->with('event')->with('profCat')->with('allUsersInEvent')->asArray()->all();
+        $spectacleEventConfig = Config::getConfig('spectacle_event');
+        $actorsProfCat = Config::getConfig('actors_prof_cat');
+        // ************************************************************ ВЫНЕСТИ В МЕТОД *****************************************************
+        foreach ($schedule as $key => $value){
+            if(!in_array($value['event_type_id'], $spectacleEventConfig)){
+                foreach ($value['allUsersInEvent'] as $allKey => $allVal){
+                    if(!in_array($allVal['userWithProf']['userProfession']['prof']['proff_cat_id'], $actorsProfCat)){
+                        unset($schedule[$key]['allUsersInEvent'][$allKey]);
+                    }
+                }
+            }else{
+                $schedule[$key]['allUsersInEvent'] = [];
+            }
+        }
+//        echo \yii\helpers\VarDumper::dumpAsString($schedule, 10, true);
         $activesRoom = [];
         
         foreach ($schedule as $key => $value){
@@ -459,6 +475,7 @@ class ScheduleComponent extends Model{
         $sheet = $spreadsheet->getActiveSheet();
         
         $sheet->setCellValueByColumnAndRow(1, 1, $dateFrom ." - " .$dateTo);
+        $sheet->getStyleByColumnAndRow(1, 1)->getFont()->setSize(15);
 //        $sheet->getStyleByColumnAndRow(1, 1)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
         $sheet->mergeCellsByColumnAndRow(1, 1, count($rooms) + 1, 1);
         
@@ -639,17 +656,57 @@ class ScheduleComponent extends Model{
                     $repeatArr = [];
                     for($i = 0; $i <= 1440; $i++){
                         $resultStr = '';
+                        $objRichText = new RichText();
                         if(isset($events[$i]) && !in_array($events[$i]['event']['id'] ."-" .$events[$i]['eventType']['id'], $repeatArr)){
-                            $repeatArr[] = $events[$i]['event']['id'] ."-" .$events[$i]['eventType']['id'];
-                            for($z = 0; $z <= 1440; $z++){
-                                if(isset($events[$z]) && +$events[$i]['event']['id'] == +$events[$z]['event']['id'] && +$events[$i]['eventType']['id'] == +$events[$z]['eventType']['id']){
-                                    $resultStr .= self::minuteToTime($events[$z]['time_from']) ." ";
+                            // Если спектакль, то повторы в этот день в одну строку
+                            if(in_array($events[$i]['eventType']['id'], $spectacleEventConfig)){
+                                $repeatArr[] = $events[$i]['event']['id'] ."-" .$events[$i]['eventType']['id'];
+                                for($z = 0; $z <= 1440; $z++){
+                                    if(isset($events[$z]) && +$events[$i]['event']['id'] == +$events[$z]['event']['id'] && +$events[$i]['eventType']['id'] == +$events[$z]['eventType']['id']){
+    //                                    $resultStr .= self::minuteToTime($events[$z]['time_from']) ." ";
+                                        $objBold = $objRichText->createTextRun(self::minuteToTime($events[$z]['time_from']) ."- ");
+                                        $objBold->getFont()->setBold(true);
+                                    }
                                 }
+                            }else{
+                                $objBold = $objRichText->createTextRun(self::minuteToTime($events[$i]['time_from']) ."- ");
+                                $objBold->getFont()->setBold(true);
                             }
-                            $resultStr .= "(" .$events[$i]['eventType']['name'] .") " .$events[$i]['event']['name'];
+                            
+                            $objRichText->createText("(" .$events[$i]['eventType']['name'] .") ");
+//                            $objRichText->createText($events[$i]['event']['name']);
+                            $objBold = $objRichText->createTextRun($events[$i]['event']['name']);
+                            $objBold->getFont()->setBold(true);
+                            if($events[$i]['event']['other_name']){
+                                $objBold = $objRichText->createTextRun(" (" .$events[$i]['event']['other_name'] ."). ");
+                                $objBold->getFont()->setBold(true);
+                            }
+//                            $resultStr .= "(" .$events[$i]['eventType']['name'] .") " .$events[$i]['event']['name'];
+                            
+                            if($events[$i]['add_info']){
+//                                $resultStr .= " (" .$events[$i]['add_info'] .")";
+                                $objRichText->createText(" (" .$events[$i]['add_info'] .")");
+                            }
+                            if($events[$i]['allUsersInEvent'] && !in_array($events[$i]['eventType']['id'], $spectacleEventConfig)){
+                                $objRichText->createText(" (");
+                                $allUsersArr = [];
+                                foreach ($events[$i]['allUsersInEvent'] as $keyUser => $valUser){
+                                    $allUsersArr[] = $valUser['userWithProf']['surname'];
+                                }
+                                $objRichText->createText(implode(', ', $allUsersArr) .")");
+                            }
+                            if($events[$i]['profCat']){
+                                $objRichText->createText("\n");
+                                $allProffArr = [];
+                                foreach ($events[$i]['profCat'] as $keyProf => $valProf){
+                                    $allProffArr[] = $valProf['profCat']['alias'];
+                                }
+                                $objBold = $objRichText->createTextRun(implode(', ', $allProffArr));
+                                $objBold->getFont()->setBold(true);
+                            }
                             
                             $sheet->getStyleByColumnAndRow($col, $gapCount)->getAlignment()->setWrapText(true);
-                            $sheet->setCellValueByColumnAndRow($col, $gapCount, $resultStr);
+                            $sheet->setCellValueByColumnAndRow($col, $gapCount, $objRichText);
                             if((int)$events[$i]['is_modified'] === 1){
                                 $sheet->getStyleByColumnAndRow($col, $gapCount)->getFont()->getColor()->setARGB(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_RED);
                             }
@@ -795,10 +852,10 @@ class ScheduleComponent extends Model{
 //            $spreadsheet->getActiveSheet()->getRowDimension($dayCount)->setRowHeight(-1);
 //            $dayCount++;
 //        }
-        
+        $filename = "Расписание_" .$dateFrom ."-" .$dateTo .".xlsx";
         $writer = new Xlsx($spreadsheet);
-        $writer->save('files/week_schedule/file.xlsx');
-        return \Yii::$app->response->sendFile('files/week_schedule/file.xlsx');
+        $writer->save('files/week_schedule/' .$filename);
+        return \Yii::$app->response->sendFile('files/week_schedule/' .$filename);
         
         
     }

@@ -77,19 +77,12 @@ class ScheduleController extends AccessController
                 }
                 $scheduleEvent->is_modified = Yii::$app->request->post('modifiedEvent');
                 if($scheduleEvent->validate() && $scheduleEvent->save()){
-                    if(in_array($scheduleEvent->event_type_id, $spectacleEventConfig)){
-                        $actorsProfCat = Config::getConfig('actors_prof_cat');
-                        $profInSchedule = new ProfCatInSchedule();
-                        $profInSchedule->prof_cat_id = $actorsProfCat[0];
-                        $profInSchedule->schedule_id = $scheduleEvent->id;
-                        $profInSchedule->save();
-                    }
                     $record = ScheduleEvents::find()
                         ->where(['id' => $scheduleEvent->id])
                         ->with('eventType')->with('event')->asArray()->one();
                     return json_encode(['response' => 'ok', 'result' => $record]);
                 }else{
-                    return 0;
+                    return json_encode(['response' => 'error', 'result' => 'Ошибка']);
                 }
             }
             
@@ -422,13 +415,6 @@ class ScheduleController extends AccessController
                 $scheduleEvent->add_info = Yii::$app->request->post('addInfo');
                 $scheduleEvent->is_modified = Yii::$app->request->post('modifiedEvent');
                 if($scheduleEvent->validate() && $scheduleEvent->save()){
-                    if(in_array($scheduleEvent->event_type_id, $spectacleEventConfig)){
-                        $actorsProfCat = Config::getConfig('actors_prof_cat');
-                        $profInSchedule = new ProfCatInSchedule();
-                        $profInSchedule->prof_cat_id = $actorsProfCat[0];
-                        $profInSchedule->schedule_id = $scheduleEvent->id;
-                        $profInSchedule->save();
-                    }
                     $record = ScheduleEvents::find()
                         ->where(['id' => $scheduleEvent->id])
                         ->with('eventType')->with('event')->with('profCat')->asArray()->one();
@@ -445,6 +431,7 @@ class ScheduleController extends AccessController
                         ->with('eventType')->with('event')->with('profCat')->with('allUsersInEvent')->asArray()->all();
                 $spectacleEventConfig = Config::getConfig('spectacle_event');
                 $actorsProfCat = Config::getConfig('actors_prof_cat');
+                // ************************************************************ ВЫНЕСТИ В МЕТОД *************************************************
                 foreach ($schedule as $key => $value){
                     if(!in_array($value['event_type_id'], $spectacleEventConfig)){
                         foreach ($value['allUsersInEvent'] as $allKey => $allVal){

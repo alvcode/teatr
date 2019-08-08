@@ -62,9 +62,7 @@ class UserController extends AccessController
         
         if(Yii::$app->request->isAjax){
             if(Yii::$app->request->post('trigger') == 'new-user'){
-                $timesheetArr = Yii::$app->request->post('timesheet');
-                $uniqueTimesheet = array_unique(\yii\helpers\ArrayHelper::getColumn($timesheetArr, 'eventType'));
-                if(count($uniqueTimesheet) < count($timesheetArr)){
+                if(!TimesheetConfig::checkRepeat(Yii::$app->request->post('timesheet'))){
                     return json_encode(['result' => 'error', 'data' => 'В настройке для табелей имеются повторяющиеся типы мероприятий']);
                 }
                 $userModel->name = Yii::$app->request->post('name');
@@ -79,13 +77,7 @@ class UserController extends AccessController
                     $userProfModel->prof_id = Yii::$app->request->post('profId');
                     $userProfModel->save();
                     
-                    foreach ($timesheetArr as $key => $value){
-                        Yii::$app->db->createCommand()->insert('timesheet_config', [
-                            'user_id' => $userModel->id,
-                            'event_type_id' => $value['eventType'],
-                            'method' => $value['method']
-                        ])->execute();
-                    }
+                    TimesheetConfig::setConfig(Yii::$app->request->post('timesheet'), $userModel->id);
                     
                     if($userModel->user_role) {
                         $getRole = Yii::$app->authManager->getRole($userModel->user_role);
@@ -124,6 +116,14 @@ class UserController extends AccessController
             if(Yii::$app->request->post('trigger') == 'get-timesheet'){
                 $getTimesheet = TimesheetConfig::find()->where(['user_id' => Yii::$app->request->post('userId')])->with('eventType')->asArray()->all();
                 return json_encode(['result' => 'ok', 'data' => $getTimesheet]);
+            }
+            
+            if(Yii::$app->request->post('trigger') == 'set-timesheet'){
+                if(!TimesheetConfig::checkRepeat(Yii::$app->request->post('timesheet'))){
+                    return json_encode(['result' => 'error', 'data' => 'В настройке для табелей имеются повторяющиеся типы мероприятий']);
+                }
+                TimesheetConfig::setConfig(Yii::$app->request->post('timesheet'), Yii::$app->request->post('userId'));
+                return json_encode(['result' => 'ok']);
             }
             
         }

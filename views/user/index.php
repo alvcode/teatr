@@ -94,7 +94,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <div class="input-group mb-3">
                             <a href="/user/index?act=sort&val=asc" class="btn btn-sm <?= (isset($sort['act']) && $sort['act'] == 'sort' && $sort['val'] == 'asc') ? "btn-success" : "btn-outline-info" ?> ml-1">По порядку</a>
                             <a href="/user/index?act=sort&val=surname" class="btn btn-sm <?= (isset($sort['act']) && $sort['act'] == 'sort' && $sort['val'] == 'surname') ? "btn-success" : "btn-outline-info" ?> ml-1">По фамилии</a>
-                            <form method="get" class="form-inline">
+                            <form method="get" class="form-inline mrg-top15">
                                 <input type="hidden" name="act" value="sortProf">
                                 <select name="val" class="form-control-sm form-control ml-1">
                                     <?php foreach ($categories as $key => $value): ?>
@@ -268,10 +268,10 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
             <div class="modal-body">
                 <div class="get-timesheet-name text-center font-weight-bold"></div>
-                <div>
+                <div class="text-center mrg-top15">
                     <div id="add-timesheet-get" class="btn btn-sm btn-outline-info"><i class="fas fa-plus-circle"></i></div>
                 </div>
-                <div class="get-timesheet-content"></div>
+                <div class="get-timesheet-content mrg-top15"></div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Отмена</button>
@@ -503,13 +503,14 @@ $this->params['breadcrumbs'][] = $this->title;
             });
         });
         
+        var changeTimesheetUser = false;
         $('.get-timesheet').dblclick(function(){
-            var userId = this.parentNode.dataset.user;
+            changeTimesheetUser = this.parentNode.dataset.user;
             var fullName = this.parentNode.getElementsByTagName('td')[0].innerHTML +" " +this.parentNode.getElementsByTagName('td')[1].innerHTML;
 //            alert(fullName); return false;
             var data = {
                 trigger: 'get-timesheet',
-                userId: userId,
+                userId: changeTimesheetUser,
             };
             data[csrfParam] = csrfToken;
             $.ajax({
@@ -522,9 +523,10 @@ $this->params['breadcrumbs'][] = $this->title;
                         console.log(result.data);
                         if(!result.data.length){
                             $('.get-timesheet-name').html(fullName);
-                            $('.get-timesheet-content').html('Настройка табеля отсутствует');
+                            $('.get-timesheet-content').html("<div class='text-center'>Настройка табеля отсутствует</div>");
                         }else{
                             $('.get-timesheet-name').html(fullName);
+                            renderTimesheetConfig(result.data);
                         }
                         $('#timesheetUserModal').modal('show');
                     } else if(result.result == 'error') {
@@ -537,6 +539,84 @@ $this->params['breadcrumbs'][] = $this->title;
                     stopPreloader();
                 }
             });
+        });
+        
+        $('#add-timesheet-get').click(function(){
+            var cloneItem = document.getElementsByClassName('timesheet-item')[0].cloneNode(true);
+            if(!document.getElementsByClassName('get-timesheet-content')[0].getElementsByClassName('timesheet-item').length){
+                $('.get-timesheet-content').empty();
+            }
+            document.getElementsByClassName('get-timesheet-content')[0].append(cloneItem);
+        });
+        
+        $('#timesheet-user-submit').click(function(){
+            var timesheetItems = document.getElementsByClassName('get-timesheet-content')[0].getElementsByClassName('timesheet-item');
+            var timesheetConfig = [];
+            for(var i = 0; i < timesheetItems.length; i++){
+                var k = timesheetConfig.length;
+                timesheetConfig[k] = {};
+                timesheetConfig[k].eventType = timesheetItems[i].getElementsByClassName('timesheet-event-type')[0].value;
+                timesheetConfig[k].method = timesheetItems[i].getElementsByClassName('timesheet-method')[0].value;
+            }
+            if(!timesheetConfig.length){
+                showNotifications("Не заполнена настройка табелей", 3000, NOTIF_RED);
+                return false;
+            }
+            console.log(timesheetConfig);
+            var data = {
+                trigger: 'set-timesheet',
+                timesheet: timesheetConfig,
+                userId: changeTimesheetUser
+            };
+            data[csrfParam] = csrfToken;
+            $.ajax({
+                type: "POST",
+                url: '/user/index',
+                data: data,
+                success: function (data) {
+                    var result = JSON.parse(data);
+                    if (result.result == 'ok') {
+                        $('#timesheetUserModal').modal('hide');
+                        showNotifications('Настройка табеля изменена', 2000, NOTIF_GREEN);
+                    } else if (result.result == 'error') {
+                        showNotifications(result.data, 7000, NOTIF_RED);
+                    }
+                },
+                error: function () {
+                    showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                    self.prop('disabled', false);
+                    stopPreloader();
+                }
+            });
+        });
+        
+        function renderTimesheetConfig(data){
+            var contentBlock = document.getElementsByClassName('get-timesheet-content')[0];
+            for(var i = 0; i < data.length; i++){
+                var cloneItem = document.getElementsByClassName('timesheet-item')[0].cloneNode(true);
+                var cloneEventsType = cloneItem.getElementsByClassName('timesheet-event-type')[0].getElementsByTagName('option');
+                var cloneMethods = cloneItem.getElementsByClassName('timesheet-method')[0].getElementsByTagName('option');
+                for(var k = 0; k < cloneEventsType.length; k++){
+                    if(+data[i].event_type_id === +cloneEventsType[k].value){
+                        cloneEventsType[k].selected = true;
+                    }else{
+                        cloneEventsType[k].selected = false;
+                    }
+                }
+                for(var z = 0; z < 2; z++){
+                    if(+data[i].method === (z + 1)){
+                        cloneMethods[z].selected = true;
+                    }else{
+                        cloneMethods[z].selected = false;
+                    }
+                }
+                contentBlock.append(cloneItem);
+            }
+        }
+        
+        $('#timesheetUserModal').on('hidden.bs.modal', function (e) {
+            $('.get-timesheet-name').empty();
+            $('.get-timesheet-content').empty();
         });
 
 
