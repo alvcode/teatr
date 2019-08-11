@@ -21,6 +21,7 @@ use app\models\UserInSchedule;
 use app\models\ProfCatInSchedule;
 use yii\base\Exception;
 use app\models\ProffCategories;
+use app\components\excel\WeekExcel;
 
 class ScheduleController extends AccessController
 {
@@ -77,6 +78,14 @@ class ScheduleController extends AccessController
                 }
                 $scheduleEvent->is_modified = Yii::$app->request->post('modifiedEvent');
                 if($scheduleEvent->validate() && $scheduleEvent->save()){
+                    // Хардкод для eventCategory
+                    if(in_array($scheduleEvent->event_type_id, $spectacleEventConfig) && Yii::$app->request->post('eventCategory') == 1){
+                        $actorsProfCat = Config::getConfig('actors_prof_cat');
+                        $profInSchedule = new ProfCatInSchedule();
+                        $profInSchedule->prof_cat_id = $actorsProfCat[0];
+                        $profInSchedule->schedule_id = $scheduleEvent->id;
+                        $profInSchedule->save();
+                    }
                     $record = ScheduleEvents::find()
                         ->where(['id' => $scheduleEvent->id])
                         ->with('eventType')->with('event')->asArray()->one();
@@ -415,6 +424,14 @@ class ScheduleController extends AccessController
                 $scheduleEvent->add_info = Yii::$app->request->post('addInfo');
                 $scheduleEvent->is_modified = Yii::$app->request->post('modifiedEvent');
                 if($scheduleEvent->validate() && $scheduleEvent->save()){
+                    // Хардкод для eventCategory
+                    if(in_array($scheduleEvent->event_type_id, $spectacleEventConfig) && Yii::$app->request->post('eventCategory') == 1){
+                        $actorsProfCat = Config::getConfig('actors_prof_cat');
+                        $profInSchedule = new ProfCatInSchedule();
+                        $profInSchedule->prof_cat_id = $actorsProfCat[0];
+                        $profInSchedule->schedule_id = $scheduleEvent->id;
+                        $profInSchedule->save();
+                    }
                     $record = ScheduleEvents::find()
                         ->where(['id' => $scheduleEvent->id])
                         ->with('eventType')->with('event')->with('profCat')->asArray()->one();
@@ -699,7 +716,7 @@ class ScheduleController extends AccessController
      */
     public function actionExcel(){
         
-        ScheduleComponent::excelWeekSchedule(Yii::$app->request->get('from'), Yii::$app->request->get('to'));
+        WeekExcel::excelWeekSchedule(Yii::$app->request->get('from'), Yii::$app->request->get('to'));
         
     }
     

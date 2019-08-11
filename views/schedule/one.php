@@ -392,6 +392,7 @@ $this->params['breadcrumbs'][] = $this->title;
             var timeFrom = $('#add--time_from').val();
             var timeTo = $('#add--time_to').val();
             var eventType = $('#select-event-type').val();
+            var eventCategory = $('#select-event-category').val();
             var event = $('#select-event').val();
             if (!timeFrom || timeFrom == '') {
                 showNotifications("Не выбрано время начала мероприятия", 3000, NOTIF_RED);
@@ -409,6 +410,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 timeFrom: timeFrom,
                 timeTo: timeTo,
                 eventType: eventType,
+                eventCategory: eventCategory,
                 event: event,
                 withoutEvent: withoutEvent,
                 modifiedEvent: modifiedEvent

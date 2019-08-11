@@ -561,6 +561,7 @@ $this->params['breadcrumbs'][] = $this->title;
             var timeFrom = $('#add--time_from').val();
             var timeTo = $('#add--time_to').val();
             var eventType = $('#select-event-type').val();
+            var eventCategory = $('#select-event-category').val();
             var event = $('#select-event').val();
             var addInfo = $('#add--add-info').val();
             if (!timeFrom || timeFrom == '') {
@@ -580,6 +581,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 timeTo: timeTo,
                 addInfo: addInfo,
                 eventType: eventType,
+                eventCategory: eventCategory,
                 event: event,
                 withoutEvent: withoutEvent,
                 modifiedEvent: modifiedEvent
