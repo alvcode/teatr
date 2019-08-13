@@ -132,7 +132,7 @@ a:hover {
   font-size: 14px;
 }
 .schedule-controls {
-  width: 260px;
+  width: 300px;
   font-size: 20px;
   display: flex;
   -webkit-flex-direction: row;
@@ -145,7 +145,7 @@ a:hover {
   justify-content: space-around;
 }
 .schedule-controls .name {
-  width: 180px;
+  width: 240px;
   font-weight: 700;
   color: #F97979;
   text-decoration: underline;
@@ -306,7 +306,7 @@ a:hover {
   justify-content: space-between;
   font-size: 18px;
   font-weight: 700;
-  text-align: center;
+  /*text-align: center;*/
   box-sizing: border-box;
   width: 100%;
 }
@@ -338,7 +338,7 @@ a:hover {
   justify-content: space-between;
   /*font-size: 18px;*/
   /*font-weight: 700;*/
-  text-align: center;
+  /*text-align: center;*/
   box-sizing: border-box;
   width: 100%;
 }
@@ -348,7 +348,7 @@ a:hover {
   border-left: 1px solid #000;
   border-bottom: 1px solid #000;
   border-right: 1px solid #000;
-  font-size: 17px;
+  font-size: 16px;
   padding: 4px;
   box-sizing: border-box;
 }
@@ -366,6 +366,7 @@ a:hover {
   width: 460px;
   position: fixed;
   padding-top: 50px;
+  padding-bottom: 25px;
   right: 0;
   top: 0;
   bottom: 0;

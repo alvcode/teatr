@@ -90,7 +90,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <div id="add-actors-cat-event" class="btn btn-sm btn-outline-success mrg-top15"><i class="fas fa-plus"></i> Добавить</div>
                 </div>
             </div>
-
+            
         </div>
     </div>
     <br>

@@ -270,12 +270,12 @@ $this->params['breadcrumbs'][] = $this->title;
                 <div id="delete--event" class="btn btn-sm btn-danger">Удалить мероприятие</div>
             </div>
             <hr>
-            <div class="text-right mrg-top15">
+            <div class="mrg-top15">
                 <div id="add-prof-categories" class="btn btn-sm btn-success">Добавить службу <i class="fas fa-plus-circle"></i></div>
             </div>
             <div class="text-center mrg-top15" id="prof-cat-right-button-container"></div>
             <div style="display: none;" id="add-user-in-schedule-container" class="text-center mrg-top15"><div class="btn btn-sm btn-outline-info" id="add-user-in-schedule-button"><i class="fas fa-plus-circle"></i></div></div>
-            <div class="text-center mrg-top15" id="user-in-event-right-button-container"></div>
+            <div class="mrg-top15" id="user-in-event-right-button-container"></div>
         </div>
     </div>
 </div>
@@ -777,19 +777,6 @@ $this->params['breadcrumbs'][] = $this->title;
                             createContainer.append(createBudgie);
                             createContainer.append(createEventType);
                             createContainer.append(createEventName);
-
-                            var createProfCat = document.createElement('div');
-                            createProfCat.className = 'three--prof-cat-cell';
-                            if (params.profCat && params.profCat.length) {
-                                var profCatArr = [];
-                                for (var k = 0; k < params.profCat.length; k++) {
-//                                    var profCatSpan = document.createElement('span');
-//                                    profCatSpan.innerHTML = params.profCat[k].profCat.alias;
-                                    profCatArr[profCatArr.length] = params.profCat[k].profCat.alias;
-                                }
-                                createProfCat.innerHTML = profCatArr.join(', ');
-                            }
-                            createContainer.append(createProfCat);
                             
                             var userListArr = [];
                             var createUserList = document.createElement('div');
@@ -808,6 +795,19 @@ $this->params['breadcrumbs'][] = $this->title;
                                 createAddInfo.innerHTML = "(" +params.addInfo +")";
                                 createContainer.append(createAddInfo);
                             }
+
+                            var createProfCat = document.createElement('div');
+                            createProfCat.className = 'three--prof-cat-cell';
+                            if (params.profCat && params.profCat.length) {
+                                var profCatArr = [];
+                                for (var k = 0; k < params.profCat.length; k++) {
+//                                    var profCatSpan = document.createElement('span');
+//                                    profCatSpan.innerHTML = params.profCat[k].profCat.alias;
+                                    profCatArr[profCatArr.length] = params.profCat[k].profCat.alias;
+                                }
+                                createProfCat.innerHTML = profCatArr.join(', ');
+                            }
+                            createContainer.append(createProfCat);
                             
                             createContainer.append(returnHR());
 

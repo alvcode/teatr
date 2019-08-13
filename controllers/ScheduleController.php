@@ -79,13 +79,13 @@ class ScheduleController extends AccessController
                 $scheduleEvent->is_modified = Yii::$app->request->post('modifiedEvent');
                 if($scheduleEvent->validate() && $scheduleEvent->save()){
                     // Хардкод для eventCategory
-                    if(in_array($scheduleEvent->event_type_id, $spectacleEventConfig) && Yii::$app->request->post('eventCategory') == 1){
-                        $actorsProfCat = Config::getConfig('actors_prof_cat');
-                        $profInSchedule = new ProfCatInSchedule();
-                        $profInSchedule->prof_cat_id = $actorsProfCat[0];
-                        $profInSchedule->schedule_id = $scheduleEvent->id;
-                        $profInSchedule->save();
-                    }
+//                    if(in_array($scheduleEvent->event_type_id, $spectacleEventConfig) && Yii::$app->request->post('eventCategory') == 1){
+//                        $actorsProfCat = Config::getConfig('actors_prof_cat');
+//                        $profInSchedule = new ProfCatInSchedule();
+//                        $profInSchedule->prof_cat_id = $actorsProfCat[0];
+//                        $profInSchedule->schedule_id = $scheduleEvent->id;
+//                        $profInSchedule->save();
+//                    }
                     $record = ScheduleEvents::find()
                         ->where(['id' => $scheduleEvent->id])
                         ->with('eventType')->with('event')->asArray()->one();
@@ -425,13 +425,13 @@ class ScheduleController extends AccessController
                 $scheduleEvent->is_modified = Yii::$app->request->post('modifiedEvent');
                 if($scheduleEvent->validate() && $scheduleEvent->save()){
                     // Хардкод для eventCategory
-                    if(in_array($scheduleEvent->event_type_id, $spectacleEventConfig) && Yii::$app->request->post('eventCategory') == 1){
-                        $actorsProfCat = Config::getConfig('actors_prof_cat');
-                        $profInSchedule = new ProfCatInSchedule();
-                        $profInSchedule->prof_cat_id = $actorsProfCat[0];
-                        $profInSchedule->schedule_id = $scheduleEvent->id;
-                        $profInSchedule->save();
-                    }
+//                    if(in_array($scheduleEvent->event_type_id, $spectacleEventConfig) && Yii::$app->request->post('eventCategory') == 1){
+//                        $actorsProfCat = Config::getConfig('actors_prof_cat');
+//                        $profInSchedule = new ProfCatInSchedule();
+//                        $profInSchedule->prof_cat_id = $actorsProfCat[0];
+//                        $profInSchedule->schedule_id = $scheduleEvent->id;
+//                        $profInSchedule->save();
+//                    }
                     $record = ScheduleEvents::find()
                         ->where(['id' => $scheduleEvent->id])
                         ->with('eventType')->with('event')->with('profCat')->asArray()->one();

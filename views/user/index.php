@@ -109,7 +109,7 @@ $this->params['breadcrumbs'][] = $this->title;
 
                     </div>
                 </div>
-                <table class="table table-sm table-striped text-center mt-2">
+                <table class="table table-sm table-striped mt-2">
                     <thead>
                         <tr>
                             <th scope="col">ID</th>

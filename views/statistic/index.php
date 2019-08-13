@@ -37,7 +37,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <input class="form-control-sm form-control" id="timesheet-time-to" placeholder="Дата до...">
                     </div>
                     <div class="col-2">
-                        <div id="timesheet-submit" class="btn btn-sm btn-info">Выгрузить в Excel</div>
+                        <a href="#" id="timesheet-submit" class="btn btn-sm btn-info" target="_blank">Выгрузить в Excel</a>
                     </div>
                 </div>
             </div>
@@ -54,12 +54,12 @@ $this->params['breadcrumbs'][] = $this->title;
         var csrfToken = $('meta[name="csrf-token"]').attr("content");
         
         $('#timesheet-time-from').datepicker({
-            dateFormat:'dd.mm.yy',
+            dateFormat:'dd-mm-yy',
             monthNames : ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'],
             dayNamesMin : ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'],
         });
         $('#timesheet-time-to').datepicker({
-            dateFormat:'dd.mm.yy',
+            dateFormat:'dd-mm-yy',
             monthNames : ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'],
             dayNamesMin : ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'],
         });
@@ -67,6 +67,7 @@ $this->params['breadcrumbs'][] = $this->title;
         $('#timesheet-submit').click(function(){
             var dateFrom = $('#timesheet-time-from').val();
             var dateTo = $('#timesheet-time-to').val();
+            var profId = $('#timesheet-prof-select').val();
             if(dateFrom == ''){
                 showNotifications('Не заполнена дата от...', 2000, NOTIF_RED);
                 return false;
@@ -75,7 +76,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 showNotifications('Не заполнена дата до...', 2000, NOTIF_RED);
                 return false;
             }
-//           alert($('#timesheet-prof-select').val()); 
+            $('#timesheet-submit').attr('href', '/statistic/timesheet?from=' +dateFrom +'&to=' +dateTo +'&prof=' +profId);
         });
         
         
