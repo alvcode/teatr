@@ -29,6 +29,10 @@ $this->params['breadcrumbs'][] = $this->title;
                                 <option value="<?= $value['id'] ?>" <?= (isset($sort['act']) && $sort['act'] == 'sortProf' && $sort['val'] == $value['id']) ? "selected" : "" ?>><?= $value['name'] ?></option>
                             <?php endforeach; ?>
                         </select>
+                        <div class="form-group mrg-top15 ml-1">
+                            <input id="timesheet-ignore-error" type="checkbox">
+                            <label class="form-check-label" for="timesheet-ignore-error">Игноририровать ошибки времени</label>
+                        </div>
                     </div>
                     <div class="col-2">
                         <input class="form-control-sm form-control" id="timesheet-time-from" placeholder="Дата от...">
@@ -64,10 +68,18 @@ $this->params['breadcrumbs'][] = $this->title;
             dayNamesMin : ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'],
         });
         
-        $('#timesheet-submit').click(function(){
+        $('#timesheet-submit').click(function(e){
+//            e.preventDefault(); 
             var dateFrom = $('#timesheet-time-from').val();
             var dateTo = $('#timesheet-time-to').val();
             var profId = $('#timesheet-prof-select').val();
+            if($('#timesheet-ignore-error').prop('checked')){
+                var error = 1;
+            }else{
+                var error = 0;
+            }
+//            alert(error);
+//            return false;
             if(dateFrom == ''){
                 showNotifications('Не заполнена дата от...', 2000, NOTIF_RED);
                 return false;
@@ -76,7 +88,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 showNotifications('Не заполнена дата до...', 2000, NOTIF_RED);
                 return false;
             }
-            $('#timesheet-submit').attr('href', '/statistic/timesheet?from=' +dateFrom +'&to=' +dateTo +'&prof=' +profId);
+            $('#timesheet-submit').attr('href', '/statistic/timesheet?from=' +dateFrom +'&to=' +dateTo +'&prof=' +profId +"&error=" +error);
         });
         
         

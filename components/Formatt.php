@@ -36,5 +36,13 @@ class Formatt extends Model{
 
         return intval($timeExplode[0] * 60) + intval($timeExplode[1]);
     }
+    
+    public static function minuteToTime($from, $to = false){
+        $result = floor($from / 60) .":" .($from % 60 < 10?"0" .$from % 60:$from % 60);
+        if($to){
+            $result .= floor($to / 60) .":" .($to % 60 < 10?"0" .$to % 60:$to % 60);
+        }
+        return $result;
+    }
    
 }
