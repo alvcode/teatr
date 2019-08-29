@@ -14,6 +14,7 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\RichText\RichText;
 use app\models\Room;
+use app\models\TimesheetConfig;
 
 /**
  *
@@ -421,7 +422,38 @@ class ScheduleComponent extends Model{
         
         return $result;
     }
+
+    /**
+     * Возвращает статистику по табелю для панели пользователя panel/index
+     * 
+     * @param $dateFrom
+     * @param $dateTo
+     * @param $userId
+     * 
+     * @return array
+     */
+    public static function panelTimesheetStatistic($dateFrom, $dateTo, $userId){
+        $explodeFrom = explode('-', $dateFrom);
+        $explodeTo = explode('-', $dateTo);
+        
+        $from = date('Y-m-d', mktime(0, 0, 0, $explodeFrom[1], $explodeFrom[0], $explodeFrom[2]));
+        $to = date('Y-m-d', mktime(0, 0, 0, $explodeTo[1], $explodeTo[0], $explodeTo[2]));
+        
+        $schedule = ScheduleEvents::find()
+            ->leftJoin('events', 'schedule_events.event_id = events.id')
+            ->leftJoin('user_in_schedule', 'user_in_schedule.schedule_event_id = schedule_events.id')
+            ->where(['between', 'date', $from, $to])
+            ->andWhere(['user_in_schedule.user_id' => $userId])
+            ->with('eventType')->with('event')->with('profCat')->orderBy('date ASC, time_from ASC')->asArray()->all();
+
+        $timesheetConfig = TimesheetConfig::find()->where(['user_id' => $userId])->asArray()->all();
+        return $schedule;
+    }
     
+    /**
+     * Переводит минуты в время
+     * 
+     */
     public static function minuteToTime($from, $to = false){
         $result = floor($from / 60) .":" .($from % 60 < 10?"0" .$from % 60:$from % 60);
         if($to){

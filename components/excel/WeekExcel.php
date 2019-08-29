@@ -61,7 +61,6 @@ class WeekExcel extends Model{
                 $schedule[$key]['allUsersInEvent'] = [];
             }
         }
-//        echo \yii\helpers\VarDumper::dumpAsString($schedule, 10, true);
         $activesRoom = [];
         
         foreach ($schedule as $key => $value){
@@ -73,10 +72,10 @@ class WeekExcel extends Model{
         
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
+        $sheet->getPageSetup()->setOrientation(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE);
         
         $sheet->setCellValueByColumnAndRow(1, 1, $dateFrom ." - " .$dateTo);
         $sheet->getStyleByColumnAndRow(1, 1)->getFont()->setSize(15);
-//        $sheet->getStyleByColumnAndRow(1, 1)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
         $sheet->mergeCellsByColumnAndRow(1, 1, count($rooms) + 1, 1);
         
         $sheet->setCellValueByColumnAndRow(1, 2, "РАСПИСАНИЕ НА НЕДЕЛЮ");
@@ -194,6 +193,7 @@ class WeekExcel extends Model{
         foreach ($rooms as $key => $value){
             $roomMatrix[$value['id']] = $roomCount;
             $sheet->setCellValueByColumnAndRow($roomCount, 4, $value['name']);
+            $sheet->getStyleByColumnAndRow($roomCount, 4)->getFont()->setSize(13);
             $sheet->getStyleByColumnAndRow($roomCount, 4)->applyFromArray([
                 'borders' => [
                     'top' => [
@@ -236,6 +236,7 @@ class WeekExcel extends Model{
                 $sheet->getStyleByColumnAndRow(1, $dayCount)->getAlignment()->setWrapText(true);
                 $sheet->setCellValueByColumnAndRow(1, $dayCount, $value['day'] ."." .$value['month'] ."." .$value['year'] ."\n" .$weekday );
                 $sheet->getStyleByColumnAndRow(1, $dayCount)->getFont()->setBold(700);
+                $sheet->getStyleByColumnAndRow(1, $dayCount)->getFont()->setSize(15);
                 $sheet->getStyleByColumnAndRow(1, $dayCount)->applyFromArray([
                     'borders' => [
                         'left' => [
@@ -258,14 +259,13 @@ class WeekExcel extends Model{
                     $textSizeArr = [];
                     foreach ($scheduleSort[$timeDate] as $coll => $eventss){
                         $repeatArr = [];
-//                        $textSizeArr = [];
                         
                         for($i = 0; $i <= 1440; $i++){
-                            if(!isset($textSizeArr[$coll])){
-                                $textSizeArr[$coll]['count'] = 0;
-                                $textSizeArr[$coll]['text'] = "";
-                            }
                             if(isset($eventss[$i]) && !in_array($eventss[$i]['event']['id'] ."-" .$eventss[$i]['eventType']['id'], $repeatArr)){
+                                if(!isset($textSizeArr[$coll])){
+                                    $textSizeArr[$coll]['count'] = 0;
+                                    $textSizeArr[$coll]['text'] = "";
+                                }
                                 if(in_array($eventss[$i]['eventType']['id'], $spectacleEventConfig)){
                                     $repeatArr[] = $eventss[$i]['event']['id'] ."-" .$eventss[$i]['eventType']['id'];
                                     for($z = 0; $z <= 1440; $z++){
@@ -310,42 +310,66 @@ class WeekExcel extends Model{
                             }
                         }
                     }
+                    // Вписываем кол-во букв в каждый зал
                     foreach ($textSizeArr as $k => $v){
                         $textSizeArr[$k]['size'] = iconv_strlen($v['text']);
                     }
-                    
-                    echo \yii\helpers\VarDumper::dumpAsString($textSizeArr, 10, true); exit();
-                    
-                    
-                    
-                    
+
+                    // Находим зал, где больше всего буков
+                    if($textSizeArr){
+                        $maxRoom = ['room' => 0, 'size' => 0, 'count' => 0];
+                        foreach ($textSizeArr as $k => $v){
+                            if($v['size'] >= $maxRoom['size']){
+                                $maxRoom = ['room' => $k, 'size' => $v['size'], 'count' => $v['count']];
+                            }
+                        }
+                    }
+
+                    // ****** Теперь на основе вычислений о максимальном кол-ве символов, вкидываем все внутрь расписания
                     $gapCount = $dayCount;
                     $repeatArr = [];
+                    $eventCount = count($events);
+                    $k = 1;
+                    $objRichText = new RichText();
                     for($i = 0; $i <= 1440; $i++){
                         $resultStr = '';
-                        $objRichText = new RichText();
+                        // $objRichText = new RichText();
                         if(isset($events[$i]) && !in_array($events[$i]['event']['id'] ."-" .$events[$i]['eventType']['id'], $repeatArr)){
                             // Если спектакль, то повторы в этот день в одну строку
                             if(in_array($events[$i]['eventType']['id'], $spectacleEventConfig)){
                                 $repeatArr[] = $events[$i]['event']['id'] ."-" .$events[$i]['eventType']['id'];
                                 for($z = 0; $z <= 1440; $z++){
                                     if(isset($events[$z]) && +$events[$i]['event']['id'] == +$events[$z]['event']['id'] && +$events[$i]['eventType']['id'] == +$events[$z]['eventType']['id']){
-    //                                    $resultStr .= self::minuteToTime($events[$z]['time_from']) ." ";
                                         $objBold = $objRichText->createTextRun(self::minuteToTime($events[$z]['time_from'], $events[$z]['time_to']) ." ");
+                                        if((int)$events[$i]['is_modified'] === 1){
+                                            $objBold->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_RED));
+                                        }
                                         $objBold->getFont()->setBold(true);
+                                        $objBold->getFont()->setSize(16);
                                     }
                                 }
                             }else{
                                 $objBold = $objRichText->createTextRun(self::minuteToTime($events[$i]['time_from'], $events[$i]['time_to']) ." ");
+                                if((int)$events[$i]['is_modified'] === 1){
+                                    $objBold->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_RED));
+                                }
                                 $objBold->getFont()->setBold(true);
+                                $objBold->getFont()->setSize(16);
                             }
-                            
+
+                            $objBold = $objRichText->createTextRun("(" .$events[$i]['eventType']['name'] .") ");
+                            $objBold->getFont()->setSize(16);
+                            if((int)$events[$i]['is_modified'] === 1){
+                                $objBold->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_RED));
+                            }
+
                             if($events[$i]['event']['name']){
                                 $objBold = $objRichText->createTextRun($events[$i]['event']['name']);
                                 if((int)$events[$i]['is_modified'] === 1){
                                     $objBold->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_RED));
                                 }
                                 $objBold->getFont()->setBold(true);
+                                $objBold->getFont()->setSize(16);
                             }
                             
                             if($events[$i]['event']['other_name']){
@@ -354,28 +378,28 @@ class WeekExcel extends Model{
                                     $objBold->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_RED));
                                 }
                                 $objBold->getFont()->setBold(true);
+                                $objBold->getFont()->setSize(16);
                             }
-//                            $resultStr .= "(" .$events[$i]['eventType']['name'] .") " .$events[$i]['event']['name'];
                             
                             if($events[$i]['add_info']){
-//                                $objRichText->createText(" (" .$events[$i]['add_info'] .")");
                                 $objBold = $objRichText->createTextRun(" (" .$events[$i]['add_info'] .")");
                                 if((int)$events[$i]['is_modified'] === 1){
                                     $objBold->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_RED));
                                 }
+                                $objBold->getFont()->setSize(16);
                             }
                             
                             if($events[$i]['allUsersInEvent'] && !in_array($events[$i]['eventType']['id'], $spectacleEventConfig)){
                                 $objRichText->createText(" (");
                                 $allUsersArr = [];
                                 foreach ($events[$i]['allUsersInEvent'] as $keyUser => $valUser){
-                                    $allUsersArr[] = $valUser['userWithProf']['surname'];
+                                    $allUsersArr[] = $valUser['userWithProf']['surname'] . " " .mb_substr($valUser['userWithProf']['name'],0,1) .".";
                                 }
-//                                $objRichText->createText(implode(', ', $allUsersArr) .")");
                                 $objBold = $objRichText->createTextRun(implode(', ', $allUsersArr) .")");
                                 if((int)$events[$i]['is_modified'] === 1){
                                     $objBold->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_RED));
                                 }
+                                $objBold->getFont()->setSize(16);
                             }
                             if($events[$i]['profCat']){
                                 $objRichText->createText("\n");
@@ -388,26 +412,38 @@ class WeekExcel extends Model{
                                     $objBold->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_RED));
                                 }
                                 $objBold->getFont()->setBold(true);
+                                $objBold->getFont()->setSize(16);
                             }
-//                            if($k < $eventCount){
-//                                $objRichText->createText("\n \n");
-//                            }
-                            
-                            $sheet->getStyleByColumnAndRow($col, $gapCount)->getAlignment()->setWrapText(true);
-                            $sheet->setCellValueByColumnAndRow($col, $gapCount, $objRichText);
+                           if($k < $eventCount){
+                               $objRichText->createText("\n \n");
+                           }
+                            if(isset($maxRoom) && (int)$maxRoom['room'] === (int)$col){
+                                $sheet->getStyleByColumnAndRow($col, $gapCount)->getAlignment()->setWrapText(true);
+                                $sheet->setCellValueByColumnAndRow($col, $gapCount, $objRichText);
+                                $objRichText = new RichText();
+                                $gapCount++;
+                            }else{
+                                $k++;
+                                if($k < $eventCount){
+                                    $objRichText->createText("\n \n");
+                                }
+                            }
                             if((int)$events[$i]['is_modified'] === 1){
                                 $sheet->getStyleByColumnAndRow($col, $gapCount)->getFont()->getColor()->setARGB(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_RED);
                             }
-//                            $sheet->getStyleByColumnAndRow($col, $gapCount)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-                            $sheet->getStyleByColumnAndRow($col, $gapCount)->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
-                            $gapCount++;
+                            $sheet->getStyleByColumnAndRow($col, $gapCount)->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP);
                         }
+                    }
+                    if(isset($maxRoom) && (int)$maxRoom['room'] !== (int)$col){
+                        $sheet->getStyleByColumnAndRow($col, $gapCount)->getAlignment()->setWrapText(true);
+                        $sheet->setCellValueByColumnAndRow($col, $gapCount, $objRichText);
+                        $sheet->mergeCellsByColumnAndRow($col, $gapCount, $col, ($gapCount + ($maxRoom['count'] - 1)));
+                        $gapCount++;
                     }
                     if($gapCount > $maxCount){
                         $maxCount = $gapCount;
                     }
                 }
-//                var_dump($maxCount);
                 $sheet->mergeCellsByColumnAndRow(1, $dayCount, 1, ($maxCount - 1));
                 $roomCount = 2;
                 foreach ($rooms as $key => $value){
@@ -506,41 +542,7 @@ class WeekExcel extends Model{
             }
         }
         
-//        exit();
-//        echo "<pre>";
-//        var_dump($scheduleSort); exit();
-//        
-//        foreach ($scheduleSort as $keyRow => $valRow){
-//            $eventMax = 0;
-//            foreach ($valRow as $keyCol => $valCol){
-//                $resultStr = '';
-//                $repeatArr = [];
-//                if(count($valCol) > $eventMax){
-//                    $eventMax = count($valCol);
-//                }
-//                for($i = 0; $i <= 1440; $i++){
-//                    if(isset($valCol[$i]) && !in_array($valCol[$i]['event']['id'] ."-" .$valCol[$i]['eventType']['id'], $repeatArr)){
-//                        $repeatArr[] = $valCol[$i]['event']['id'] ."-" .$valCol[$i]['eventType']['id'];
-//                        for($z = 0; $z <= 1440; $z++){
-//                            if(isset($valCol[$z]) && $valCol[$i]['event']['id'] == $valCol[$z]['event']['id'] && $valCol[$i]['eventType']['id'] == $valCol[$z]['eventType']['id']){
-//                                $resultStr .= self::minuteToTime($valCol[$z]['time_from']) ." ";
-//                            }
-//                        }
-//                        $resultStr .= "(" .$valCol[$i]['eventType']['name'] .") " .$valCol[$i]['event']['name'] ."\n \n";
-//                    }
-//                }
-//                $sheet->getStyleByColumnAndRow($keyCol, $keyRow)->getAlignment()->setWrapText(true);
-//                $sheet->setCellValueByColumnAndRow($keyCol, $keyRow, $resultStr);
-//                $sheet->getStyleByColumnAndRow($keyCol, $keyRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-//                $sheet->getStyleByColumnAndRow($keyCol, $keyRow)->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
-//            }
-//        }
-        
-//        $dayCount = 5;
-//        foreach ($dates as $key => $value){
-//            $spreadsheet->getActiveSheet()->getRowDimension($dayCount)->setRowHeight(-1);
-//            $dayCount++;
-//        }
+
         $filename = "Расписание_" .$dateFrom ."-" .$dateTo .".xlsx";
         $writer = new Xlsx($spreadsheet);
         $writer->save('files/week_schedule/' .$filename);

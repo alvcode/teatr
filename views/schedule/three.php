@@ -77,8 +77,7 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
         <br>
         
-        <a href="/schedule/excel" id="excel-download-1" target="_blank" class="btn btn-sm btn-info">Выгрузить в Excel - 1</a>
-        <a href="/schedule/excel" id="excel-download-2" target="_blank" class="btn btn-sm btn-info">Выгрузить в Excel - 2</a>
+        <a href="/schedule/excel" id="excel-download" target="_blank" class="btn btn-sm btn-info">Выгрузить в Excel</a>
     </div>
 
 
@@ -636,8 +635,7 @@ $this->params['breadcrumbs'][] = $this->title;
             datePeriod[1].month = (dateObj.getMonth() + 1);
             datePeriod[1].year = dateObj.getFullYear();
             
-            document.getElementById('excel-download-1').setAttribute('href', '/schedule/excel-one?from=' +datePeriod[0].year +"-" +datePeriod[0].month +"-" +datePeriod[0].day +"&to="+datePeriod[1].year +"-" +datePeriod[1].month +"-" +datePeriod[1].day);
-            document.getElementById('excel-download-2').setAttribute('href', '/schedule/excel-two?from=' +datePeriod[0].year +"-" +datePeriod[0].month +"-" +datePeriod[0].day +"&to="+datePeriod[1].year +"-" +datePeriod[1].month +"-" +datePeriod[1].day);
+            document.getElementById('excel-download').setAttribute('href', '/schedule/excel-one?from=' +datePeriod[0].year +"-" +datePeriod[0].month +"-" +datePeriod[0].day +"&to="+datePeriod[1].year +"-" +datePeriod[1].month +"-" +datePeriod[1].day);
             return true;
         };
         

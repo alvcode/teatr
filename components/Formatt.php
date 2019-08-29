@@ -40,9 +40,26 @@ class Formatt extends Model{
     public static function minuteToTime($from, $to = false){
         $result = floor($from / 60) .":" .($from % 60 < 10?"0" .$from % 60:$from % 60);
         if($to){
-            $result .= floor($to / 60) .":" .($to % 60 < 10?"0" .$to % 60:$to % 60);
+            $result .= " - " .floor($to / 60) .":" .($to % 60 < 10?"0" .$to % 60:$to % 60);
         }
         return $result;
+    }
+
+    /**
+     * Форматирует дату в удобочитаемый вид для главной панели
+     * Если дата совпадает с сегодняшним днем, то возвращаем текст "Сегодня". С завтрашним - текст "Завтра"
+     * 
+     * @param string $date - дата в формате Y-m-d
+     * 
+     * @return string
+     */
+    public static function panelHumanDate($date){
+        $weekdayName = ['(вс)', '(пн)', '(вт)', '(ср)', '(чт)', '(пт)', '(сб)'];
+        $nDate = date('Y-m-d');
+        if($nDate == $date) return 'Сегодня!';
+        if($date == date('Y-m-d', strtotime($nDate ." + 1 day"))) return 'Завтра';
+        $getFormat = date('d.m.Y', strtotime($date));
+        return $getFormat ." " .$weekdayName[date('w', strtotime($date))];
     }
    
 }

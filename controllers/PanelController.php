@@ -13,6 +13,9 @@ use app\models\Room;
 use app\models\EventType;
 use app\models\Events;
 use app\models\EventCategories;
+use app\models\ScheduleEvents;
+use app\components\Formatt;
+use app\components\ScheduleComponent;
 
 class PanelController extends AccessController
 {
@@ -52,8 +55,34 @@ class PanelController extends AccessController
      * @return string
      */
     public function actionIndex(){
+        if(Yii::$app->request->isAjax){
+            if(Yii::$app->request->post('trigger') == 'load-timesheet-stat'){
+                $result = ScheduleComponent::panelTimesheetStatistic(Yii::$app->request->post('from'), Yii::$app->request->post('to'), Yii::$app->user->identity->id);
+                return json_encode(['result' => 'ok', 'response' => $result]);
+            }
+        }
+        $nDate = date('Y-m-d');
+        $nearSchedule = ScheduleEvents::find()
+            ->leftJoin('user_in_schedule', 'user_in_schedule.schedule_event_id = schedule_events.id')
+            ->where(['between', 'date', $nDate, date('Y-m-d', strtotime($nDate ." + 10 day"))])
+            ->andWhere(['user_in_schedule.user_id' => Yii::$app->user->identity->id])
+            ->with('eventType')->with('event')->orderBy('date ASC, time_from ASC')
+            ->asArray()->all();
         
-        return $this->render('index');
+        foreach($nearSchedule as $k => $v){
+            $nearSchedule[$k]['time_from'] = Formatt::minuteToTime($v['time_from']);
+            if($v['time_to']){
+                $nearSchedule[$k]['time_to'] = Formatt::minuteToTime($v['time_to']);
+            }
+            $nearSchedule[$k]['date'] = Formatt::panelHumanDate($v['date']);
+        }
+
+            // echo "<pre>";
+            // var_dump($nearSchedule); exit();
+        
+        return $this->render('index', [
+            'nearSchedule' => $nearSchedule
+        ]);
     }
     
     
