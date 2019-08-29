@@ -22,6 +22,7 @@ use app\models\ProfCatInSchedule;
 use yii\base\Exception;
 use app\models\ProffCategories;
 use app\components\excel\WeekExcel;
+use app\components\excel\WeekExcelTwo;
 
 class ScheduleController extends AccessController
 {
@@ -460,6 +461,16 @@ class ScheduleController extends AccessController
                         $schedule[$key]['allUsersInEvent'] = [];
                     }
                 }
+                foreach ($schedule as $key => $value){
+                    foreach ($value['allUsersInEvent'] as $allKey => $allVal){
+                        $schedule[$key]['allUsersInEvent'][$allKey]['userSurname'] = $allVal['userWithProf']['surname'];
+                    }
+                }
+//                $value['allUsersInEvent'][$allKey]['userSurname'] = $allVal['userWithProf']['surname'];
+                foreach ($schedule as $key => $value){
+                    $schedule[$key]['allUsersInEvent'] = ScheduleComponent::sortFirstLetter($schedule[$key]['allUsersInEvent'], 'userSurname');
+                }
+                
                 return json_encode($schedule);
             }
             
@@ -467,8 +478,10 @@ class ScheduleController extends AccessController
                 $data = UserInSchedule::find()->select('user_in_schedule.*')
                     ->where(['schedule_event_id' => Yii::$app->request->post('event')])
                     ->with('userWithProf')->asArray()->all();
-                
-                return json_encode($data);
+                foreach ($data as $key => $value){
+                    $data[$key]['userSurname'] = $value['userWithProf']['surname'];
+                }
+                return json_encode(ScheduleComponent::sortFirstLetter($data, 'userSurname'));
             }
             
             if(Yii::$app->request->post('trigger') == 'add-prof-cat-in-event'){
@@ -714,9 +727,18 @@ class ScheduleController extends AccessController
     /**
      * Action выгрузки в excel
      */
-    public function actionExcel(){
+    public function actionExcelOne(){
         
         WeekExcel::excelWeekSchedule(Yii::$app->request->get('from'), Yii::$app->request->get('to'));
+        
+    }
+    
+    /**
+     * Action выгрузки в excel
+     */
+    public function actionExcelTwo(){
+        
+        WeekExcelTwo::excelWeekSchedule(Yii::$app->request->get('from'), Yii::$app->request->get('to'));
         
     }
     

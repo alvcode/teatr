@@ -77,7 +77,8 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
         <br>
         
-        <a href="/schedule/excel" id="excel-download" target="_blank" class="btn btn-sm btn-info">Выгрузить в Excel</a>
+        <a href="/schedule/excel" id="excel-download-1" target="_blank" class="btn btn-sm btn-info">Выгрузить в Excel - 1</a>
+        <a href="/schedule/excel" id="excel-download-2" target="_blank" class="btn btn-sm btn-info">Выгрузить в Excel - 2</a>
     </div>
 
 
@@ -315,12 +316,12 @@ $this->params['breadcrumbs'][] = $this->title;
                 </button>
             </div>
             <div class="modal-body">
-                <div class="user-modal-container text-center">
+                <div class="user-modal-container">
                     <?php foreach ($users as $key => $value): ?>
                     <div class="user-modal-liter-container">
                             <div style="font-weight: 700;" class="text-danger liter-key"><?= $key ?></div>
                             <?php foreach($value as $keyV => $valueV): ?>
-                                <div class="actor-list-item noselect" data-prof-cat="<?= $valueV['userProfessionJoinProf']['prof']['proff_cat_id'] ?>" data-id="<?= $valueV['id'] ?>"><?= $valueV['name'] ?> <?= $valueV['surname'] ?></div>
+                                <div class="actor-list-item noselect" data-prof-cat="<?= $valueV['userProfessionJoinProf']['prof']['proff_cat_id'] ?>" data-id="<?= $valueV['id'] ?>"><?= $valueV['surname'] ?> <?= $valueV['name'] ?></div>
                             <?php endforeach; ?>
                         </div>
                     <?php endforeach; ?>
@@ -452,17 +453,18 @@ $this->params['breadcrumbs'][] = $this->title;
             }
             return true;
         };
-
-        $('#add--time_from, #edit--time_from').bootstrapMaterialDatePicker({
-            date: false,
-            shortTime: false,
-            format: 'HH:mm'
-        });
-        $('#add--time_to, #edit--time_to').bootstrapMaterialDatePicker({
-            date: false,
-            shortTime: false,
-            format: 'HH:mm'
-        });
+        
+        $("#add--time_from, #edit--time_from, #add--time_to, #edit--time_to").mask("99:99", {clearIfNotMatch: true});
+//        $('#add--time_from, #edit--time_from').bootstrapMaterialDatePicker({
+//            date: false,
+//            shortTime: false,
+//            format: 'HH:mm'
+//        });
+//        $('#add--time_to, #edit--time_to').bootstrapMaterialDatePicker({
+//            date: false,
+//            shortTime: false,
+//            format: 'HH:mm'
+//        });
 
         var rooms = document.querySelector('.three--title-row').getElementsByClassName('room');
 
@@ -634,7 +636,8 @@ $this->params['breadcrumbs'][] = $this->title;
             datePeriod[1].month = (dateObj.getMonth() + 1);
             datePeriod[1].year = dateObj.getFullYear();
             
-            document.getElementById('excel-download').setAttribute('href', '/schedule/excel?from=' +datePeriod[0].year +"-" +datePeriod[0].month +"-" +datePeriod[0].day +"&to="+datePeriod[1].year +"-" +datePeriod[1].month +"-" +datePeriod[1].day);
+            document.getElementById('excel-download-1').setAttribute('href', '/schedule/excel-one?from=' +datePeriod[0].year +"-" +datePeriod[0].month +"-" +datePeriod[0].day +"&to="+datePeriod[1].year +"-" +datePeriod[1].month +"-" +datePeriod[1].day);
+            document.getElementById('excel-download-2').setAttribute('href', '/schedule/excel-two?from=' +datePeriod[0].year +"-" +datePeriod[0].month +"-" +datePeriod[0].day +"&to="+datePeriod[1].year +"-" +datePeriod[1].month +"-" +datePeriod[1].day);
             return true;
         };
         
@@ -778,6 +781,13 @@ $this->params['breadcrumbs'][] = $this->title;
                             createContainer.append(createEventType);
                             createContainer.append(createEventName);
                             
+                            if(params.addInfo){
+                                var createAddInfo = document.createElement('div');
+                                createAddInfo.className = 'three--add-info-block';
+                                createAddInfo.innerHTML = "(" +params.addInfo +")";
+                                createContainer.append(createAddInfo);
+                            }
+                            
                             var userListArr = [];
                             var createUserList = document.createElement('div');
                             createUserList.className = 'three--user-actors-list';
@@ -789,13 +799,6 @@ $this->params['breadcrumbs'][] = $this->title;
                             }
                             createContainer.append(createUserList);
                             
-                            if(params.addInfo){
-                                var createAddInfo = document.createElement('div');
-                                createAddInfo.className = 'three--add-info-block';
-                                createAddInfo.innerHTML = "(" +params.addInfo +")";
-                                createContainer.append(createAddInfo);
-                            }
-
                             var createProfCat = document.createElement('div');
                             createProfCat.className = 'three--prof-cat-cell';
                             if (params.profCat && params.profCat.length) {
@@ -1082,11 +1085,13 @@ $this->params['breadcrumbs'][] = $this->title;
             $('#prof-cat-right-button-container div').addClass('btn-outline-secondary');
             $(this).removeClass('btn-outline-secondary');
             $(this).addClass('btn-info');
+//            console.log(selectedShowProfCat);
             for(var i = 0; i < usersInEvent.length; i++){
                 if(+usersInEvent[i].userWithProf.userProfession.prof.proff_cat_id === +selectedShowProfCat){
+//                    alert('k');
                     var createContainer = document.createElement('div');
                     createContainer.className = 'cursor-pointer';
-                    createContainer.innerHTML = usersInEvent[i].userWithProf.name +" " +usersInEvent[i].userWithProf.surname +" <span class='badge badge-pill badge-danger three--remove-in-schedule'><i class='fas fa-times'></i></span>";
+                    createContainer.innerHTML = usersInEvent[i].userWithProf.surname +" " +usersInEvent[i].userWithProf.name +" <span class='badge badge-pill badge-danger three--remove-in-schedule'><i class='fas fa-times'></i></span>";
                     createContainer.dataset.userInSchedule = usersInEvent[i].id;
                     createContainer.dataset.userId = usersInEvent[i].userWithProf.id;
                     document.getElementById('user-in-event-right-button-container').append(createContainer);

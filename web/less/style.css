@@ -111,7 +111,7 @@ a:hover {
   justify-content: space-between;
   /*font-size: 18px;*/
   /*font-weight: 700;*/
-  text-align: center;
+  /*text-align: center;*/
   box-sizing: border-box;
 }
 .one--date-row .date {
@@ -164,12 +164,13 @@ a:hover {
   margin: 0 5px;
 }
 .event-cell .type {
-  font-size: 14px;
+  font-size: 13px;
   /*color: #b8daff;*/
   font-weight: 700;
 }
 .event-cell .name {
   font-size: 13px;
+  font-weight: 700;
 }
 .event-cell hr {
   margin-top: 2px;
@@ -388,8 +389,12 @@ a:hover {
 }
 .three--user-actors-list,
 .three--add-info-block {
-  font-size: 12px;
+  font-size: 11px;
   color: #1C6C80;
+}
+.user-modal-container {
+  padding-left: 70px;
+  box-sizing: border-box;
 }
 #profCatModal .selected {
   color: #F97979;
@@ -402,4 +407,11 @@ a:hover {
 }
 .three--copy-event {
   display: none;
+}
+.stat--toggle-timesheet-text {
+  font-size: 18px;
+}
+.toggle-icon {
+  font-size: 30px;
+  cursor: pointer;
 }

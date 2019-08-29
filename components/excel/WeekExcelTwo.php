@@ -20,7 +20,7 @@ use app\models\Room;
  * 
  */
 
-class WeekExcel extends Model{
+class WeekExcelTwo extends Model{
     
     /**
      * Генерация недельного расписания в Excel 
@@ -73,6 +73,7 @@ class WeekExcel extends Model{
         
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
+        $sheet->getPageSetup()->setOrientation(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE);
         
         $sheet->setCellValueByColumnAndRow(1, 1, $dateFrom ." - " .$dateTo);
         $sheet->getStyleByColumnAndRow(1, 1)->getFont()->setSize(15);
@@ -226,7 +227,7 @@ class WeekExcel extends Model{
                 }
             }
         }
-        
+//        echo \yii\helpers\VarDumper::dumpAsString($scheduleSort, 10, true);
         $dayCount = 5;
         foreach ($dates as $key => $value){
             $timeDate = mktime(0, 0, 0,$value['month'], $value['day'], $value['year']);
@@ -253,77 +254,14 @@ class WeekExcel extends Model{
                     ]
                 ]);
                 foreach ($scheduleSort[$timeDate] as $col => $events){
-
-                    // Проходим по всем залам за текущую дату, записываем кол-во мероприятий и кол-во букв в каждом
-                    $textSizeArr = [];
-                    foreach ($scheduleSort[$timeDate] as $coll => $eventss){
-                        $repeatArr = [];
-//                        $textSizeArr = [];
-                        
-                        for($i = 0; $i <= 1440; $i++){
-                            if(!isset($textSizeArr[$coll])){
-                                $textSizeArr[$coll]['count'] = 0;
-                                $textSizeArr[$coll]['text'] = "";
-                            }
-                            if(isset($eventss[$i]) && !in_array($eventss[$i]['event']['id'] ."-" .$eventss[$i]['eventType']['id'], $repeatArr)){
-                                if(in_array($eventss[$i]['eventType']['id'], $spectacleEventConfig)){
-                                    $repeatArr[] = $eventss[$i]['event']['id'] ."-" .$eventss[$i]['eventType']['id'];
-                                    for($z = 0; $z <= 1440; $z++){
-                                        if(isset($eventss[$z]) && +$eventss[$i]['event']['id'] == +$eventss[$z]['event']['id'] && +$eventss[$i]['eventType']['id'] == +$eventss[$z]['eventType']['id']){
-                                            $textSizeArr[$coll]['text'] .= self::minuteToTime($eventss[$z]['time_from'], $eventss[$z]['time_to']) ." ";
-                                        }
-                                    }
-                                }else{
-                                    $textSizeArr[$coll]['text'] .= self::minuteToTime($eventss[$i]['time_from'], $eventss[$i]['time_to']) ." ";
-                                }
-
-                                if($eventss[$i]['event']['name']){
-                                    $textSizeArr[$coll]['text'] .= $eventss[$i]['event']['name'];
-                                }
-
-                                if($eventss[$i]['event']['other_name']){
-                                    $textSizeArr[$coll]['text'] .= " (" .$eventss[$i]['event']['other_name'] ."). ";
-                                }
-
-                                if($eventss[$i]['add_info']){
-                                    $textSizeArr[$coll]['text'] .= " (" .$eventss[$i]['add_info'] .")";
-                                }
-
-                                if($eventss[$i]['allUsersInEvent'] && !in_array($eventss[$i]['eventType']['id'], $spectacleEventConfig)){
-                                    $textSizeArr[$coll]['text'] .= " (";
-                                    $allUsersArr = [];
-                                    foreach ($eventss[$i]['allUsersInEvent'] as $keyUser => $valUser){
-                                        $allUsersArr[] = $valUser['userWithProf']['surname'];
-                                    }
-                                    $textSizeArr[$coll]['text'] .= implode(', ', $allUsersArr) .")";
-                                }
-                                if($eventss[$i]['profCat']){
-                                    $textSizeArr[$coll]['text'] .= "\n";
-                                    $allProffArr = [];
-                                    foreach ($eventss[$i]['profCat'] as $keyProf => $valProf){
-                                        $allProffArr[] = $valProf['profCat']['alias'];
-                                    }
-                                    $textSizeArr[$coll]['text'] .= implode(', ', $allProffArr);
-                                }
-
-                                $textSizeArr[$coll]['count']++;
-                            }
-                        }
-                    }
-                    foreach ($textSizeArr as $k => $v){
-                        $textSizeArr[$k]['size'] = iconv_strlen($v['text']);
-                    }
-                    
-                    echo \yii\helpers\VarDumper::dumpAsString($textSizeArr, 10, true); exit();
-                    
-                    
-                    
-                    
                     $gapCount = $dayCount;
                     $repeatArr = [];
+                    $eventCount = count($events);
+                    $k = 1;
+                    $objRichText = new RichText();
                     for($i = 0; $i <= 1440; $i++){
                         $resultStr = '';
-                        $objRichText = new RichText();
+//                        $objRichText = new RichText();
                         if(isset($events[$i]) && !in_array($events[$i]['event']['id'] ."-" .$events[$i]['eventType']['id'], $repeatArr)){
                             // Если спектакль, то повторы в этот день в одну строку
                             if(in_array($events[$i]['eventType']['id'], $spectacleEventConfig)){
@@ -337,7 +275,15 @@ class WeekExcel extends Model{
                                 }
                             }else{
                                 $objBold = $objRichText->createTextRun(self::minuteToTime($events[$i]['time_from'], $events[$i]['time_to']) ." ");
+                                if((int)$events[$i]['is_modified'] === 1){
+                                    $objBold->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_RED));
+                                }
                                 $objBold->getFont()->setBold(true);
+                            }
+                            
+                            $objBold = $objRichText->createTextRun("(" .$events[$i]['eventType']['name'] .") ");
+                            if((int)$events[$i]['is_modified'] === 1){
+                                $objBold->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_RED));
                             }
                             
                             if($events[$i]['event']['name']){
@@ -364,7 +310,6 @@ class WeekExcel extends Model{
                                     $objBold->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_RED));
                                 }
                             }
-                            
                             if($events[$i]['allUsersInEvent'] && !in_array($events[$i]['eventType']['id'], $spectacleEventConfig)){
                                 $objRichText->createText(" (");
                                 $allUsersArr = [];
@@ -389,20 +334,23 @@ class WeekExcel extends Model{
                                 }
                                 $objBold->getFont()->setBold(true);
                             }
-//                            if($k < $eventCount){
-//                                $objRichText->createText("\n \n");
-//                            }
+                            if($k < $eventCount){
+                                $objRichText->createText("\n \n");
+                            }
                             
                             $sheet->getStyleByColumnAndRow($col, $gapCount)->getAlignment()->setWrapText(true);
-                            $sheet->setCellValueByColumnAndRow($col, $gapCount, $objRichText);
-                            if((int)$events[$i]['is_modified'] === 1){
-                                $sheet->getStyleByColumnAndRow($col, $gapCount)->getFont()->getColor()->setARGB(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_RED);
-                            }
+//                            $sheet->setCellValueByColumnAndRow($col, $gapCount, $objRichText);
+//                            if((int)$events[$i]['is_modified'] === 1){
+//                                $sheet->getStyleByColumnAndRow($col, $gapCount)->getFont()->getColor()->setARGB(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_RED);
+//                            }
 //                            $sheet->getStyleByColumnAndRow($col, $gapCount)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-                            $sheet->getStyleByColumnAndRow($col, $gapCount)->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
-                            $gapCount++;
+                            $sheet->getStyleByColumnAndRow($col, $gapCount)->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP);
+//                            $gapCount++;
+                            $k++;
                         }
                     }
+                    $sheet->setCellValueByColumnAndRow($col, $gapCount, $objRichText);
+                    $gapCount++;
                     if($gapCount > $maxCount){
                         $maxCount = $gapCount;
                     }
@@ -458,6 +406,8 @@ class WeekExcel extends Model{
                         ],
                     ]
                 ]);
+                $sheet->getPageSetup()->setPaperSize(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::PAPERSIZE_A4);
+                $sheet->getPageSetup()->setPrintAreaByColumnAndRow(1, 1, (count($rooms) +2), ($maxCount -1));
                 $sheet->getStyleByColumnAndRow(1, $dayCount)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
                 $sheet->getStyleByColumnAndRow(1, $dayCount)->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
                 $sheet->getRowDimension($dayCount)->setRowHeight(30);

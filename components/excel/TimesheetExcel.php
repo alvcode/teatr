@@ -19,6 +19,7 @@ use app\components\ScheduleComponent;
 use app\models\Profession;
 use app\components\Formatt;
 use app\models\TimesheetConfig;
+use app\models\ProffCategories;
 
 /**
  *
@@ -27,51 +28,185 @@ use app\models\TimesheetConfig;
 
 class TimesheetExcel extends Model{
     
-    public static $timesheetConfig;
+    // Конфиг. Хардкод. Расширить, если требуется задействовать новые помещения или типы мероприятий
+    public $roomIds = ['3' => 'Большая сцена', '4' => 'Малая сцена'];
+    public $eventTypes = ['17' => 'Репетиция', '26' => 'Раус'];
+    
+    
+    // Дата от
+    public $from;
+    
+    // Дата до
+    public $to;
+    
+    // id профессии или службы. В зависимости от $mode понимаем что тут лежит
+    public $profId;
+    
+    // Режим работы. prof или profCat (поиск профессии или сразу всей службы)
+    public $mode;
+    
+    // Профессия или Служба с которой работаем для вывода в название
+    public $profName;
+    
+    // Конфигурация табеля
+    public $timesheetConfig;
+    
+    // Загруженное расписание
+    protected $schedule;
+    
+    // Загруженные юзеры
+    protected $users;
+    
+    public function __construct($from, $to, $profId, $mode) {
+        parent::__construct();
+        if(!$from || !$to || !$profId || !$mode){
+            throw new Exception('Переданы не все параметры');
+        }
+        $this->from = $from;
+        $this->to = $to;
+        $this->profId = $profId;
+        $this->mode = $mode;
+        
+        $this->loadSchedule();
+        $this->loadUsers();
+        $this->loadTimesheetConfig();
+        $this->loadProfName();
+    }
+    
+//    public function init($from, $to, $profId, $mode){
+//        parent::init();
+//        if(!$from || !$to || !$profId || !$mode){
+//            throw new Exception('Переданы не все параметры');
+//        }
+//        $this->from = $from;
+//        $this->to = $to;
+//        $this->profId = $profId;
+//        $this->mode = $mode;
+//        
+//        $this->loadSchedule();
+//        $this->loadUsers();
+//        $this->loadTimesheetConfig();
+//        $this->loadProfName();
+//    }
+    
+    /**
+     * Загружает расписание
+     */
+    public function loadSchedule(){
+        $explodeFrom = explode('-', $this->from);
+        $explodeTo = explode('-', $this->to);
+        
+        $from = date('Y-m-d', mktime(0, 0, 0, $explodeFrom[1], $explodeFrom[0], $explodeFrom[2]));
+        $to = date('Y-m-d', mktime(0, 0, 0, $explodeTo[1], $explodeTo[0], $explodeTo[2]));
+        
+        $schedule = ScheduleEvents::find()
+            ->leftJoin('events', 'schedule_events.event_id = events.id')
+            ->where(['between', 'date', $from, $to])
+            ->andWhere(['or', ['room_id' => array_keys($this->roomIds)], ['event_type_id' => array_keys($this->eventTypes)]])
+            ->andWhere(['events.category_id' => 1])
+            ->with('eventType')->with('event')->with('profCat')->with('allUsersInEvent')->orderBy('date ASC, time_from ASC')->asArray()->all();
+        
+        $this->schedule = ScheduleComponent::transformEventsToTwo($schedule);
+    }
+    
+    /**
+     * Загружает юзеров
+     */
+    public function loadUsers(){
+        if($this->mode == 'prof'){
+            $users = User::find()->select('user.id, user.name, user.surname')
+                ->leftJoin('user_profession', 'user.id = user_profession.user_id')
+                ->where(['user_profession.prof_id' => $this->profId, 'user.is_active' => 1])
+                ->asArray()->all();
+            $this->users = ScheduleComponent::sortFirstLetter($users, 'surname');
+        }elseif($this->mode == 'profCat'){
+            $users = User::find()->select('user.id, user.name, user.surname')
+                ->leftJoin('user_profession', 'user.id = user_profession.user_id')
+                ->leftJoin('profession', 'user_profession.prof_id = profession.id')
+                ->where(['profession.proff_cat_id' => $this->profId, 'user.is_active' => 1])
+                ->asArray()->all();
+            $this->users = ScheduleComponent::sortFirstLetter($users, 'surname');
+        }
+    }
+    
+    /**
+     * Загружает настройки табеля
+     */
+    public function loadTimesheetConfig(){
+        $this->timesheetConfig = TimesheetConfig::find()->where(['user_id' => \yii\helpers\ArrayHelper::getColumn($this->users, 'id')])->asArray()->all();
+    }
+    
+    public function loadProfName(){
+        if($this->mode == 'prof'){
+            $this->profName = Profession::find()->where(['id' => $this->profId])->asArray()->one();
+        }elseif($this->mode == 'profCat'){
+            $this->profName = ProffCategories::find()->where(['id' => $this->profId])->asArray()->one();
+        }
+    }
+    
+    public function checkTimeError(){
+        $result = [];
+        foreach ($this->schedule['schedule'] as $day => $eventId){
+            foreach ($eventId as $eventKey => $eventValue){
+                foreach ($eventValue as $keyEvent => $event){
+                    if(in_array($event['eventType']['id'], array_keys($this->eventTypes)) || in_array($event['room_id'], array_keys($this->roomIds))){
+                        if(!$event['time_to']){
+                            $c = count($result);
+                            $result[$c]['name'] = $event['event']['name'];
+                            $result[$c]['type'] = $event['eventType']['name'];
+                            $result[$c]['date'] = date('d.m.Y', strtotime($event['date']));
+                            $result[$c]['time'] = Formatt::minuteToTime($event['time_from']);
+                        }
+                    }
+                }
+            }
+        }
+        return $result;
+    }
+    
     
     /**
      * Генерация табеля в Excel 
      * По тем или иным причинам решено было сделать немного хардкода, далее в комментариях
      * все написано где что
      * 
-     * @param string $from
-     * @param string $to
-     * @param integer $profId
      * @return 
      */
-    public static function excelTimesheet($from, $to, $profId){
-        // Хардкод настройки. 
-        $roomIds = ['3' => 'Большая сцена', '4' => 'Малая сцена'];
-        $eventTypes = ['17' => 'Репетиция', '26' => 'Раус'];
+    public function run(){
+        // Хардкод настройки. Перенести в параметры класса 
+//        $roomIds = ['3' => 'Большая сцена', '4' => 'Малая сцена'];
+//        $eventTypes = ['17' => 'Репетиция', '26' => 'Раус'];
         // end
         $weekdayName = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
         
-        $explodeFrom = explode('-', $from);
-        $explodeTo = explode('-', $to);
+        $explodeFrom = explode('-', $this->from);
+        $explodeTo = explode('-', $this->to);
         
         $from = date('Y-m-d', mktime(0, 0, 0, $explodeFrom[1], $explodeFrom[0], $explodeFrom[2]));
         $to = date('Y-m-d', mktime(0, 0, 0, $explodeTo[1], $explodeTo[0], $explodeTo[2]));
         $dateFrom = date('d.m.Y', mktime(0, 0, 0, $explodeFrom[1], $explodeFrom[0], $explodeFrom[2]));
         $dateTo = date('d.m.Y', mktime(0, 0, 0, $explodeTo[1], $explodeTo[0], $explodeTo[2]));
         
-        $schedule = ScheduleEvents::find()
-            ->where(['between', 'date', $from, $to])
-            ->andWhere(['or', ['room_id' => array_keys($roomIds)], ['event_type_id' => array_keys($eventTypes)]])
-            ->with('eventType')->with('event')->with('profCat')->with('allUsersInEvent')->orderBy('date ASC, time_from ASC')->asArray()->all();
+//        $schedule = ScheduleEvents::find()
+//            ->leftJoin('events', 'schedule_events.event_id = events.id')
+//            ->where(['between', 'date', $from, $to])
+//            ->andWhere(['or', ['room_id' => array_keys($roomIds)], ['event_type_id' => array_keys($eventTypes)]])
+//            ->andWhere(['events.category_id' => 1])
+//            ->with('eventType')->with('event')->with('profCat')->with('allUsersInEvent')->orderBy('date ASC, time_from ASC')->asArray()->all();
         
-        $schedule = ScheduleComponent::transformEventsToTwo($schedule);
+//        $schedule = ScheduleComponent::transformEventsToTwo($schedule);
         
-        $users = User::find()->select('user.id, user.name, user.surname')
-                ->leftJoin('user_profession', 'user.id = user_profession.user_id')
-                ->where(['user_profession.prof_id' => $profId, 'user.is_active' => 1])
-                ->asArray()->all();
+//        $users = User::find()->select('user.id, user.name, user.surname')
+//                ->leftJoin('user_profession', 'user.id = user_profession.user_id')
+//                ->where(['user_profession.prof_id' => $profId, 'user.is_active' => 1])
+//                ->asArray()->all();
         
-        self::$timesheetConfig = TimesheetConfig::find()->where(['user_id' => \yii\helpers\ArrayHelper::getColumn($users, 'id')])->asArray()->all();
+//        self::$timesheetConfig = TimesheetConfig::find()->where(['user_id' => \yii\helpers\ArrayHelper::getColumn($users, 'id')])->asArray()->all();
         
 //        var_dump(self::calculateTime(300, 480)); exit();
 //echo \yii\helpers\VarDumper::dumpAsString($schedule, 10, true);
         
-        $profession = Profession::find()->where(['id' => $profId])->asArray()->one();
+//        $profession = Profession::find()->where(['id' => $profId])->asArray()->one();
         
         /*
          * 
@@ -95,7 +230,7 @@ class TimesheetExcel extends Model{
             $sheet->getStyleByColumnAndRow($i, ($headRow +1))->applyFromArray(self::generateBorders(['top', 'right', 'bottom', 'left']));
             $sheet->getStyleByColumnAndRow($i, ($headRow +2))->applyFromArray(self::generateBorders(['top', 'right', 'bottom', 'left']));
         }
-        foreach ($schedule['schedule'] as $day => $eventId){
+        foreach ($this->schedule['schedule'] as $day => $eventId){
             $eventInDay = 0;
             $startColumnDate = $headColumn;
             foreach ($eventId as $eventKey => $eventValue){
@@ -105,7 +240,7 @@ class TimesheetExcel extends Model{
                 $eventName = '';
                 foreach ($eventValue as $keyEvent => $event){
                     $sheet->setCellValueByColumnAndRow($headColumn, ($headRow +2), Formatt::minuteToTime($event['time_from']));
-                    $schedule['schedule'][$day][$eventKey][$keyEvent]['column'] = $headColumn;
+                    $this->schedule['schedule'][$day][$eventKey][$keyEvent]['column'] = $headColumn;
                     $countAllEvents++;
                     $sheet->getStyleByColumnAndRow($headColumn, ($headRow +2))->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
                     $sheet->getStyleByColumnAndRow($headColumn, ($headRow +2))->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
@@ -157,15 +292,16 @@ class TimesheetExcel extends Model{
         $sheet->getStyleByColumnAndRow(1, ($headRow +2))->getFont()->setBold(700);
         
         // ============================================================= Формируем BODY
-        $countLines = count($roomIds) + count($eventTypes);
+        $countLines = count($this->roomIds) + count($this->eventTypes);
         $bodyRow = 7;
         $resultColumn = $countAllEvents + 3;
-        foreach ($users as $userKey => $userValue){
+        foreach ($this->users as $userKey => $userValue){
             $userData = []; // Храним информацию о соответствии строк к room и event_type + общее кол-во часов/выходов
             $sheet->mergeCellsByColumnAndRow(1, $bodyRow, 1, ($bodyRow +($countLines -1)));
-            $sheet->getStyleByColumnAndRow(1, ($bodyRow +($countLines -1)))->applyFromArray(self::generateBorders(['bottom', 'left']));
+            $sheet->getStyleByColumnAndRow(1, ($bodyRow +($countLines -1)))->applyFromArray(self::generateBorders(['left']));
+            $sheet->getStyleByColumnAndRow(1, ($bodyRow +($countLines -1)))->applyFromArray(self::generateBorders(['bottom'], 'medium'));
             $sheet->setCellValueByColumnAndRow(1, $bodyRow, $userValue['surname'] ." " .$userValue['name']);
-            foreach ($roomIds as $roomKey => $roomVal){
+            foreach ($this->roomIds as $roomKey => $roomVal){
                 $c = count($userData);
                 $userData[$c]['type'] = 'room';
                 $userData[$c]['id'] = $roomKey;
@@ -176,12 +312,14 @@ class TimesheetExcel extends Model{
                 $sheet->getStyleByColumnAndRow(2, $bodyRow)->getAlignment()->setWrapText(true);
                 $sheet->getStyleByColumnAndRow(2, $bodyRow)->getFont()->setSize(9);
                 $sheet->getStyleByColumnAndRow(2, $bodyRow)->applyFromArray(self::generateBorders(['left', 'bottom', 'right']));
+                $sheet->getStyleByColumnAndRow($countAllEvents + 3, $bodyRow)->applyFromArray(self::generateBorders(['left'], 'medium'));
                 for($z = 3; $z <= ($countAllEvents + 4); $z++){
                     $sheet->getStyleByColumnAndRow($z, $bodyRow)->applyFromArray(self::generateBorders(['top', 'bottom', 'right']));
                 }
                 $bodyRow++;
             }
-            foreach ($eventTypes as $keyEventType => $valEventType){
+            $t = 1;
+            foreach ($this->eventTypes as $keyEventType => $valEventType){
                 $c = count($userData);
                 $userData[$c]['type'] = 'event';
                 $userData[$c]['id'] = $keyEventType;
@@ -191,59 +329,73 @@ class TimesheetExcel extends Model{
                 $sheet->setCellValueByColumnAndRow(2, $bodyRow, $valEventType);
                 $sheet->getStyleByColumnAndRow(2, $bodyRow)->getAlignment()->setWrapText(true);
                 $sheet->getStyleByColumnAndRow(2, $bodyRow)->getFont()->setSize(9);
-                $sheet->getStyleByColumnAndRow(2, $bodyRow)->applyFromArray(self::generateBorders(['left', 'bottom', 'right']));
+                $sheet->getStyleByColumnAndRow($countAllEvents + 3, $bodyRow)->applyFromArray(self::generateBorders(['left'], 'medium'));
+                if($t == count($this->eventTypes)){
+                    $sheet->getStyleByColumnAndRow(2, $bodyRow)->applyFromArray(self::generateBorders(['left', 'right']));
+                    $sheet->getStyleByColumnAndRow(2, $bodyRow)->applyFromArray(self::generateBorders(['bottom'], 'medium'));
+                }else{
+                    $sheet->getStyleByColumnAndRow(2, $bodyRow)->applyFromArray(self::generateBorders(['left', 'bottom', 'right']));
+                }
                 for($z = 3; $z <= ($countAllEvents + 4); $z++){
-                    $sheet->getStyleByColumnAndRow($z, $bodyRow)->applyFromArray(self::generateBorders(['top', 'bottom', 'right']));
+                    if($t == count($this->eventTypes)){
+                        $sheet->getStyleByColumnAndRow($z, $bodyRow)->applyFromArray(self::generateBorders(['top', 'right']));
+                        $sheet->getStyleByColumnAndRow($z, $bodyRow)->applyFromArray(self::generateBorders(['bottom'], 'medium'));
+                    }else{
+                        $sheet->getStyleByColumnAndRow($z, $bodyRow)->applyFromArray(self::generateBorders(['top', 'bottom', 'right']));
+                    }
                 }
                 $bodyRow++;
+                $t++;
             }
             // Добавляем в ячейки часы/выходы
-            foreach ($schedule['schedule'] as $day => $eventId){
+            foreach ($this->schedule['schedule'] as $day => $eventId){
                 foreach ($eventId as $eventKey => $eventValue){
                     foreach ($eventValue as $keyEvent => $event){
                         if($event['allUsersInEvent']){
                             foreach ($event['allUsersInEvent'] as $usKey => $usVal){
-                                $timesheetConfig = self::checkTimesheetConfig($userValue['id'], $event['eventType']['id']);
-                                // 1 - часы, 2 - выходы
-                                if($timesheetConfig && $timesheetConfig == 1 && $event['time_to']){
-                                    if(in_array($event['eventType']['id'], array_keys($eventTypes))){
-                                        foreach ($userData as $keyUserData => $valUserData){
-                                            if($valUserData['type'] == 'event' && (int)$valUserData['id'] == (int)$event['eventType']['id']){
-                                                $workTime = self::calculateTime($event['time_from'], $event['time_to']);
-                                                $userData[$keyUserData]['work_time'] += $workTime;
-                                                $sheet->setCellValueByColumnAndRow($event['column'], $valUserData['row'], $workTime);
-                                                $sheet->getStyleByColumnAndRow($event['column'], $valUserData['row'])->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-                                                $sheet->getStyleByColumnAndRow($event['column'], $valUserData['row'])->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+                                if((int)$userValue['id'] == (int)$usVal['user_id']){
+                                    $timesheetConfig = $this->checkTimesheetConfig($userValue['id'], $event['eventType']['id']);
+                                    // 1 - часы, 2 - выходы
+                                    if($timesheetConfig && $timesheetConfig == 1 && $event['time_to']){
+                                        if(in_array($event['eventType']['id'], array_keys($this->eventTypes))){
+                                            foreach ($userData as $keyUserData => $valUserData){
+                                                if($valUserData['type'] == 'event' && (int)$valUserData['id'] == (int)$event['eventType']['id']){
+                                                    $workTime = self::calculateTime($event['time_from'], $event['time_to']);
+                                                    $userData[$keyUserData]['work_time'] += $workTime;
+                                                    $sheet->setCellValueByColumnAndRow($event['column'], $valUserData['row'], $workTime);
+                                                    $sheet->getStyleByColumnAndRow($event['column'], $valUserData['row'])->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                                                    $sheet->getStyleByColumnAndRow($event['column'], $valUserData['row'])->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+                                                }
+                                            }
+                                        }else{
+                                            foreach ($userData as $keyUserData => $valUserData){
+                                                if($valUserData['type'] == 'room' && (int)$valUserData['id'] == (int)$event['room_id']){
+                                                    $workTime = self::calculateTime($event['time_from'], $event['time_to']);
+                                                    $userData[$keyUserData]['work_time'] += $workTime;
+                                                    $sheet->setCellValueByColumnAndRow($event['column'], $valUserData['row'], $workTime);
+                                                    $sheet->getStyleByColumnAndRow($event['column'], $valUserData['row'])->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                                                    $sheet->getStyleByColumnAndRow($event['column'], $valUserData['row'])->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+                                                }
                                             }
                                         }
-                                    }else{
-                                        foreach ($userData as $keyUserData => $valUserData){
-                                            if($valUserData['type'] == 'room' && (int)$valUserData['id'] == (int)$event['room_id']){
-                                                $workTime = self::calculateTime($event['time_from'], $event['time_to']);
-                                                $userData[$keyUserData]['work_time'] += $workTime;
-                                                $sheet->setCellValueByColumnAndRow($event['column'], $valUserData['row'], $workTime);
-                                                $sheet->getStyleByColumnAndRow($event['column'], $valUserData['row'])->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-                                                $sheet->getStyleByColumnAndRow($event['column'], $valUserData['row'])->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+                                    }elseif($timesheetConfig && $timesheetConfig == 2){
+                                        if(in_array($event['eventType']['id'], array_keys($this->eventTypes))){
+                                            foreach ($userData as $keyUserData => $valUserData){
+                                                if($valUserData['type'] == 'event' && (int)$valUserData['id'] == (int)$event['eventType']['id']){
+                                                    $userData[$keyUserData]['work_day'] += 1;
+                                                    $sheet->setCellValueByColumnAndRow($event['column'], $valUserData['row'], '1');
+                                                    $sheet->getStyleByColumnAndRow($event['column'], $valUserData['row'])->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                                                    $sheet->getStyleByColumnAndRow($event['column'], $valUserData['row'])->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+                                                }
                                             }
-                                        }
-                                    }
-                                }elseif($timesheetConfig && $timesheetConfig == 2){
-                                    if(in_array($event['eventType']['id'], array_keys($eventTypes))){
-                                        foreach ($userData as $keyUserData => $valUserData){
-                                            if($valUserData['type'] == 'event' && (int)$valUserData['id'] == (int)$event['eventType']['id']){
-                                                $userData[$keyUserData]['work_day'] += 1;
-                                                $sheet->setCellValueByColumnAndRow($event['column'], $valUserData['row'], '1');
-                                                $sheet->getStyleByColumnAndRow($event['column'], $valUserData['row'])->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-                                                $sheet->getStyleByColumnAndRow($event['column'], $valUserData['row'])->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
-                                            }
-                                        }
-                                    }else{
-                                        foreach ($userData as $keyUserData => $valUserData){
-                                            if($valUserData['type'] == 'room' && (int)$valUserData['id'] == (int)$event['room_id']){
-                                                $userData[$keyUserData]['work_day'] += 1;
-                                                $sheet->setCellValueByColumnAndRow($event['column'], $valUserData['row'], '1');
-                                                $sheet->getStyleByColumnAndRow($event['column'], $valUserData['row'])->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-                                                $sheet->getStyleByColumnAndRow($event['column'], $valUserData['row'])->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+                                        }else{
+                                            foreach ($userData as $keyUserData => $valUserData){
+                                                if($valUserData['type'] == 'room' && (int)$valUserData['id'] == (int)$event['room_id']){
+                                                    $userData[$keyUserData]['work_day'] += 1;
+                                                    $sheet->setCellValueByColumnAndRow($event['column'], $valUserData['row'], '1');
+                                                    $sheet->getStyleByColumnAndRow($event['column'], $valUserData['row'])->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                                                    $sheet->getStyleByColumnAndRow($event['column'], $valUserData['row'])->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+                                                }
                                             }
                                         }
                                     }
@@ -253,10 +405,21 @@ class TimesheetExcel extends Model{
                     }
                 }
             }
+            foreach ($userData as $k => $v){
+                if($v['work_day']){
+                    $sheet->setCellValueByColumnAndRow($headColumn, $v['row'], $v['work_day']);
+                    $sheet->getStyleByColumnAndRow($headColumn, $v['row'])->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                    $sheet->getStyleByColumnAndRow($headColumn, $v['row'])->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+                }
+                if($v['work_time']){
+                    $sheet->setCellValueByColumnAndRow($headColumn +1, $v['row'], $v['work_time']);
+                    $sheet->getStyleByColumnAndRow($headColumn +1, $v['row'])->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                    $sheet->getStyleByColumnAndRow($headColumn +1, $v['row'])->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+                }
+            }
             // Тут мы должны вписать итоговые значения на основе $userData
         }
-        
-        $filename = "Табель_(" .$profession['name'] .")_" .$dateFrom ."-" .$dateTo .".xlsx";
+        $filename = "Табель_(" .$this->profName['name'] .")_" .$dateFrom ."-" .$dateTo .".xlsx";
         $writer = new Xlsx($spreadsheet);
         $writer->save('files/timesheets/' .$filename);
         return \Yii::$app->response->sendFile('files/timesheets/' .$filename);
@@ -270,13 +433,19 @@ class TimesheetExcel extends Model{
      * @param array $conf
      * @return array
      */
-    public static function generateBorders($conf){
+    public static function generateBorders($conf, $style = 'thin'){
+        $styleConst = false;
+        if($style == 'thin'){
+            $styleConst = \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN;
+        }elseif($style == 'medium'){
+            $styleConst = \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM;
+        }
         $result = [];
         $result['borders'] = [];
         if($conf){
             foreach ($conf as $value){
                 $result['borders'][$value] = [
-                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                    'borderStyle' => $styleConst,
                     'color' => array('argb' => '000000'),
                 ];
             }
@@ -290,10 +459,10 @@ class TimesheetExcel extends Model{
      * @param int $eventType
      * @return int
      */
-    public static function checkTimesheetConfig($userId, $eventType){
+    public function checkTimesheetConfig($userId, $eventType){
         $result = 0;
-        if(self::$timesheetConfig){
-            foreach (self::$timesheetConfig as $key => $value){
+        if($this->timesheetConfig){
+            foreach ($this->timesheetConfig as $key => $value){
                 if((int)$value['user_id'] == (int)$userId && (int)$value['event_type_id'] == (int)$eventType){
                     $result = (int)$value['method'];
                 }

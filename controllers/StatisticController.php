@@ -9,6 +9,7 @@ use yii\web\Response;
 use yii\filters\VerbFilter;
 use app\models\ProffCategories;
 use app\components\excel\TimesheetExcel;
+use yii\base\Exception;
 
 class StatisticController extends AccessController
 {
@@ -50,25 +51,44 @@ class StatisticController extends AccessController
     public function actionIndex(){
         
         $categoryAll = ProffCategories::find()->with('professions')->asArray()->all();
-        $categories = [];
+        $professions = [];
         foreach($categoryAll as $key => $value){
             if($value['professions']){
                 foreach($value['professions'] as $keyP => $valueP){
-                    $countArr = count($categories);
-                    $categories[$countArr]['id'] = $valueP['id'];
-                    $categories[$countArr]['name'] = $valueP['name'] ." (".$value['name'] .")";
+                    $countArr = count($professions);
+                    $professions[$countArr]['id'] = $valueP['id'];
+                    $professions[$countArr]['name'] = $valueP['name'] ." (".$value['name'] .")";
                 }
             }
         }
         
         return $this->render('index', [
-            'categories' => $categories,
+            'professions' => $professions,
+            'categories' => $categoryAll
         ]);
     }
     
     
     public function actionTimesheet(){
-        TimesheetExcel::excelTimesheet(Yii::$app->request->get('from'), Yii::$app->request->get('to'), Yii::$app->request->get('prof'));
+        if(Yii::$app->request->get('prof')){
+            // Режим профессии
+            $mode = 'prof';
+            $id = Yii::$app->request->get('prof');
+        }elseif(Yii::$app->request->get('profCat')){
+            // Режим службы
+            $mode = 'profCat';
+            $id = Yii::$app->request->get('profCat');
+        }
+        $timesheet = new TimesheetExcel(Yii::$app->request->get('from'), Yii::$app->request->get('to'), $id, $mode);
+        if((int)Yii::$app->request->get('time_error') == 0){
+            $errors = $timesheet->checkTimeError();
+            if($errors){
+                return $this->render('timesheet_error', [
+                    't_to_errors' => $errors,
+                ]);
+            }
+        }
+        $timesheet->run();
     }
     
 

@@ -236,17 +236,18 @@ $this->params['breadcrumbs'][] = $this->title;
         var addNowDate = {}; // Выбранная дата
         var addNowRoom = false; // выбранный зал
         var scheduleData = false; // Все загруженные записи
-
-        $('#add--time_from, #edit--time_from').bootstrapMaterialDatePicker({
-            date: false,
-            shortTime: false,
-            format: 'HH:mm'
-        });
-        $('#add--time_to, #edit--time_to').bootstrapMaterialDatePicker({
-            date: false,
-            shortTime: false,
-            format: 'HH:mm'
-        });
+        
+        $("#add--time_from, #edit--time_from, #add--time_to, #edit--time_to").mask("99:99", {clearIfNotMatch: true});
+//        $('#add--time_from, #edit--time_from').bootstrapMaterialDatePicker({
+//            date: false,
+//            shortTime: false,
+//            format: 'HH:mm'
+//        });
+//        $('#add--time_to, #edit--time_to').bootstrapMaterialDatePicker({
+//            date: false,
+//            shortTime: false,
+//            format: 'HH:mm'
+//        });
 
         var rooms = document.querySelector('.one--title-row').getElementsByClassName('room');
 

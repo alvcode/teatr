@@ -90,20 +90,21 @@ $this->params['breadcrumbs'][] = $this->title;
                     <div class="col-4">
                         <h4>Список сотрудников:</h4>
                     </div>
-                    <div class="col-4 text-right form-inline">
+                    <div class="col-3"></div>
+                    <div class="col-5 text-right form-inline">
                         <div class="input-group mb-3">
                             <a href="/user/index?act=sort&val=asc" class="btn btn-sm <?= (isset($sort['act']) && $sort['act'] == 'sort' && $sort['val'] == 'asc') ? "btn-success" : "btn-outline-info" ?> ml-1">По порядку</a>
                             <a href="/user/index?act=sort&val=surname" class="btn btn-sm <?= (isset($sort['act']) && $sort['act'] == 'sort' && $sort['val'] == 'surname') ? "btn-success" : "btn-outline-info" ?> ml-1">По фамилии</a>
-                            <form method="get" class="form-inline mrg-top15">
+                            <form method="get" class="form-inline my-lg-0 mrg-top15">
                                 <input type="hidden" name="act" value="sortProf">
-                                <select name="val" class="form-control-sm form-control ml-1">
+                                <select style="width:85%;" name="val" class="form-control-sm form-control mr-sm-2">
                                     <?php foreach ($categories as $key => $value): ?>
                                         <option value="<?= $value['id'] ?>" <?= (isset($sort['act']) && $sort['act'] == 'sortProf' && $sort['val'] == $value['id']) ? "selected" : "" ?>><?= $value['name'] ?></option>
                                     <?php endforeach; ?>
                                 </select>
-                                <div class="input-group-append">
-                                    <button class="btn btn-sm <?= (isset($sort['act']) && $sort['act'] == 'sortProf') ? "btn-success" : "btn-outline-info" ?> clean-input" type="submit" id="button-addon2">ok</button>
-                                </div>
+                                <!-- <div class="input-group-append"> -->
+                                    <button class="btn my-2 my-sm-0 btn-sm <?= (isset($sort['act']) && $sort['act'] == 'sortProf') ? "btn-success" : "btn-outline-info" ?> clean-input" type="submit" id="button-addon2">ok</button>
+                                <!-- </div> -->
                             </form>
                         </div>
 
@@ -113,8 +114,8 @@ $this->params['breadcrumbs'][] = $this->title;
                     <thead>
                         <tr>
                             <th scope="col">ID</th>
-                            <th scope="col">Имя</th>
                             <th scope="col">Фамилия</th>
+                            <th scope="col">Имя</th>
                             <th scope="col">E-mail</th>
                             <th scope="col">Телефон</th>
                             <th scope="col">Роль</th>
@@ -129,8 +130,8 @@ $this->params['breadcrumbs'][] = $this->title;
                         <?php foreach ($users as $key => $value): ?>
                             <tr class="user-row" data-user="<?= $value['id'] ?>">
                                 <th scope="row"><?= $value['id'] ?></th>
-                                <td><?= $value['name'] ?></td>
                                 <td><?= $value['surname'] ?></td>
+                                <td><?= $value['name'] ?></td>
                                 <td><?= $value['email'] ?></td>
                                 <td><?= $value['number'] ? "+" . $value['number'] : "-" ?></td>
                                 <td>
@@ -505,6 +506,8 @@ $this->params['breadcrumbs'][] = $this->title;
         
         var changeTimesheetUser = false;
         $('.get-timesheet').dblclick(function(){
+            goPreloader();
+            this.classList.add('text-success');
             changeTimesheetUser = this.parentNode.dataset.user;
             var fullName = this.parentNode.getElementsByTagName('td')[0].innerHTML +" " +this.parentNode.getElementsByTagName('td')[1].innerHTML;
 //            alert(fullName); return false;
