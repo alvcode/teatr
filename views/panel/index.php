@@ -22,6 +22,11 @@ $this->params['breadcrumbs'][] = $this->title;
                     <h6>С возвращением, <?= Yii::$app->user->identity->name ?>!</h6>
                 </div>
             </div>
+            <div>
+                Узнай, как разместить иконку этой страницы у себя в телефоне на главном экране: 
+                <span class="badge badge-pill badge-warning cursor-pointer" id="instr-android">Android</span> / 
+                <span class="badge badge-pill badge-warning cursor-pointer" id="instr-iphone">iPhone</span>
+            </div>
             
             <?= $this->render('../templates/_flash') ?>
             
@@ -92,6 +97,46 @@ $this->params['breadcrumbs'][] = $this->title;
 
 </div>
 
+<!-- Modal android --> 
+<div class="modal fade" id="androidInstrModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Как добавить страницу на главный экран Android-устройства</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal iOS --> 
+<div class="modal fade" id="iosInstrModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Как добавить страницу на главный экран iOS-устройства</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <script>
     window.onload = function () {
@@ -108,6 +153,13 @@ $this->params['breadcrumbs'][] = $this->title;
             dateFormat:'dd-mm-yy',
             monthNames : ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'],
             dayNamesMin : ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'],
+        });
+
+        $('#instr-android').click(function(){
+            $('#androidInstrModal').modal('show');
+        });
+        $('#instr-iphone').click(function(){
+            $('#iosInstrModal').modal('show');
         });
 
         $('#load-timesheet-stat').click(function(){

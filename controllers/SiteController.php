@@ -9,6 +9,11 @@ use yii\web\Response;
 use yii\filters\VerbFilter;
 use app\models\LoginForm;
 use app\models\ContactForm;
+use app\models\ScheduleViewHash;
+use app\models\ScheduleEvents;
+use app\components\ScheduleComponent;
+use yii\base\Exception;
+use app\models\Room;
 
 class SiteController extends Controller
 {
@@ -100,6 +105,59 @@ class SiteController extends Controller
         Yii::$app->user->logout();
 
         return $this->redirect('/site/index');
+    }
+
+    /**
+     * Week schedule action.
+     *
+     * @return Response
+     */
+    public function actionWeekSchedule($from, $to, $hash)
+    {
+        $this->layout = 'schedule';
+        $profCatLeave = ['8', '5', '16', '11', '14'];
+
+        $searchHash = ScheduleViewHash::find()->where(['date_from' => $from, 'date_to' => $to])->asArray()->one();
+        if($searchHash['hash'] == $hash){
+        $schedule = ScheduleEvents::find()
+                ->where(['between', 'date', $from, $to])
+                ->with('eventType')->with('event')->with('profCat')->with('allUsersInEvent')->asArray()->all();
+        
+        $dateFrom = date('d.m.Y', strtotime($from));
+        $dateTo = date('d.m.Y', strtotime($to));
+        
+        $schedule = ScheduleComponent::removeNeedUsers($schedule);
+        
+        $activesRoom = [];
+        foreach ($schedule as $key => $value){
+            if(!in_array($value['room_id'], $activesRoom)){
+                $activesRoom[] = $value['room_id'];
+            }
+        }
+        $dates = [];
+        for ($i = 0; $i < 7; $i++){
+            $cc = count($dates);
+            $dates[$cc]['day'] = date('d', strtotime($from ." + " .$i ." day"));
+            $dates[$cc]['month'] = date('m', strtotime($from ." + " .$i ." day"));
+            $dates[$cc]['year'] = date('Y', strtotime($from ." + " .$i ." day"));
+        }
+        $scheduleSort = [];
+        foreach ($schedule as $key => $value){
+            foreach ($dates as $keyD => $valueD){
+                if(strtotime($value['date']) === mktime(0, 0, 0,$valueD['month'], $valueD['day'], $valueD['year'])){
+                    $scheduleSort[strtotime($value['date'])][$value['room_id']][intval($value['time_from'])] = $value;
+                }
+            }
+        }
+        $rooms = Room::find()->where(['is_active' => 1, 'id' => $activesRoom])->asArray()->all();
+
+        echo "<pre>";
+        var_dump($scheduleSort); exit();
+        }else{
+            throw new Exception('Неверная ссылка');
+        }
+
+        return $this->render('week');
     }
 
 }

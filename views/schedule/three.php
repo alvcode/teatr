@@ -78,6 +78,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <br>
         
         <a href="/schedule/excel" id="excel-download" target="_blank" class="btn btn-sm btn-info">Выгрузить в Excel</a>
+        <div id="generate-link" class="btn btn-sm btn-info">Сгенерировать ссылку</div>
     </div>
 
 
@@ -397,6 +398,28 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 </div>
 
+<!-- Modal generate link --> 
+<div class="modal fade" id="generateLinkModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Ссылка для просмотра данного расписания</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="generate-link-container">
+                
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Закрыть</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     window.onload = function () {
 
@@ -565,6 +588,8 @@ $this->params['breadcrumbs'][] = $this->title;
             var eventCategory = $('#select-event-category').val();
             var event = $('#select-event').val();
             var addInfo = $('#add--add-info').val();
+//            console.log(timeToMinute(timeFrom), timeToMinute(timeTo));
+//            return false;
             if (!timeFrom || timeFrom == '') {
                 showNotifications("Не выбрано время начала мероприятия", 3000, NOTIF_RED);
                 return false;
@@ -573,6 +598,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 showNotifications("Добавляемое мероприятие пересекается с другими в этот день", 3000, NOTIF_RED);
                 return false;
             }
+//            return false;
             goPreloader();
             var data = {
                 trigger: 'add-schedule',
@@ -675,10 +701,10 @@ $this->params['breadcrumbs'][] = $this->title;
                 exclude = 0;
             var dateRows = document.getElementsByClassName('three--date-row');
             for (var i = 0; i < dateRows.length; i++) {
-                if (date.day == dateRows[i].dataset.day && date.month == dateRows[i].dataset.month && date.year == dateRows[i].dataset.year) {
+                if (+date.day == +dateRows[i].dataset.day && +date.month == +dateRows[i].dataset.month && +date.year == +dateRows[i].dataset.year) {
                     var roomsCell = dateRows[i].getElementsByClassName('room-cell');
                     for (var z = 0; z < roomsCell.length; z++) {
-                        if (roomsCell[z].dataset.room == room) {
+                        if (+roomsCell[z].dataset.room == +room) {
                             var eventsCell = roomsCell[z].getElementsByClassName('event-cell');
                             if (eventsCell.length) {
                                 for (var k = 0; k < eventsCell.length; k++) {
@@ -686,16 +712,16 @@ $this->params['breadcrumbs'][] = $this->title;
                                         if (+eventsCell[k].dataset.timeFrom == +timeFrom) {
                                             return false;
                                         }
-                                        if (eventsCell[k].dataset.timeTo !== undefined && timeTo
+                                        if (+eventsCell[k].dataset.timeTo !== undefined && +timeTo
                                                 && ((+timeFrom >= +eventsCell[k].dataset.timeFrom && +timeFrom < +eventsCell[k].dataset.timeTo)
                                                         || (+timeTo > +eventsCell[k].dataset.timeFrom && +timeTo <= +eventsCell[k].dataset.timeTo))) {
                                             return false;
                                         }
-                                        if (eventsCell[k].dataset.timeTo === undefined && timeTo
+                                        if (+eventsCell[k].dataset.timeTo === undefined && +timeTo
                                                 && (+eventsCell[k].dataset.timeFrom > +timeFrom && +eventsCell[k].dataset.timeFrom < +timeTo)) {
                                             return false;
                                         }
-                                        if (eventsCell[k].dataset.timeTo !== undefined && !timeTo
+                                        if (+eventsCell[k].dataset.timeTo !== undefined && !timeTo
                                                 && (+timeFrom > +eventsCell[k].dataset.timeFrom && +timeFrom < +eventsCell[k].dataset.timeTo)) {
                                             return false;
                                         }
@@ -779,6 +805,20 @@ $this->params['breadcrumbs'][] = $this->title;
                             createContainer.append(createEventType);
                             createContainer.append(createEventName);
                             
+                            var adminListArr = [];
+                            var createAdminList = document.createElement('div');
+                            createAdminList.className = 'three--user-admin-list';
+                            for(var key in params.users){
+                                // Хардкод на prof_cat_id
+                                if(+params.users[key].userWithProf.userProfession.prof.proff_cat_id != 8){
+                                    adminListArr[adminListArr.length] = params.users[key].userWithProf.surname +" " + params.users[key].userWithProf.name[0] +".";
+                                }
+                            }
+                            if(adminListArr.length){
+                                createAdminList.innerHTML = adminListArr.join(', ');
+                            }
+                            createContainer.append(createAdminList);
+                            
                             if(params.addInfo){
                                 var createAddInfo = document.createElement('div');
                                 createAddInfo.className = 'three--add-info-block';
@@ -790,10 +830,13 @@ $this->params['breadcrumbs'][] = $this->title;
                             var createUserList = document.createElement('div');
                             createUserList.className = 'three--user-actors-list';
                             for(var key in params.users){
-                                userListArr[userListArr.length] = params.users[key].userWithProf.name[0] +". " + params.users[key].userWithProf.surname;
+                                // Хардкод на prof_cat_id
+                                if(+params.users[key].userWithProf.userProfession.prof.proff_cat_id == 8){
+                                    userListArr[userListArr.length] = params.users[key].userWithProf.name[0] +". " + params.users[key].userWithProf.surname;
+                                }
                             }
                             if(userListArr.length){
-                                createUserList.innerHTML = "(" +userListArr.join(', ') +")";
+                                createUserList.innerHTML = userListArr.join(', ');
                             }
                             createContainer.append(createUserList);
                             
@@ -845,21 +888,29 @@ $this->params['breadcrumbs'][] = $this->title;
             }
         }
         
-        function updateUserListInEvent(users, prof_cat, eventId){
+        function updateUserListInEvent(users, eventId){
             var eventCells = document.getElementsByClassName('event-cell');
             for(var i = 0; i < eventCells.length; i++){
                 if(+eventCells[i].dataset.id == +eventId){
                     var userListArr = [];
+                    var adminListArr = [];
                     var createUserList = document.createElement('div');
                     var userListDiv = eventCells[i].getElementsByClassName('three--user-actors-list')[0];
+                    var adminListDiv = eventCells[i].getElementsByClassName('three--user-admin-list')[0];
                     userListDiv.innerHTML = '';
+                    adminListDiv.innerHTML = '';
                     for(var key in users){
-                        if(+users[key].userWithProf.userProfession.prof.proff_cat_id == +prof_cat){
-                            userListArr[userListArr.length] = users[key].userWithProf.name[0] +". " + users[key].userWithProf.surname;
+                        if(+users[key].userWithProf.userProfession.prof.proff_cat_id == 8){
+                            userListArr[userListArr.length] = users[key].userWithProf.surname +" " + users[key].userWithProf.name[0] +".";
+                        }else if(['5', '16', '11', '14'].includes(users[key].userWithProf.userProfession.prof.proff_cat_id)){
+                            adminListArr[adminListArr.length] = users[key].userWithProf.surname +" " + users[key].userWithProf.name[0] +".";
                         }
                     }
                     if(userListArr.length){
                         userListDiv.innerHTML = "(" +userListArr.join(', ') +")";
+                    }
+                    if(adminListArr.length){
+                        adminListDiv.innerHTML = adminListArr.join(', ');
                     }
                 }
             }
@@ -1041,24 +1092,24 @@ $this->params['breadcrumbs'][] = $this->title;
                                     }
                                 }
                                 scheduleData[key].profCat = result.result.profCat;
-                                var dateT = new Date(scheduleData[key].date);
-                                var cellData = {
-                                    id: scheduleData[key].id,
-                                    date: {
-                                        day: dateT.getDate(),
-                                        month: dateT.getMonth(),
-                                        year: dateT.getFullYear()
-                                    },
-                                    room: scheduleData[key].room_id,
-                                    eventType: scheduleData[key].eventType.name,
-                                    eventTypeId: scheduleData[key].eventType.id,
-                                    eventName: (scheduleData[key].event !== null ? scheduleData[key].event.name : ''),
-                                    eventOtherName: (scheduleData[key].event !== null && scheduleData[key].event.other_name !== null ? scheduleData[key].event.other_name : ''),
-                                    timeFrom: scheduleData[key].time_from,
-                                    timeTo: (scheduleData[key].time_to !== null ? scheduleData[key].time_to : ''),
-                                    profCat: scheduleData[key].profCat
-                                };
-                                addEventInCalendar(cellData);
+//                                var dateT = new Date(scheduleData[key].date);
+//                                var cellData = {
+//                                    id: scheduleData[key].id,
+//                                    date: {
+//                                        day: dateT.getDate(),
+//                                        month: dateT.getMonth(),
+//                                        year: dateT.getFullYear()
+//                                    },
+//                                    room: scheduleData[key].room_id,
+//                                    eventType: scheduleData[key].eventType.name,
+//                                    eventTypeId: scheduleData[key].eventType.id,
+//                                    eventName: (scheduleData[key].event !== null ? scheduleData[key].event.name : ''),
+//                                    eventOtherName: (scheduleData[key].event !== null && scheduleData[key].event.other_name !== null ? scheduleData[key].event.other_name : ''),
+//                                    timeFrom: scheduleData[key].time_from,
+//                                    timeTo: (scheduleData[key].time_to !== null ? scheduleData[key].time_to : ''),
+//                                    profCat: scheduleData[key].profCat
+//                                };
+                                addEventInCalendar(generateCellData(scheduleData[key]));
                                 $('#prof-cat-right-button-container').empty();
                                 addRightProfCatButton(scheduleData[key].profCat);
                                 $('#profCatModal').modal('hide');
@@ -1078,14 +1129,16 @@ $this->params['breadcrumbs'][] = $this->title;
         $('#prof-cat-right-button-container').on('click', 'div', function(){
             $('#user-in-event-right-button-container').empty();
             $('#add-user-in-schedule-container').css({'display': 'block'});
+            $('#user-in-event-right-button-container').css({'display': 'block'});
             selectedShowProfCat = this.dataset.id;
             $('#prof-cat-right-button-container div').removeClass('btn-info');
             $('#prof-cat-right-button-container div').addClass('btn-outline-secondary');
             $(this).removeClass('btn-outline-secondary');
             $(this).addClass('btn-info');
-//            console.log(selectedShowProfCat);
+//            console.log(usersInEvent);
+//alert(selectedShowProfCat);
             for(var i = 0; i < usersInEvent.length; i++){
-                if(+usersInEvent[i].userWithProf.userProfession.prof.proff_cat_id === +selectedShowProfCat){
+                if(+usersInEvent[i].userWithProf.userProfession.prof.proff_cat_id == +selectedShowProfCat){
 //                    alert('k');
                     var createContainer = document.createElement('div');
                     createContainer.className = 'cursor-pointer';
@@ -1148,11 +1201,13 @@ $this->params['breadcrumbs'][] = $this->title;
                                     profCat: scheduleData[key].profCat,
                                     users: scheduleData[key].allUsersInEvent
                                 };
-                                for(var i = 0; i < usersInEvent.length; i++){
-                                    if(+usersInEvent[i].userWithProf.userProfession.prof.proff_cat_id === +deletedProfCat){
-                                        usersInEvent.splice(i, 1);
-                                    }
-                                }
+                                usersInEvent = result.result.allUsersInEvent;
+//                                for(var i = 0; i < usersInEvent.length; i++){
+//                                    if(+usersInEvent[i].userWithProf.userProfession.prof.proff_cat_id == +deletedProfCat){
+//                                        usersInEvent.splice(i, 1);
+//                                    }
+//                                }
+                                console.log(usersInEvent);
                                 addEventInCalendar(cellData);
                                 $('#prof-cat-right-button-container').empty();
                                 addRightProfCatButton(scheduleData[key].profCat);
@@ -1264,7 +1319,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 document.getElementById('user-in-event-right-button-container').append(createContainer);
                             }
                         }
-                        updateUserListInEvent(usersInEvent, result.actors_prof_cat, result.event_schedule);
+                        updateUserListInEvent(usersInEvent, result.event_schedule);
                         $('#usersListModal').modal('hide');
                     }else if(result.result == 'intersect'){
                         var textNotification = '';
@@ -1326,7 +1381,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 document.getElementById('user-in-event-right-button-container').append(createContainer);
                             }
                         }
-                        updateUserListInEvent(result.result, result.actors_prof_cat, result.event_schedule);
+                        updateUserListInEvent(result.result, result.event_schedule);
                     }else if(result.response == 'error'){
                         showNotifications(result.result, 4000, NOTIF_RED);
                     }
@@ -1538,6 +1593,39 @@ $this->params['breadcrumbs'][] = $this->title;
                     stopPreloader();
                 }
             });
+        });
+
+        $('#generate-link').click(function(){
+            // alert(location.hostname);
+            // return false;
+            goPreloader();
+            var data = {
+                trigger: 'generate-link',
+                period: datePeriod,
+            };
+            data[csrfParam] = csrfToken;
+            $.ajax({
+                type: "POST",
+                url: '/schedule/three',
+                data: data,
+                success: function (data) {
+                    var result = JSON.parse(data);
+                    console.log(result);
+                    if(result.response == 'ok'){
+                        $('.generate-link-container').html(location.hostname +result.result);
+                        $('#generateLinkModal').modal('show');
+                    }else if(result.response == 'error'){
+                        showNotifications(result.result, 4000, NOTIF_RED);
+                    }
+                        
+                    stopPreloader();
+                },
+                error: function () {
+                    showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                    stopPreloader();
+                }
+            });
+            // console.log(datePeriod);
         });
 
 

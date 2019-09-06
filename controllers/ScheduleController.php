@@ -21,6 +21,7 @@ use app\models\UserInSchedule;
 use app\models\ProfCatInSchedule;
 use yii\base\Exception;
 use app\models\ProffCategories;
+use app\models\ScheduleViewHash;
 use app\components\excel\WeekExcel;
 use app\components\excel\WeekExcelTwo;
 
@@ -404,7 +405,7 @@ class ScheduleController extends AccessController
      * Action недельного расписания
      */
     public function actionThree(){
-        
+        $profCatLeave = ['8', '5', '16', '11', '14'];
         if(Yii::$app->request->isAjax){
             if(Yii::$app->request->post('trigger') == 'add-schedule'){
                 $spectacleEventConfig = Config::getConfig('spectacle_event');
@@ -440,7 +441,8 @@ class ScheduleController extends AccessController
                 }
             }
             
-            if(Yii::$app->request->post('trigger') == 'load-schedule'){
+            if(Yii::$app->request->post('trigger') == 'load-schedule'){ 
+                // В javascript страницы есть хардкод отображения аткров и других служб по prof_cat
                 $period = Yii::$app->request->post('period');
                 $startDate = date('Y-m-d', strtotime($period[0]['year'] ."-" .$period[0]['month'] ."-" .$period[0]['day']));
                 $endDate = date('Y-m-d', strtotime($period[1]['year'] ."-" .$period[1]['month'] ."-" .$period[1]['day']));
@@ -448,12 +450,12 @@ class ScheduleController extends AccessController
                         ->where(['between', 'date', $startDate, $endDate])
                         ->with('eventType')->with('event')->with('profCat')->with('allUsersInEvent')->asArray()->all();
                 $spectacleEventConfig = Config::getConfig('spectacle_event');
-                $actorsProfCat = Config::getConfig('actors_prof_cat');
+//                $actorsProfCat = Config::getConfig('actors_prof_cat');
                 // ************************************************************ ВЫНЕСТИ В МЕТОД *************************************************
                 foreach ($schedule as $key => $value){
                     if(!in_array($value['event_type_id'], $spectacleEventConfig)){
                         foreach ($value['allUsersInEvent'] as $allKey => $allVal){
-                            if(!in_array($allVal['userWithProf']['userProfession']['prof']['proff_cat_id'], $actorsProfCat)){
+                            if(!in_array($allVal['userWithProf']['userProfession']['prof']['proff_cat_id'], $profCatLeave)){
                                 unset($schedule[$key]['allUsersInEvent'][$allKey]);
                             }
                         }
@@ -461,14 +463,19 @@ class ScheduleController extends AccessController
                         $schedule[$key]['allUsersInEvent'] = [];
                     }
                 }
+                // Сортировка сотрудников и служб
                 foreach ($schedule as $key => $value){
                     foreach ($value['allUsersInEvent'] as $allKey => $allVal){
                         $schedule[$key]['allUsersInEvent'][$allKey]['userSurname'] = $allVal['userWithProf']['surname'];
+                    }
+                    foreach ($value['profCat'] as $keyProf => $valProf){
+                        $schedule[$key]['profCat'][$keyProf]['alias'] = $valProf['profCat']['alias'];
                     }
                 }
 //                $value['allUsersInEvent'][$allKey]['userSurname'] = $allVal['userWithProf']['surname'];
                 foreach ($schedule as $key => $value){
                     $schedule[$key]['allUsersInEvent'] = ScheduleComponent::sortFirstLetter($schedule[$key]['allUsersInEvent'], 'userSurname');
+                    $schedule[$key]['profCat'] = ScheduleComponent::sortFirstLetter($schedule[$key]['profCat'], 'alias');
                 }
                 
                 return json_encode($schedule);
@@ -530,12 +537,11 @@ class ScheduleController extends AccessController
                         ->where(['schedule_event_id' => Yii::$app->request->post('eventSchedule')])
                         ->with('userWithProf')->asArray()->all();
                     $transaction->commit();
-                    // Определяем, добавлялись актеры или нет и проставляем соответствующий флаг
-                    $actorsProfCat = Config::getConfig('actors_prof_cat');
+//                    $actorsProfCat = Config::getConfig('actors_prof_cat');
                     return json_encode([
                         'response' => 'ok',
                         'result' => $userInSchedule,
-                        'actors_prof_cat' => $actorsProfCat[0],
+//                        'actors_prof_cat' => $actorsProfCat[0],
                         'event_schedule' => Yii::$app->request->post('eventSchedule')
                     ]);
                 }catch (\Exception $e) {
@@ -552,8 +558,8 @@ class ScheduleController extends AccessController
                 $userInSchedule = UserInSchedule::find()->select('user_in_schedule.*')
                         ->where(['schedule_event_id' => $eventId])
                         ->with('userWithProf')->asArray()->all();
-                $actorsProfCat = Config::getConfig('actors_prof_cat');
-                return json_encode(['response' => 'ok', 'result' => $userInSchedule, 'actors_prof_cat' => $actorsProfCat[0], 'event_schedule' => $eventId]);
+//                $actorsProfCat = Config::getConfig('actors_prof_cat');
+                return json_encode(['response' => 'ok', 'result' => $userInSchedule, 'event_schedule' => $eventId]);
             }
             
             if(Yii::$app->request->post('trigger') == 'delete-prof-cat'){
@@ -577,11 +583,12 @@ class ScheduleController extends AccessController
                 $schedule = ScheduleEvents::find()
                         ->where(['id' => Yii::$app->request->post('eventSchedule')])
                         ->with('eventType')->with('event')->with('profCat')->with('allUsersInEvent')->asArray()->one();
+                // ************************************************************ ВЫНЕСТИ В МЕТОД *************************************************
                 $spectacleEventConfig = Config::getConfig('spectacle_event');
                 $actorsProfCat = Config::getConfig('actors_prof_cat');
                 if(!in_array($schedule['event_type_id'], $spectacleEventConfig)){
                     foreach ($schedule['allUsersInEvent'] as $allKey => $allVal){
-                        if(!in_array($allVal['userWithProf']['userProfession']['prof']['proff_cat_id'], $actorsProfCat)){
+                        if(!in_array($allVal['userWithProf']['userProfession']['prof']['proff_cat_id'], $profCatLeave)){
                             unset($schedule['allUsersInEvent'][$allKey]);
                         }
                     }
@@ -639,6 +646,7 @@ class ScheduleController extends AccessController
                     $newScheduleEvent->time_from = $getEvent['time_from'];
                     $newScheduleEvent->time_to = $getEvent['time_to'];
                     $newScheduleEvent->is_modified = Yii::$app->request->post('modifiedEvent');
+                    $newScheduleEvent->add_info = $getEvent['add_info'];
                     if($newScheduleEvent->save()){
                         if(+Yii::$app->request->post('moveUsers') > 0){
                             $getUserInSchedule = UserInSchedule::find()->where([
@@ -668,10 +676,11 @@ class ScheduleController extends AccessController
                     $record = ScheduleEvents::find()
                         ->where(['id' => $newScheduleEvent->id])
                         ->with('eventType')->with('event')->with('profCat')->with('allUsersInEvent')->asArray()->one();
-                    $actorsProfCat = Config::getConfig('actors_prof_cat');
+                    // $actorsProfCat = Config::getConfig('actors_prof_cat');
+                    // ****************************************** ВЫНЕСТИ В МЕТОД
                     if(!in_array($record['event_type_id'], $configSpectacle)){
                         foreach ($record['allUsersInEvent'] as $allKey => $allVal){
-                            if(!in_array($allVal['userWithProf']['userProfession']['prof']['proff_cat_id'], $actorsProfCat)){
+                            if(!in_array($allVal['userWithProf']['userProfession']['prof']['proff_cat_id'], $profCatLeave)){
                                 unset($record['allUsersInEvent'][$allKey]);
                             }
                         }
@@ -695,6 +704,25 @@ class ScheduleController extends AccessController
                 }else{
                     return json_encode(['response' => 'error', 'result' => 'Ошибка базы данных. Перезагрузите страницу и попробуйте снова']);
                 }
+            }
+
+            if(Yii::$app->request->post('trigger') == 'generate-link'){
+                $period = Yii::$app->request->post('period');
+                $from = $period[0]['year'] ."-" .$period[0]['month'] ."-" .$period[0]['day'];
+                $to = $period[1]['year'] ."-" .$period[1]['month'] ."-" .$period[1]['day'];
+                $searchHash = ScheduleViewHash::find()->where(['date_from' => $from, 'date_to' => $to])->asArray()->one();
+                if($searchHash){
+                    return json_encode(['response' => 'ok', 'result' => '/site/week-schedule?from=' .$from .'&to=' .$to .'&hash=' .$searchHash['hash']]);
+                }else{
+                    $newHash = new ScheduleViewHash();
+                    $newHash->date_from = $from;
+                    $newHash->date_to = $to;
+                    $newHash->hash = \Yii::$app->getSecurity()->generateRandomString();
+                    if($newHash->save()){
+                        return json_encode(['response' => 'ok', 'result' => '/site/week-schedule?from=' .$from .'&to=' .$to .'&hash=' .$newHash->hash]);
+                    }
+                }
+                return json_encode(['response' => 'error', 'result' => 'Ошибка при генерации ссылки. Сообщите разработчику']);
             }
             
             

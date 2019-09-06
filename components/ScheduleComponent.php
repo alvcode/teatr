@@ -461,5 +461,26 @@ class ScheduleComponent extends Model{
         }
         return $result;
     }
+
+    /**
+     * Удаляет пользователей в соответствии с конфигурацией.
+     */
+    public static function removeNeedUsers($schedule){
+        $spectacleEventConfig = Config::getConfig('spectacle_event');
+        $profCatLeave = ['8', '5', '16', '11', '14'];
+
+        foreach ($schedule as $key => $value){
+            if(!in_array($value['event_type_id'], $spectacleEventConfig)){
+                foreach ($value['allUsersInEvent'] as $allKey => $allVal){
+                    if(!in_array($allVal['userWithProf']['userProfession']['prof']['proff_cat_id'], $profCatLeave)){
+                        unset($schedule[$key]['allUsersInEvent'][$allKey]);
+                    }
+                }
+            }else{
+                $schedule[$key]['allUsersInEvent'] = [];
+            }
+        }
+        return $schedule;
+    }
    
 }

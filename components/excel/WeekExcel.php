@@ -10,6 +10,7 @@ use app\models\Casts;
 use app\models\UserInSchedule;
 use app\models\User;
 use app\models\Config;
+use app\components\ScheduleComponent;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\RichText\RichText;
@@ -29,6 +30,8 @@ class WeekExcel extends Model{
      * @return 
      */
     public static function excelWeekSchedule($from, $to){
+        $spectacleEventConfig = Config::getConfig('spectacle_event');
+        $profCatLeave = ['8', '5', '16', '11', '14'];
         $weekdayName = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
         $roomMatrix = []; // Соответствие комнаты к столбцу
         $explodeFrom = explode('-', $from);
@@ -47,20 +50,8 @@ class WeekExcel extends Model{
         $schedule = ScheduleEvents::find()
                 ->where(['between', 'date', $from, $to])
                 ->with('eventType')->with('event')->with('profCat')->with('allUsersInEvent')->asArray()->all();
-        $spectacleEventConfig = Config::getConfig('spectacle_event');
-        $actorsProfCat = Config::getConfig('actors_prof_cat');
-        // ************************************************************ ВЫНЕСТИ В МЕТОД *****************************************************
-        foreach ($schedule as $key => $value){
-            if(!in_array($value['event_type_id'], $spectacleEventConfig)){
-                foreach ($value['allUsersInEvent'] as $allKey => $allVal){
-                    if(!in_array($allVal['userWithProf']['userProfession']['prof']['proff_cat_id'], $actorsProfCat)){
-                        unset($schedule[$key]['allUsersInEvent'][$allKey]);
-                    }
-                }
-            }else{
-                $schedule[$key]['allUsersInEvent'] = [];
-            }
-        }
+        $schedule = ScheduleComponent::removeNeedUsers($schedule);
+
         $activesRoom = [];
         
         foreach ($schedule as $key => $value){
@@ -261,6 +252,7 @@ class WeekExcel extends Model{
                         $repeatArr = [];
                         
                         for($i = 0; $i <= 1440; $i++){
+                            $oneEventText = '';
                             if(isset($eventss[$i]) && !in_array($eventss[$i]['event']['id'] ."-" .$eventss[$i]['eventType']['id'], $repeatArr)){
                                 if(!isset($textSizeArr[$coll])){
                                     $textSizeArr[$coll]['count'] = 0;
@@ -271,31 +263,56 @@ class WeekExcel extends Model{
                                     for($z = 0; $z <= 1440; $z++){
                                         if(isset($eventss[$z]) && +$eventss[$i]['event']['id'] == +$eventss[$z]['event']['id'] && +$eventss[$i]['eventType']['id'] == +$eventss[$z]['eventType']['id']){
                                             $textSizeArr[$coll]['text'] .= self::minuteToTime($eventss[$z]['time_from'], $eventss[$z]['time_to']) ." ";
+                                            $oneEventText .= self::minuteToTime($eventss[$z]['time_from'], $eventss[$z]['time_to']) ." ";
                                         }
                                     }
                                 }else{
                                     $textSizeArr[$coll]['text'] .= self::minuteToTime($eventss[$i]['time_from'], $eventss[$i]['time_to']) ." ";
+                                    $oneEventText .= self::minuteToTime($eventss[$i]['time_from'], $eventss[$i]['time_to']) ." ";
                                 }
+                                
+                                $textSizeArr[$coll]['text'] .= "(" .$eventss[$i]['eventType']['name'] .") ";
+                                $oneEventText .= "(" .$eventss[$i]['eventType']['name'] .") ";
 
                                 if($eventss[$i]['event']['name']){
                                     $textSizeArr[$coll]['text'] .= $eventss[$i]['event']['name'];
+                                    $oneEventText .= $eventss[$i]['event']['name'];
                                 }
 
                                 if($eventss[$i]['event']['other_name']){
-                                    $textSizeArr[$coll]['text'] .= " (" .$eventss[$i]['event']['other_name'] ."). ";
+                                    $textSizeArr[$coll]['text'] .= " (" .$eventss[$i]['event']['other_name'] .") ";
+                                    $oneEventText .= " (" .$eventss[$i]['event']['other_name'] .") ";
+                                }
+                                
+                                if($eventss[$i]['allUsersInEvent'] && !in_array($eventss[$i]['eventType']['id'], $spectacleEventConfig)){
+                                    $textSizeArr[$coll]['text'] .= " ";
+                                    $oneEventText .= " ";
+                                    $allUsersArr = [];
+                                    foreach ($eventss[$i]['allUsersInEvent'] as $keyUser => $valUser){
+                                        if(+$valUser['userWithProf']['userProfession']['prof']['proff_cat_id'] != 8){
+                                            $allUsersArr[] = $valUser['userWithProf']['surname'] . " " .mb_substr($valUser['userWithProf']['name'],0,1);
+                                        }
+                                    }
+                                    $textSizeArr[$coll]['text'] .= implode(', ', $allUsersArr) .".";
+                                    $oneEventText .= implode(', ', $allUsersArr) .".";
                                 }
 
                                 if($eventss[$i]['add_info']){
                                     $textSizeArr[$coll]['text'] .= " (" .$eventss[$i]['add_info'] .")";
+                                    $oneEventText .= " (" .$eventss[$i]['add_info'] .")";
                                 }
 
                                 if($eventss[$i]['allUsersInEvent'] && !in_array($eventss[$i]['eventType']['id'], $spectacleEventConfig)){
-                                    $textSizeArr[$coll]['text'] .= " (";
+                                    $textSizeArr[$coll]['text'] .= " ";
+                                    $oneEventText .= " ";
                                     $allUsersArr = [];
                                     foreach ($eventss[$i]['allUsersInEvent'] as $keyUser => $valUser){
-                                        $allUsersArr[] = $valUser['userWithProf']['surname'];
+                                        if(+$valUser['userWithProf']['userProfession']['prof']['proff_cat_id'] == 8){
+                                            $allUsersArr[] = $valUser['userWithProf']['surname'] . " " .mb_substr($valUser['userWithProf']['surname'],0,1);
+                                        }
                                     }
-                                    $textSizeArr[$coll]['text'] .= implode(', ', $allUsersArr) .")";
+                                    $textSizeArr[$coll]['text'] .= implode(', ', $allUsersArr);
+                                    $oneEventText .= implode(', ', $allUsersArr);
                                 }
                                 if($eventss[$i]['profCat']){
                                     $textSizeArr[$coll]['text'] .= "\n";
@@ -304,10 +321,18 @@ class WeekExcel extends Model{
                                         $allProffArr[] = $valProf['profCat']['alias'];
                                     }
                                     $textSizeArr[$coll]['text'] .= implode(', ', $allProffArr);
+                                    $oneEventText .= implode(', ', $allProffArr);
                                 }
-
-                                $textSizeArr[$coll]['count']++;
+                                
+                                if(iconv_strlen($oneEventText) > 480){
+                                    $textSizeArr[$coll]['count']++;
+                                    $textSizeArr[$coll]['count']++;
+                                }else{
+                                    $textSizeArr[$coll]['count']++;
+                                }
+                                // $textSizeArr[$coll]['count']++;
                             }
+
                         }
                     }
                     // Вписываем кол-во букв в каждый зал
@@ -325,6 +350,9 @@ class WeekExcel extends Model{
                         }
                     }
 
+                    // echo "<pre>";
+                    // var_dump($maxRoom); 
+
                     // ****** Теперь на основе вычислений о максимальном кол-ве символов, вкидываем все внутрь расписания
                     $gapCount = $dayCount;
                     $repeatArr = [];
@@ -341,6 +369,7 @@ class WeekExcel extends Model{
                                 for($z = 0; $z <= 1440; $z++){
                                     if(isset($events[$z]) && +$events[$i]['event']['id'] == +$events[$z]['event']['id'] && +$events[$i]['eventType']['id'] == +$events[$z]['eventType']['id']){
                                         $objBold = $objRichText->createTextRun(self::minuteToTime($events[$z]['time_from'], $events[$z]['time_to']) ." ");
+                                        $resultStr .= self::minuteToTime($events[$z]['time_from'], $events[$z]['time_to']) ." ";
                                         if((int)$events[$i]['is_modified'] === 1){
                                             $objBold->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_RED));
                                         }
@@ -350,6 +379,7 @@ class WeekExcel extends Model{
                                 }
                             }else{
                                 $objBold = $objRichText->createTextRun(self::minuteToTime($events[$i]['time_from'], $events[$i]['time_to']) ." ");
+                                $resultStr .= self::minuteToTime($events[$i]['time_from'], $events[$i]['time_to']) ." ";
                                 if((int)$events[$i]['is_modified'] === 1){
                                     $objBold->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_RED));
                                 }
@@ -358,6 +388,7 @@ class WeekExcel extends Model{
                             }
 
                             $objBold = $objRichText->createTextRun("(" .$events[$i]['eventType']['name'] .") ");
+                            $resultStr .= "(" .$events[$i]['eventType']['name'] .") ";
                             $objBold->getFont()->setSize(16);
                             if((int)$events[$i]['is_modified'] === 1){
                                 $objBold->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_RED));
@@ -365,6 +396,7 @@ class WeekExcel extends Model{
 
                             if($events[$i]['event']['name']){
                                 $objBold = $objRichText->createTextRun($events[$i]['event']['name']);
+                                $resultStr .= $events[$i]['event']['name'];
                                 if((int)$events[$i]['is_modified'] === 1){
                                     $objBold->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_RED));
                                 }
@@ -373,60 +405,116 @@ class WeekExcel extends Model{
                             }
                             
                             if($events[$i]['event']['other_name']){
-                                $objBold = $objRichText->createTextRun(" (" .$events[$i]['event']['other_name'] ."). ");
+                                $objBold = $objRichText->createTextRun(" (" .$events[$i]['event']['other_name'] .") ");
+                                $resultStr .= " (" .$events[$i]['event']['other_name'] .") ";
                                 if((int)$events[$i]['is_modified'] === 1){
                                     $objBold->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_RED));
                                 }
                                 $objBold->getFont()->setBold(true);
-                                $objBold->getFont()->setSize(16);
+                                $objBold->getFont()->setSize(14);
+                            }
+                            // Не актеры
+                            if($events[$i]['allUsersInEvent'] && !in_array($events[$i]['eventType']['id'], $spectacleEventConfig)){
+                                // Сортируем по алфавиту
+                                foreach ($events[$i]['allUsersInEvent'] as $keyUser => $valUser){
+                                    $events[$i]['allUsersInEvent'][$keyUser]['userSurname'] = $valUser['userWithProf']['surname'];
+                                }
+                                $events[$i]['allUsersInEvent'] = \app\components\ScheduleComponent::sortFirstLetter($events[$i]['allUsersInEvent'], 'userSurname');
+                                $objRichText->createText(" ");
+                                $resultStr .= " ";
+                                $allUsersArr = [];
+                                foreach ($events[$i]['allUsersInEvent'] as $keyUser => $valUser){
+                                    if(+$valUser['userWithProf']['userProfession']['prof']['proff_cat_id'] != 8){
+                                        $allUsersArr[] = $valUser['userWithProf']['surname'] . " " .mb_substr($valUser['userWithProf']['name'],0,1);
+                                    }
+                                }
+                                $objBold = $objRichText->createTextRun(implode(', ', $allUsersArr) .".");
+                                $resultStr .= implode(', ', $allUsersArr) .".";
+                                if((int)$events[$i]['is_modified'] === 1){
+                                    $objBold->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_RED));
+                                }
+                                $objBold->getFont()->setSize(13);
                             }
                             
                             if($events[$i]['add_info']){
                                 $objBold = $objRichText->createTextRun(" (" .$events[$i]['add_info'] .")");
+                                $resultStr .= " (" .$events[$i]['add_info'] .")";
                                 if((int)$events[$i]['is_modified'] === 1){
                                     $objBold->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_RED));
                                 }
-                                $objBold->getFont()->setSize(16);
+                                $objBold->getFont()->setSize(13);
                             }
-                            
+                            // Актеры
                             if($events[$i]['allUsersInEvent'] && !in_array($events[$i]['eventType']['id'], $spectacleEventConfig)){
-                                $objRichText->createText(" (");
+                                $objRichText->createText(" ");
+                                $resultStr .= " ";
                                 $allUsersArr = [];
                                 foreach ($events[$i]['allUsersInEvent'] as $keyUser => $valUser){
-                                    $allUsersArr[] = $valUser['userWithProf']['surname'] . " " .mb_substr($valUser['userWithProf']['name'],0,1) .".";
+                                    if(+$valUser['userWithProf']['userProfession']['prof']['proff_cat_id'] == 8){
+                                        $allUsersArr[] = $valUser['userWithProf']['surname'] . " " .mb_substr($valUser['userWithProf']['name'],0,1);
+                                    }
                                 }
-                                $objBold = $objRichText->createTextRun(implode(', ', $allUsersArr) .")");
+                                $objBold = $objRichText->createTextRun(implode(', ', $allUsersArr));
+                                $resultStr .= implode(', ', $allUsersArr);
                                 if((int)$events[$i]['is_modified'] === 1){
                                     $objBold->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_RED));
                                 }
-                                $objBold->getFont()->setSize(16);
+                                $objBold->getFont()->setSize(13);
                             }
                             if($events[$i]['profCat']){
                                 $objRichText->createText("\n");
                                 $allProffArr = [];
+                                // Сортируем по алфавиту
+                                foreach ($events[$i]['profCat'] as $keyProf => $valProf){
+                                    $events[$i]['profCat'][$keyProf]['alias'] = $valProf['profCat']['alias'];
+                                }
+                                $events[$i]['profCat'] = \app\components\ScheduleComponent::sortFirstLetter($events[$i]['profCat'], 'alias');
                                 foreach ($events[$i]['profCat'] as $keyProf => $valProf){
                                     $allProffArr[] = $valProf['profCat']['alias'];
                                 }
                                 $objBold = $objRichText->createTextRun(implode(', ', $allProffArr));
+                                $resultStr .= implode(', ', $allProffArr);
                                 if((int)$events[$i]['is_modified'] === 1){
                                     $objBold->getFont()->setColor(new \PhpOffice\PhpSpreadsheet\Style\Color(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_RED));
                                 }
                                 $objBold->getFont()->setBold(true);
-                                $objBold->getFont()->setSize(16);
+                                $objBold->getFont()->setSize(13);
                             }
-                           if($k < $eventCount){
-                               $objRichText->createText("\n \n");
-                           }
+//                           if($k < $eventCount){
+//                               $objRichText->createText("\n \n");
+//                           }
+                           
                             if(isset($maxRoom) && (int)$maxRoom['room'] === (int)$col){
+                                
+                                if(iconv_strlen($resultStr) > 480){
+                                    $sheet->mergeCellsByColumnAndRow($col, $gapCount, $col, ($gapCount + 1));
+                                    $sheet->getStyleByColumnAndRow($col, ($gapCount +1))->getAlignment()->setWrapText(true);
+                                    // $gapCount++;
+                                }
                                 $sheet->getStyleByColumnAndRow($col, $gapCount)->getAlignment()->setWrapText(true);
                                 $sheet->setCellValueByColumnAndRow($col, $gapCount, $objRichText);
+                                if(iconv_strlen($resultStr) > 480){
+                                    // $spreadsheet->getActiveSheet()->getRowDimension($gapCount)->setRowHeight(409);
+                                    // $spreadsheet->getActiveSheet()->getRowDimension(($gapCount+1))->setRowHeight(409);
+                                    $gapCount++;
+                                    // $sheet->setCellValueByColumnAndRow($col, $gapCount, $objRichText);
+                                }
+                                
                                 $objRichText = new RichText();
                                 $gapCount++;
+                                $sheet->getStyleByColumnAndRow(1, $gapCount)->applyFromArray([
+                                    'borders' => [
+                                        'left' => [
+                                            'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_MEDIUM,
+                                            'color' => array('argb' => '000000'),
+                                        ],
+                                    ]
+                                ]);
                             }else{
-                                $k++;
                                 if($k < $eventCount){
                                     $objRichText->createText("\n \n");
                                 }
+                                $k++;
                             }
                             if((int)$events[$i]['is_modified'] === 1){
                                 $sheet->getStyleByColumnAndRow($col, $gapCount)->getFont()->getColor()->setARGB(\PhpOffice\PhpSpreadsheet\Style\Color::COLOR_RED);
