@@ -183,7 +183,11 @@ class ScheduleComponent extends Model{
         $findSchedule = ScheduleEvents::findOne($scheduleId);
         $findUsers = UserInSchedule::find()->where(['schedule_event_id' => $findSchedule->id])->with('user')->asArray()->all();
         $findSchedule->time_from = $timeFrom;
-        $findSchedule->time_to = $timeTo;
+        if($timeTo){
+            $findSchedule->time_to = $timeTo;
+        }else{
+            $findSchedule->time_to = null;
+        }
         
         $allEvents = ScheduleEvents::find()->where(['date' => $dateParam])->with('event')->asArray()->all();
         if($findUsers && $allEvents){
@@ -479,6 +483,35 @@ class ScheduleComponent extends Model{
             }else{
                 $schedule[$key]['allUsersInEvent'] = [];
             }
+        }
+        return $schedule;
+    }
+    
+    /**
+     * Загрузка данных для недельного расписания. Используется в генерации расписания по ссылке для сотрудников,
+     * поэтому вынесено в метод
+     */
+    public static function loadThreeSchedule($period){
+        $startDate = date('Y-m-d', strtotime($period[0]['year'] ."-" .$period[0]['month'] ."-" .$period[0]['day']));
+        $endDate = date('Y-m-d', strtotime($period[1]['year'] ."-" .$period[1]['month'] ."-" .$period[1]['day']));
+        $schedule = ScheduleEvents::find()
+                ->where(['between', 'date', $startDate, $endDate])
+                ->with('eventType')->with('event')->with('profCat')->with('allUsersInEvent')->asArray()->all();
+        $spectacleEventConfig = Config::getConfig('spectacle_event');
+        $schedule = self::removeNeedUsers($schedule);
+        // Сортировка сотрудников и служб
+        foreach ($schedule as $key => $value){
+            foreach ($value['allUsersInEvent'] as $allKey => $allVal){
+                $schedule[$key]['allUsersInEvent'][$allKey]['userSurname'] = $allVal['userWithProf']['surname'];
+            }
+            foreach ($value['profCat'] as $keyProf => $valProf){
+                $schedule[$key]['profCat'][$keyProf]['alias'] = $valProf['profCat']['alias'];
+            }
+        }
+//                $value['allUsersInEvent'][$allKey]['userSurname'] = $allVal['userWithProf']['surname'];
+        foreach ($schedule as $key => $value){
+            $schedule[$key]['allUsersInEvent'] = ScheduleComponent::sortFirstLetter($schedule[$key]['allUsersInEvent'], 'userSurname');
+            $schedule[$key]['profCat'] = ScheduleComponent::sortFirstLetter($schedule[$key]['profCat'], 'alias');
         }
         return $schedule;
     }

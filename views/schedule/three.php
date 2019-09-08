@@ -78,6 +78,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <br>
         
         <a href="/schedule/excel" id="excel-download" target="_blank" class="btn btn-sm btn-info">Выгрузить в Excel</a>
+        <a href="/schedule/word" id="word-download" target="_blank" class="btn btn-sm btn-info">Выгрузить в Word (тест, пока не нажимать)</a>
         <div id="generate-link" class="btn btn-sm btn-info">Сгенерировать ссылку</div>
     </div>
 
@@ -176,6 +177,10 @@ $this->params['breadcrumbs'][] = $this->title;
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
+                                <div>
+                                    <input type="checkbox" class="" id="add--without-intersect">
+                                    <label class="form-check-label" for="add--without-intersect">Не проверять на пересечения</label>
+                                </div>
                             </td>
                         </tr>
                     </tbody>
@@ -239,6 +244,10 @@ $this->params['breadcrumbs'][] = $this->title;
             <div>
                 <input type="checkbox" class="" id="edit--modified-event">
                 <label class="form-check-label" for="edit--modified-event">Измененное!</label>
+            </div>
+            <div>
+                <input type="checkbox" class="" id="edit--without-intersect">
+                <label class="form-check-label" for="edit--without-intersect">Не проверять на пересечения</label>
             </div>
             <div class="three--copy-event">
                 <h5 class="text-info">Копировать запись на другой день</h5>
@@ -409,9 +418,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 </button>
             </div>
             <div class="modal-body">
-                <div class="generate-link-container">
-                
-                </div>
+                <a href="#" class="generate-link-container" id="generate-link-container" target="_blank"></a>
+                <div style="display:block;" id="copy-link-button" class="btn btn-sm btn-info mrg-top15">Двойной клик для копирования</div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Закрыть</button>
@@ -576,6 +584,15 @@ $this->params['breadcrumbs'][] = $this->title;
             }
         });
 
+        var withoutIntersect = 0;
+        $('#add--without-intersect').click(function(){
+            if($(this).prop('checked')){
+                withoutIntersect = 1;
+            }else{
+                withoutIntersect = 0;
+            }
+        });
+
         $('#select-event-category').change(function () {
             eventCatSort();
         });
@@ -594,9 +611,11 @@ $this->params['breadcrumbs'][] = $this->title;
                 showNotifications("Не выбрано время начала мероприятия", 3000, NOTIF_RED);
                 return false;
             }
-            if (!checkTimesInterval(timeToMinute(timeFrom), timeToMinute(timeTo), addNowDate, addNowRoom)) {
-                showNotifications("Добавляемое мероприятие пересекается с другими в этот день", 3000, NOTIF_RED);
-                return false;
+            if(withoutIntersect == 0){
+                if (!checkTimesInterval(timeToMinute(timeFrom), timeToMinute(timeTo), addNowDate, addNowRoom)) {
+                    showNotifications("Добавляемое мероприятие пересекается с другими в этот день", 3000, NOTIF_RED);
+                    return false;
+                }
             }
 //            return false;
             goPreloader();
@@ -662,6 +681,7 @@ $this->params['breadcrumbs'][] = $this->title;
             datePeriod[1].year = dateObj.getFullYear();
             
             document.getElementById('excel-download').setAttribute('href', '/schedule/excel-one?from=' +datePeriod[0].year +"-" +datePeriod[0].month +"-" +datePeriod[0].day +"&to="+datePeriod[1].year +"-" +datePeriod[1].month +"-" +datePeriod[1].day);
+            document.getElementById('word-download').setAttribute('href', '/schedule/word?from=' +datePeriod[0].year +"-" +datePeriod[0].month +"-" +datePeriod[0].day +"&to="+datePeriod[1].year +"-" +datePeriod[1].month +"-" +datePeriod[1].day);
             return true;
         };
         
@@ -712,16 +732,17 @@ $this->params['breadcrumbs'][] = $this->title;
                                         if (+eventsCell[k].dataset.timeFrom == +timeFrom) {
                                             return false;
                                         }
-                                        if (+eventsCell[k].dataset.timeTo !== undefined && +timeTo
+                                        if (eventsCell[k].dataset.timeTo !== undefined && +timeTo
                                                 && ((+timeFrom >= +eventsCell[k].dataset.timeFrom && +timeFrom < +eventsCell[k].dataset.timeTo)
-                                                        || (+timeTo > +eventsCell[k].dataset.timeFrom && +timeTo <= +eventsCell[k].dataset.timeTo))) {
+                                                        || (+timeTo > +eventsCell[k].dataset.timeFrom && +timeTo <= +eventsCell[k].dataset.timeTo)
+                                                        || (+timeFrom <= +eventsCell[k].dataset.timeFrom && +timeTo >= +eventsCell[k].dataset.timeTo))) {
                                             return false;
                                         }
-                                        if (+eventsCell[k].dataset.timeTo === undefined && +timeTo
+                                        if (eventsCell[k].dataset.timeTo === undefined && +timeTo
                                                 && (+eventsCell[k].dataset.timeFrom > +timeFrom && +eventsCell[k].dataset.timeFrom < +timeTo)) {
                                             return false;
                                         }
-                                        if (+eventsCell[k].dataset.timeTo !== undefined && !timeTo
+                                        if (eventsCell[k].dataset.timeTo !== undefined && !timeTo
                                                 && (+timeFrom > +eventsCell[k].dataset.timeFrom && +timeFrom < +eventsCell[k].dataset.timeTo)) {
                                             return false;
                                         }
@@ -958,6 +979,8 @@ $this->params['breadcrumbs'][] = $this->title;
         $('body').on('click', '.event-cell', function (e) {
             $('#edit--time_from').val('');
             $('#edit--time_to').val('');
+            editWithoutIntersect = 0;
+            $('#edit--without-intersect').prop('checked', false);
             $('.three--right-save-button').slideDown(200);
             $('.three--copy-event').slideUp(200);
             $('#prof-cat-right-button-container').empty();
@@ -1002,6 +1025,8 @@ $this->params['breadcrumbs'][] = $this->title;
             $('#prof-cat-right-button-container').empty();
             $('#add-user-in-schedule-container').css({'display': 'none'});
             $('#user-in-event-right-button-container').empty();
+            editWithoutIntersect = 0;
+            $('#edit--without-intersect').prop('checked', false);
         });
 
         // Загружает всех пользователей на выбранном мероприятии
@@ -1395,6 +1420,15 @@ $this->params['breadcrumbs'][] = $this->title;
             });
         });
         
+        var editWithoutIntersect = 0;
+        $('#edit--without-intersect').click(function(){
+            if($(this).prop('checked')){
+                editWithoutIntersect = 1;
+            }else{
+                editWithoutIntersect = 0;
+            }
+        });
+
         $('#save--event-time').click(function(){
             var newTimeFrom = $('#edit--time_from').val();
             var newTimeTo = $('#edit--time_to').val();
@@ -1403,9 +1437,11 @@ $this->params['breadcrumbs'][] = $this->title;
                 showNotifications('Кажется вы не указали время начала мероприятия', 7000, NOTIF_RED);
                 return false;
             }
-            if (!checkTimesInterval(timeToMinute(newTimeFrom), timeToMinute(newTimeTo), editEventDate, editEventRoom, editEventId)) {
-                showNotifications("Изменяемое мероприятие пересекается с другими в этот день", 3000, NOTIF_RED);
-                return false;
+            if(editWithoutIntersect == 0){
+                if (!checkTimesInterval(timeToMinute(newTimeFrom), timeToMinute(newTimeTo), editEventDate, editEventRoom, editEventId)) {
+                    showNotifications("Изменяемое мероприятие пересекается с другими в этот день", 3000, NOTIF_RED);
+                    return false;
+                }
             }
             if($('#edit--modified-event').prop('checked')){
                 editModifiedEvent = 1;
@@ -1506,9 +1542,11 @@ $this->params['breadcrumbs'][] = $this->title;
             }
 //            alert(editEventId);
 //            return false;
-            if (!checkTimesInterval(timeToMinute(newTimeFrom), timeToMinute(newTimeTo), date, room)) {
-                showNotifications("Изменяемое мероприятие пересекается с другими в этот день", 3000, NOTIF_RED);
-                return false;
+            if(editWithoutIntersect == 0){
+                if (!checkTimesInterval(timeToMinute(newTimeFrom), timeToMinute(newTimeTo), date, room)) {
+                    showNotifications("Изменяемое мероприятие пересекается с другими в этот день", 3000, NOTIF_RED);
+                    return false;
+                }
             }
             if($('#edit--modified-event').prop('checked')){
                 editModifiedEvent = 1;
@@ -1521,6 +1559,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 id: editEventId,
                 date: date,
                 room: room,
+                timeFrom: newTimeFrom,
+                timeTo: newTimeTo,
                 moveUsers: moveUsers,
                 modifiedEvent: editModifiedEvent
             };
@@ -1612,7 +1652,8 @@ $this->params['breadcrumbs'][] = $this->title;
                     var result = JSON.parse(data);
                     console.log(result);
                     if(result.response == 'ok'){
-                        $('.generate-link-container').html(location.hostname +result.result);
+                        $('#generate-link-container').html(result.result);
+                        $('#generate-link-container').attr('href', result.result);
                         $('#generateLinkModal').modal('show');
                     }else if(result.response == 'error'){
                         showNotifications(result.result, 4000, NOTIF_RED);
@@ -1627,8 +1668,31 @@ $this->params['breadcrumbs'][] = $this->title;
             });
             // console.log(datePeriod);
         });
+        
+        // Копирование ссылки для просмотра расписания в буфер обмена
+        var copyEmailBtn = document.querySelector('#copy-link-button');
+        copyEmailBtn.addEventListener('click', function(event) {
+          // Select the email link anchor text
+          var emailLink = document.querySelector('#generate-link-container');
+          var range = document.createRange();
+          range.selectNode(emailLink);
+          window.getSelection().addRange(range);
 
+          try {
+            // Now that we've selected the anchor text, execute the copy command
+            var successful = document.execCommand('copy');
+            var msg = successful ? 'successful' : 'unsuccessful';
+            console.log('Copy email command was ' + msg);
+          } catch(err) {
+            console.log('Oops, unable to copy');
+          }
 
+          // Remove the selections - NOTE: Should use
+          // removeRange(range) when it is supported
+          window.getSelection().removeAllRanges();
+          showNotifications('Ссылка скопирована в буфер обмена', 3000, NOTIF_GREEN);
+        });
+        
         $('.clean-input').click(function () {
             this.parentNode.parentNode.querySelector('input').value = '';
         });
@@ -1720,7 +1784,7 @@ $this->params['breadcrumbs'][] = $this->title;
             var createBR = document.createElement('hr');
             return createBR;
         }
-
+        
 
     }
 </script>

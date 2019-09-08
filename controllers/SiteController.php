@@ -13,6 +13,7 @@ use app\models\ScheduleViewHash;
 use app\models\ScheduleEvents;
 use app\components\ScheduleComponent;
 use yii\base\Exception;
+use yii\web\NotFoundHttpException;
 use app\models\Room;
 
 class SiteController extends Controller
@@ -112,52 +113,37 @@ class SiteController extends Controller
      *
      * @return Response
      */
-    public function actionWeekSchedule($from, $to, $hash)
+    public function actionWeekSchedule()
     {
         $this->layout = 'schedule';
-        $profCatLeave = ['8', '5', '16', '11', '14'];
-
-        $searchHash = ScheduleViewHash::find()->where(['date_from' => $from, 'date_to' => $to])->asArray()->one();
-        if($searchHash['hash'] == $hash){
-        $schedule = ScheduleEvents::find()
-                ->where(['between', 'date', $from, $to])
-                ->with('eventType')->with('event')->with('profCat')->with('allUsersInEvent')->asArray()->all();
         
-        $dateFrom = date('d.m.Y', strtotime($from));
-        $dateTo = date('d.m.Y', strtotime($to));
-        
-        $schedule = ScheduleComponent::removeNeedUsers($schedule);
-        
-        $activesRoom = [];
-        foreach ($schedule as $key => $value){
-            if(!in_array($value['room_id'], $activesRoom)){
-                $activesRoom[] = $value['room_id'];
-            }
-        }
-        $dates = [];
-        for ($i = 0; $i < 7; $i++){
-            $cc = count($dates);
-            $dates[$cc]['day'] = date('d', strtotime($from ." + " .$i ." day"));
-            $dates[$cc]['month'] = date('m', strtotime($from ." + " .$i ." day"));
-            $dates[$cc]['year'] = date('Y', strtotime($from ." + " .$i ." day"));
-        }
-        $scheduleSort = [];
-        foreach ($schedule as $key => $value){
-            foreach ($dates as $keyD => $valueD){
-                if(strtotime($value['date']) === mktime(0, 0, 0,$valueD['month'], $valueD['day'], $valueD['year'])){
-                    $scheduleSort[strtotime($value['date'])][$value['room_id']][intval($value['time_from'])] = $value;
+        if(Yii::$app->request->isAjax){
+            if(Yii::$app->request->post('trigger') == 'load-schedule'){ 
+                // В javascript страницы есть хардкод отображения аткров и других служб по prof_cat
+                $searchHash = ScheduleViewHash::find()->where(['date_from' => Yii::$app->request->post('from'), 'date_to' => Yii::$app->request->post('to')])->asArray()->one();
+                if($searchHash['hash'] == Yii::$app->request->post('hash')){
+                    $period = Yii::$app->request->post('period');
+                    return json_encode(['result' => 'ok', 'response' => ScheduleComponent::loadThreeSchedule($period)]);
+                }else{
+                    return json_encode(['result' => 'error', 'response' => 'Хэш не прошел проверку на подлинность. Обратитесь к разработчику, если считаете это ошибкой программы']);
                 }
             }
         }
-        $rooms = Room::find()->where(['is_active' => 1, 'id' => $activesRoom])->asArray()->all();
-
-        echo "<pre>";
-        var_dump($scheduleSort); exit();
+        
+        $searchHash = ScheduleViewHash::find()->where(['date_from' => Yii::$app->request->get('from'), 'date_to' => Yii::$app->request->get('to')])->asArray()->one();
+        if($searchHash['hash'] == Yii::$app->request->get('hash')){
+            $rooms = Room::find()->where(['is_active' => 1])->asArray()->all();
         }else{
-            throw new Exception('Неверная ссылка');
+            throw new NotFoundHttpException('Ссылка не прошла проверку на подлинность. Убедитесь в том, что скопировали ссылку полностью или обратитесь в администрацию');
         }
-
-        return $this->render('week');
+        
+        return $this->render('week', [
+            'rooms' => $rooms,
+            'from' => Yii::$app->request->get('from'),
+            'to' => Yii::$app->request->get('to'),
+            'hash' => Yii::$app->request->get('hash')
+        ]);
+        
     }
 
 }
