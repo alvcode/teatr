@@ -116,7 +116,8 @@ window.onload = function () {
         
         
         function renderCalendar() {
-            var dateObj = new Date(document.getElementById('from').innerHTML);
+            var dateFromSplit = document.getElementById('from').innerHTML.split('-');
+            var dateObj = new Date(dateFromSplit[1] +'/' +dateFromSplit[2] +'/' +dateFromSplit[0]);
             $('#three--schedule-items').empty();
 //            dateObj.setDay(1);
             document.getElementById('control-name').innerHTML = dateObj.getDate() + " " + monthNameDec[dateObj.getMonth()];
@@ -129,15 +130,16 @@ window.onload = function () {
                 dateObj.setFullYear(dateObj.getFullYear());
                 dateObj.setMonth(dateObj.getMonth());
                 if (i > 0) {
-                    dateObj.setDate(dateObj.getDate() + 1);
+                    dateObj.setDate((dateObj.getDate() + 1));
                 }
-                document.getElementById('three--schedule-items').append(returnScheduleRow(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate(), dateObj.getDay(), rooms));
+                document.getElementById('three--schedule-items').appendChild(returnScheduleRow(dateObj.getFullYear(), dateObj.getMonth(), dateObj.getDate(), dateObj.getDay(), rooms));
                 if(i < 6){
-                    document.getElementById('three--schedule-items').append(document.getElementsByClassName('three-ind--title-row')[0].cloneNode(true));
+                    document.getElementById('three--schedule-items').appendChild(document.getElementsByClassName('three-ind--title-row')[0].cloneNode(true));
                 }
                 
             }
             document.getElementById('control-name').innerHTML += " - " + dateObj.getDate() + " " + monthNameDec[dateObj.getMonth()];
+//            alert('ok');
             datePeriod[1] = {};
             datePeriod[1].day = dateObj.getDate();
             datePeriod[1].month = (dateObj.getMonth() + 1);
@@ -159,14 +161,14 @@ window.onload = function () {
             if (week == 6 || week == 0) {
                 createDate.style.color = 'red';
             }
-
-            createContainer.append(createDate);
+//alert(week);
+            createContainer.appendChild(createDate);
 
             for (var i = 0; i < rooms.length; i++) {
                 var createRoom = document.createElement('div');
                 createRoom.className = 'room room-cell';
                 createRoom.dataset.room = rooms[i].dataset.room;
-                createContainer.append(createRoom);
+                createContainer.appendChild(createRoom);
             }
             return createContainer;
         };
@@ -237,9 +239,9 @@ window.onload = function () {
                             createEventName.className = 'name';
                             createEventName.innerHTML = (params.eventName && params.eventName != '' ? "\"" +params.eventName +"\"":"") + (params.eventOtherName && params.eventOtherName != '' ? " (" + params.eventOtherName + ")" : "");
 
-                            createContainer.append(createBudgie);
-                            createContainer.append(createEventType);
-                            createContainer.append(createEventName);
+                            createContainer.appendChild(createBudgie);
+                            createContainer.appendChild(createEventType);
+                            createContainer.appendChild(createEventName);
                             
                             var adminListArr = [];
                             var createAdminList = document.createElement('div');
@@ -253,13 +255,13 @@ window.onload = function () {
                             if(adminListArr.length){
                                 createAdminList.innerHTML = adminListArr.join(', ');
                             }
-                            createContainer.append(createAdminList);
+                            createContainer.appendChild(createAdminList);
                             
                             if(params.addInfo){
                                 var createAddInfo = document.createElement('div');
                                 createAddInfo.className = 'three--add-info-block';
                                 createAddInfo.innerHTML = "(" +params.addInfo +")";
-                                createContainer.append(createAddInfo);
+                                createContainer.appendChild(createAddInfo);
                             }
                             
                             var userListArr = [];
@@ -274,7 +276,7 @@ window.onload = function () {
                             if(userListArr.length){
                                 createUserList.innerHTML = userListArr.join(', ');
                             }
-                            createContainer.append(createUserList);
+                            createContainer.appendChild(createUserList);
                             
                             var createProfCat = document.createElement('div');
                             createProfCat.className = 'three--prof-cat-cell';
@@ -287,13 +289,13 @@ window.onload = function () {
                                 }
                                 createProfCat.innerHTML = profCatArr.join(', ');
                             }
-                            createContainer.append(createProfCat);
+                            createContainer.appendChild(createProfCat);
                             
-                            createContainer.append(returnHR());
+                            createContainer.appendChild(returnHR());
 
-                            var eventsCell = roomsCell[z].getElementsByClassName('event-cell');
+                            var eventsCell = roomsCell[z].getElementsByClassName('event-cell-ind');
                             if (!eventsCell.length) {
-                                roomsCell[z].append(createContainer);
+                                roomsCell[z].appendChild(createContainer);
                                 return true;
                             } else {
                                 var p = false;
@@ -302,7 +304,7 @@ window.onload = function () {
                                         roomsCell[z].insertBefore(createContainer, eventsCell[k]);
                                         return true;
                                     }
-                                    if (p && +params.timeFrom < +eventsCell[k].dataset.timeFrom &&
+                                    if (p && +params.timeFrom <= +eventsCell[k].dataset.timeFrom &&
                                             +params.timeFrom > +p.dataset.timeFrom) {
                                         roomsCell[z].insertBefore(createContainer, eventsCell[k]);
                                         return true;
@@ -310,9 +312,9 @@ window.onload = function () {
                                     p = eventsCell[k];
                                 }
                                 if (p && +params.timeFrom > +p.dataset.timeFrom) {
-                                    roomsCell[z].append(createContainer);
+                                    roomsCell[z].appendChild(createContainer);
                                     return true;
-                                } else if (p && +params.timeFrom < +p.dataset.timeFrom) {
+                                } else if (p && +params.timeFrom <= +p.dataset.timeFrom) {
                                     roomsCell[z].insertBefore(createContainer, p);
                                     return true;
                                 }

@@ -102,11 +102,13 @@ class TimesheetExcel extends Model{
         $schedule = ScheduleEvents::find()
             ->leftJoin('events', 'schedule_events.event_id = events.id')
             ->where(['between', 'date', $from, $to])
-            ->andWhere(['or', ['room_id' => array_keys($this->roomIds)], ['event_type_id' => array_keys($this->eventTypes)]])
-            ->andWhere(['events.category_id' => 1])
+            ->andWhere(['or', ['room_id' => array_keys($this->roomIds), 'events.category_id' => 1], ['event_type_id' => array_keys($this->eventTypes)]])
+//            ->andWhere(['events.category_id' => 1])
             ->with('eventType')->with('event')->with('profCat')->with('allUsersInEvent')->orderBy('date ASC, time_from ASC')->asArray()->all();
         
         $this->schedule = ScheduleComponent::transformEventsToTwo($schedule);
+//        echo "<pre>";
+//        var_dump($this->schedule); exit();
     }
     
     /**

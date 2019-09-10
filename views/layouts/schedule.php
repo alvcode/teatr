@@ -27,6 +27,10 @@ AppAsset::register($this);
 <div class="site-week-schedule">
     <?= $content ?>
 </div>
+    <!--Preloader-->
+<div class="preloader-container">
+    <img src="/img/loader.gif">
+</div>
 
 <?php $this->endBody() ?>
 </body>
