@@ -78,7 +78,7 @@ $this->params['breadcrumbs'][] = $this->title;
         <br>
         
         <a href="/schedule/excel" id="excel-download" target="_blank" class="btn btn-sm btn-info">Выгрузить в Excel</a>
-        <a href="/schedule/word" id="word-download" target="_blank" class="btn btn-sm btn-info">Выгрузить в Word (тест, пока не нажимать)</a>
+        <a href="/schedule/word" id="word-download" target="_blank" class="btn btn-sm btn-info">Выгрузить в Word</a>
         <div id="generate-link" class="btn btn-sm btn-info">Сгенерировать ссылку</div>
     </div>
 
