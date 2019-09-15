@@ -832,7 +832,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             for(var key in params.users){
                                 // Хардкод на prof_cat_id
                                 if(+params.users[key].userWithProf.userProfession.prof.proff_cat_id != 8){
-                                    adminListArr[adminListArr.length] = params.users[key].userWithProf.surname +" " + params.users[key].userWithProf.name[0] +".";
+                                    adminListArr[adminListArr.length] = params.users[key].userWithProf.surname +(params.users[key].userWithProf.show_full_name == 1?" " + params.users[key].userWithProf.name:"");
                                 }
                             }
                             if(adminListArr.length){
@@ -853,7 +853,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             for(var key in params.users){
                                 // Хардкод на prof_cat_id
                                 if(+params.users[key].userWithProf.userProfession.prof.proff_cat_id == 8){
-                                    userListArr[userListArr.length] = params.users[key].userWithProf.name[0] +". " + params.users[key].userWithProf.surname;
+                                    userListArr[userListArr.length] = params.users[key].userWithProf.surname +(params.users[key].userWithProf.show_full_name == 1?" " + params.users[key].userWithProf.name:"");
                                 }
                             }
                             if(userListArr.length){

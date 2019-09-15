@@ -69,6 +69,7 @@ class UserController extends AccessController
                 $userModel->surname = Yii::$app->request->post('surname');
                 $userModel->email = Yii::$app->request->post('email');
                 $userModel->number = preg_replace("/[^0-9]/iu", '', Yii::$app->request->post('number'));
+                $userModel->show_full_name = Yii::$app->request->post('showFullName');
                 $userModel->password = Yii::$app->request->post('password');
                 $userModel->user_role = Yii::$app->request->post('userRole');
                 

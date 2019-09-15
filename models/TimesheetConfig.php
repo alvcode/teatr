@@ -41,9 +41,11 @@ class TimesheetConfig extends \yii\db\ActiveRecord
      * @return boolean [true - все хорошо, false - повторы]
      */
     public static function checkRepeat($data){
-        $uniqueTimesheet = array_unique(\yii\helpers\ArrayHelper::getColumn($data, 'eventType'));
-        if(count($uniqueTimesheet) < count($data)){
-            return false;
+        if($data){
+            $uniqueTimesheet = array_unique(\yii\helpers\ArrayHelper::getColumn($data, 'eventType'));
+            if(count($uniqueTimesheet) < count($data)){
+                return false;
+            }
         }
         return true;
     }
@@ -58,12 +60,14 @@ class TimesheetConfig extends \yii\db\ActiveRecord
      */
     public static function setConfig($data, $userId){
         Yii::$app->db->createCommand()->delete('timesheet_config', ['user_id' => $userId])->execute();
-        foreach ($data as $key => $value){
-            Yii::$app->db->createCommand()->insert('timesheet_config', [
-                'user_id' => $userId,
-                'event_type_id' => $value['eventType'],
-                'method' => $value['method']
-            ])->execute();
+        if($data){
+            foreach ($data as $key => $value){
+                Yii::$app->db->createCommand()->insert('timesheet_config', [
+                    'user_id' => $userId,
+                    'event_type_id' => $value['eventType'],
+                    'method' => $value['method']
+                ])->execute();
+            }
         }
         return true;
     }

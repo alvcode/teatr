@@ -218,6 +218,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 ])->label("Должность")
                 ?>
                 
+                <?= $form->field($userModel, 'show_full_name')->checkbox() ?>
+                
                 <div class="form-group">
                     <label class="control-label">Расчет табеля</label>
                     <div id="add-timesheet-icon" class="btn btn-sm btn-outline-info"><i class="fas fa-plus-circle"></i></div>
@@ -331,10 +333,16 @@ $this->params['breadcrumbs'][] = $this->title;
                 showNotifications("Не выбрана профессия", 3000, NOTIF_RED);
                 return false;
             }
-            if(!timesheetConfig.length){
-                showNotifications("Не заполнена настройка табелей", 3000, NOTIF_RED);
-                return false;
+            var showFullName = false;
+            if($('#user-show_full_name').prop('checked')){
+                showFullName = 1;
+            }else{
+                showFullName = 0;
             }
+//            if(!timesheetConfig.length){
+//                showNotifications("Не заполнена настройка табелей", 3000, NOTIF_RED);
+//                return false;
+//            }
             var data = {
                 trigger: 'new-user',
                 name: $('#new-name').val(),
@@ -344,7 +352,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 password: $('#new-password').val(),
                 userRole: $('#new-role').val(),
                 profId: $('#new-prof').val(),
-                timesheet: timesheetConfig
+                timesheet: timesheetConfig,
+                showFullName: showFullName
             };
             data[csrfParam] = csrfToken;
             var self = $(this);
@@ -561,11 +570,11 @@ $this->params['breadcrumbs'][] = $this->title;
                 timesheetConfig[k].eventType = timesheetItems[i].getElementsByClassName('timesheet-event-type')[0].value;
                 timesheetConfig[k].method = timesheetItems[i].getElementsByClassName('timesheet-method')[0].value;
             }
-            if(!timesheetConfig.length){
-                showNotifications("Не заполнена настройка табелей", 3000, NOTIF_RED);
-                return false;
-            }
-            console.log(timesheetConfig);
+//            if(!timesheetConfig.length){
+//                showNotifications("Не заполнена настройка табелей", 3000, NOTIF_RED);
+//                return false;
+//            }
+//            console.log(timesheetConfig);
             var data = {
                 trigger: 'set-timesheet',
                 timesheet: timesheetConfig,

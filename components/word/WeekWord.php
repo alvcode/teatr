@@ -174,9 +174,14 @@ class WeekWord extends Model {
 
                                 if ($eventData['allUsersInEvent'] && !in_array($eventData['eventType']['id'], $spectacleEventConfig)) {
                                     $allUsersArr = [];
+                                    // Сортируем по алфавиту
+                                    foreach ($eventData['allUsersInEvent'] as $keyUser => $valUser){
+                                        $eventData['allUsersInEvent'][$keyUser]['userSurname'] = $valUser['userWithProf']['surname'];
+                                    }
+                                    $eventData['allUsersInEvent'] = \app\components\ScheduleComponent::sortFirstLetter($eventData['allUsersInEvent'], 'userSurname');
                                     foreach ($eventData['allUsersInEvent'] as $keyUser => $valUser) {
                                         if (+$valUser['userWithProf']['userProfession']['prof']['proff_cat_id'] != 8) {
-                                            $allUsersArr[] = $valUser['userWithProf']['surname'];
+                                            $allUsersArr[] = $valUser['userWithProf']['surname'] .(+$valUser['userWithProf']['show_full_name'] == 1?" " .$valUser['userWithProf']['name']:"");
                                         }
                                     }
                                     if ($allUsersArr) {
@@ -198,9 +203,14 @@ class WeekWord extends Model {
 
                                 if ($eventData['allUsersInEvent'] && !in_array($eventData['eventType']['id'], $spectacleEventConfig)) {
                                     $allUsersArr = [];
+                                    // Сортируем по алфавиту
+                                    foreach ($eventData['allUsersInEvent'] as $keyUser => $valUser){
+                                        $eventData['allUsersInEvent'][$keyUser]['userSurname'] = $valUser['userWithProf']['surname'];
+                                    }
+                                    $eventData['allUsersInEvent'] = \app\components\ScheduleComponent::sortFirstLetter($eventData['allUsersInEvent'], 'userSurname');
                                     foreach ($eventData['allUsersInEvent'] as $keyUser => $valUser) {
                                         if (+$valUser['userWithProf']['userProfession']['prof']['proff_cat_id'] == 8) {
-                                            $allUsersArr[] = $valUser['userWithProf']['surname'];
+                                            $allUsersArr[] = $valUser['userWithProf']['surname'] .(+$valUser['userWithProf']['show_full_name'] == 1?" " .$valUser['userWithProf']['name']:"");;
                                         }
                                     }
                                     if ($allUsersArr) {
@@ -215,6 +225,11 @@ class WeekWord extends Model {
                                 if ($eventData['profCat']) {
                                     $roomObjects[$col]->addTextBreak(1);
                                     $allProffArr = [];
+                                    // Сортируем по алфавиту
+                                    foreach ($eventData['profCat'] as $keyProf => $valProf){
+                                        $eventData['profCat'][$keyProf]['alias'] = $valProf['profCat']['alias'];
+                                    }
+                                    $eventData['profCat'] = \app\components\ScheduleComponent::sortFirstLetter($eventData['profCat'], 'alias');
                                     foreach ($eventData['profCat'] as $keyProf => $valProf) {
                                         $allProffArr[] = $valProf['profCat']['alias'];
                                     }

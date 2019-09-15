@@ -15,6 +15,7 @@ use Yii;
  * @property string $password_hash
  * @property string $auth_key
  * @property string $access_token
+ * @property int $show_full_name
  * @property string $date_register
  * @property string $last_login
  * @property int $is_active
@@ -52,7 +53,7 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
     public function rules()
     {
         return [
-            [['email', 'name', 'surname'], 'required'],
+            [['email', 'name', 'surname', 'show_full_name'], 'required'],
             [['password'], 'trim'],
 //            [['date_register', 'last_login'], 'datetime'],
             [['email'], 'email'],
@@ -189,6 +190,7 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
             'auth_key' => 'Auth Key',
             'access_token' => 'Access Token',
             'date_register' => 'Дата регистрации',
+            'show_full_name' => 'Отображать полное имя сотрудника'
         ];
     }
 }

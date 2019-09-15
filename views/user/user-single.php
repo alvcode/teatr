@@ -68,6 +68,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 ])->label("Должность")
                 ?>
             
+                <?= $form->field($user, 'show_full_name')->checkbox() ?>
+            
                 <div class="form-group">
                     <div class="col-lg-offset-1 col-lg-11">
                         <?= Html::submitButton('Сохранить', ['class' => 'btn btn-success btn-sm']) ?>
