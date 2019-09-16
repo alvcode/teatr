@@ -922,9 +922,9 @@ $this->params['breadcrumbs'][] = $this->title;
                     adminListDiv.innerHTML = '';
                     for(var key in users){
                         if(+users[key].userWithProf.userProfession.prof.proff_cat_id == 8){
-                            userListArr[userListArr.length] = users[key].userWithProf.surname +" " + users[key].userWithProf.name[0] +".";
+                            userListArr[userListArr.length] = users[key].userWithProf.surname +(users[key].userWithProf.show_full_name == 1?" " + users[key].userWithProf.name:"");
                         }else if(['5', '16', '11', '14'].includes(users[key].userWithProf.userProfession.prof.proff_cat_id)){
-                            adminListArr[adminListArr.length] = users[key].userWithProf.surname +" " + users[key].userWithProf.name[0] +".";
+                            adminListArr[adminListArr.length] = users[key].userWithProf.surname +(users[key].userWithProf.show_full_name == 1?" " + users[key].userWithProf.name:"");
                         }
                     }
                     if(userListArr.length){
