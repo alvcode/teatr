@@ -148,7 +148,7 @@ class WeekWord extends Model {
                                             $roomObjects[$col]->addText(self::minuteToTime($eventData['time_from'], $eventData['time_to']) . " ", ['bold' => true, 'underline' => 'single']);
                                         }
                                     }
-                                }
+//                                }
 
                                 if((int) $eventData['is_modified'] === 1) {
                                     $roomObjects[$col]->addText("(" . $eventData['eventType']['name'] . ") ", ['color' => '#FD3333']);
@@ -242,6 +242,7 @@ class WeekWord extends Model {
                                     }
                                 }
                                 $eventCount++;
+                            }
                             }
                         }
                     }
