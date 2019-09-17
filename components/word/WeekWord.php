@@ -126,20 +126,22 @@ class WeekWord extends Model {
                                     $roomObjects[$col]->addTextBreak(2);
                                 }
                                 if (!in_array($eventData['event']['id'] . "-" . $eventData['eventType']['id'], $repeatArr)) {
+                                    $timeRepeatText = [];
                                     if (in_array($eventData['eventType']['id'], $spectacleEventConfig)) {
                                         $repeatArr[] = $eventData['event']['id'] . "-" . $eventData['eventType']['id'];
                                         for ($z = 0; $z <= 1440; $z++) {
                                             if (isset($events[$z])) {
                                                 foreach ($events[$z] as $keyCheck => $eventCheck) {
                                                     if (+$eventData['event']['id'] == +$eventCheck['event']['id'] && +$eventData['eventType']['id'] == +$eventCheck['eventType']['id'] /* && +$eventData['id'] != +$eventCheck['id'] */) {
-                                                        if((int) $eventData['is_modified'] === 1) {
-                                                            $roomObjects[$col]->addText(self::minuteToTime($eventCheck['time_from'], $eventCheck['time_to']) . " ", ['bold' => true, 'color' => '#FD3333', 'underline' => 'single']);
-                                                        } else {
-                                                            $roomObjects[$col]->addText(self::minuteToTime($eventCheck['time_from'], $eventCheck['time_to']) . " ", ['bold' => true, 'underline' => 'single']);
-                                                        }
+                                                        $timeRepeatText[] = self::minuteToTime($eventCheck['time_from'], $eventCheck['time_to']) . " ";
                                                     }
                                                 }
                                             }
+                                        }
+                                        if((int) $eventData['is_modified'] === 1) {
+                                            $roomObjects[$col]->addText(implode(", ", $timeRepeatText), ['bold' => true, 'color' => '#FD3333', 'underline' => 'single']);
+                                        } else {
+                                            $roomObjects[$col]->addText(implode(", ", $timeRepeatText), ['bold' => true, 'underline' => 'single']);
                                         }
                                     } else {
                                         if((int) $eventData['is_modified'] === 1) {
