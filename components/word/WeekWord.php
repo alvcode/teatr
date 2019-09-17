@@ -133,15 +133,15 @@ class WeekWord extends Model {
                                             if (isset($events[$z])) {
                                                 foreach ($events[$z] as $keyCheck => $eventCheck) {
                                                     if (+$eventData['event']['id'] == +$eventCheck['event']['id'] && +$eventData['eventType']['id'] == +$eventCheck['eventType']['id'] /* && +$eventData['id'] != +$eventCheck['id'] */) {
-                                                        $timeRepeatText[] = self::minuteToTime($eventCheck['time_from'], $eventCheck['time_to']) . " ";
+                                                        $timeRepeatText[] = self::minuteToTime($eventCheck['time_from'], $eventCheck['time_to']);
                                                     }
                                                 }
                                             }
                                         }
                                         if((int) $eventData['is_modified'] === 1) {
-                                            $roomObjects[$col]->addText(implode(", ", $timeRepeatText), ['bold' => true, 'color' => '#FD3333', 'underline' => 'single']);
+                                            $roomObjects[$col]->addText(implode(" / ", $timeRepeatText), ['bold' => true, 'color' => '#FD3333', 'underline' => 'single']);
                                         } else {
-                                            $roomObjects[$col]->addText(implode(", ", $timeRepeatText), ['bold' => true, 'underline' => 'single']);
+                                            $roomObjects[$col]->addText(implode(" / ", $timeRepeatText), ['bold' => true, 'underline' => 'single']);
                                         }
                                     } else {
                                         if((int) $eventData['is_modified'] === 1) {
