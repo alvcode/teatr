@@ -101,7 +101,7 @@ class WeekWord extends Model {
             $timeDate = mktime(0, 0, 0, $value['month'], $value['day'], $value['year']);
             if (isset($scheduleSort[$timeDate])) {
                 $weekday = $weekdayName[date('w', $timeDate)];
-                $table->addRow(null, array('tblHeader' => true));
+                $table->addRow(null, array('tblHeader' => false));
                 $cell = $table->addCell(2000)->createTextRun(['valign' => 'center', 'align' => 'center']);
                 $cell->addText($value['day'] . "." . $value['month'] . "." . $value['year'], ['bold' => true], ['valign' => 'center', 'align' => 'center']);
                 $cell->addTextBreak(1);
