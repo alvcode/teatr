@@ -62,7 +62,7 @@ class WeekWord extends Model {
 
         $phpWord = new PhpWord();
         $phpWord->setDefaultFontName('Times New Roman');
-        $phpWord->setDefaultFontSize(14);
+        $phpWord->setDefaultFontSize(10);
 
 
         $section = $phpWord->addSection(array(
@@ -188,9 +188,9 @@ class WeekWord extends Model {
                                     }
                                     if ($allUsersArr) {
                                         if((int) $eventData['is_modified'] === 1) {
-                                            $roomObjects[$col]->addText(" " . implode(', ', $allUsersArr) . ".", ['size' => 12, 'color' => '#FD3333']);
+                                            $roomObjects[$col]->addText(" " . implode(', ', $allUsersArr) . ".", ['size' => 10, 'color' => '#FD3333']);
                                         }else{
-                                            $roomObjects[$col]->addText(" " . implode(', ', $allUsersArr) . ".", ['size' => 12]);
+                                            $roomObjects[$col]->addText(" " . implode(', ', $allUsersArr) . ".", ['size' => 10]);
                                         }
                                     }
                                 }
@@ -217,9 +217,9 @@ class WeekWord extends Model {
                                     }
                                     if ($allUsersArr) {
                                         if((int) $eventData['is_modified'] === 1) {
-                                            $roomObjects[$col]->addText(" " . implode(', ', $allUsersArr) . ".", ['size' => 12, 'color' => '#FD3333']);
+                                            $roomObjects[$col]->addText(" " . implode(', ', $allUsersArr) . ".", ['size' => 10, 'color' => '#FD3333']);
                                         }else{
-                                            $roomObjects[$col]->addText(" " . implode(', ', $allUsersArr) . ".", ['size' => 12]);
+                                            $roomObjects[$col]->addText(" " . implode(', ', $allUsersArr) . ".", ['size' => 10]);
                                         }
                                     }
                                 }
