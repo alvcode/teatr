@@ -257,7 +257,8 @@ a:hover {
   text-align: right;
 }
 .actor-modal-container {
-  text-align: center;
+  padding-left: 70px;
+  box-sizing: border-box;
 }
 .actor-modal-container > div {
   margin-top: 5px;

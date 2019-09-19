@@ -57,7 +57,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <?php foreach ($actors as $key => $value): ?>
                         <div style="font-weight: 700;" class="text-danger"><?= $key ?></div>
                         <?php foreach($value as $keyV => $valueV): ?>
-                            <div class="actor-list-item noselect" data-id="<?= $valueV['id'] ?>"><?= $valueV['name'] ?> <?= $valueV['surname'] ?></div>
+                            <div class="actor-list-item noselect" data-id="<?= $valueV['id'] ?>"><?= $valueV['surname'] ?> <?= $valueV['name'] ?></div>
                         <?php endforeach; ?>
                     <?php endforeach; ?>
                 </div>
