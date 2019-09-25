@@ -579,6 +579,7 @@ class ScheduleController extends AccessController
                 }
                 $findEvent->add_info = Yii::$app->request->post('addInfo');
                 $findEvent->is_modified = Yii::$app->request->post('modifiedEvent');
+                $findEvent->is_all = Yii::$app->request->post('isAll');
                 $checkIntersect = ScheduleComponent::checkIntersectEdit($findEvent->id, $findEvent->date, $findEvent->time_from, $findEvent->time_to);
                 if($checkIntersect){
                     return json_encode(['response' => 'intersect', 'data' => $checkIntersect]);

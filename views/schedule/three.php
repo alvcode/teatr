@@ -249,6 +249,10 @@ $this->params['breadcrumbs'][] = $this->title;
                 <input type="checkbox" class="" id="edit--without-intersect">
                 <label class="form-check-label" for="edit--without-intersect">Не проверять на пересечения</label>
             </div>
+            <div>
+                <input type="checkbox" class="" id="edit--is-all">
+                <label class="form-check-label" for="edit--is-all">Все</label>
+            </div>
             <div class="three--copy-event">
                 <h5 class="text-info">Копировать запись на другой день</h5>
                 <div class="form-group mb-3">
@@ -782,7 +786,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 profCat: result.profCat,
                 is_modified: result.is_modified,
                 users: result.allUsersInEvent,
-                addInfo: result.add_info
+                addInfo: result.add_info,
+                is_all: result.is_all
             };
             return cellData;
         }
@@ -847,13 +852,18 @@ $this->params['breadcrumbs'][] = $this->title;
                                 createContainer.append(createAddInfo);
                             }
                             
+                            // Если стоит флаг is_all, то отображаем слово ВСЕ, иначе- фамилии
                             var userListArr = [];
                             var createUserList = document.createElement('div');
                             createUserList.className = 'three--user-actors-list';
-                            for(var key in params.users){
-                                // Хардкод на prof_cat_id
-                                if(+params.users[key].userWithProf.userProfession.prof.proff_cat_id == 8){
-                                    userListArr[userListArr.length] = params.users[key].userWithProf.surname +(params.users[key].userWithProf.show_full_name == 1?" " + params.users[key].userWithProf.name:"");
+                            if(+params.is_all > 0){
+                                createUserList.innerHTML = '(ВСЕ)';
+                            }else{
+                                for(var key in params.users){
+                                    // Хардкод на prof_cat_id
+                                    if(+params.users[key].userWithProf.userProfession.prof.proff_cat_id == 8){
+                                        userListArr[userListArr.length] = params.users[key].userWithProf.surname +(params.users[key].userWithProf.show_full_name == 1?" " + params.users[key].userWithProf.name:"");
+                                    }
                                 }
                             }
                             if(userListArr.length){
@@ -1011,6 +1021,11 @@ $this->params['breadcrumbs'][] = $this->title;
                     }else{
                         editModifiedEvent = 0;
                         $('#edit--modified-event').prop('checked', false);
+                    }
+                    if(+scheduleData[key].is_all > 0){
+                        $('#edit--is-all').prop('checked', true);
+                    }else{
+                        $('#edit--is-all').prop('checked', false);
                     }
                 }
             }
@@ -1420,6 +1435,7 @@ $this->params['breadcrumbs'][] = $this->title;
             });
         });
         
+        // Игнорировать проверку на пересечения
         var editWithoutIntersect = 0;
         $('#edit--without-intersect').click(function(){
             if($(this).prop('checked')){
@@ -1428,6 +1444,17 @@ $this->params['breadcrumbs'][] = $this->title;
                 editWithoutIntersect = 0;
             }
         });
+        
+        // Отображать слово ВСЕ, вместо фамилий актеров
+        var isAll = 0;
+        $('#edit--is-all').click(function(){
+            if($(this).prop('checked')){
+                isAll = 1;
+            }else{
+                isAll = 0;
+            }
+        });
+        
 
         $('#save--event-time').click(function(){
             var newTimeFrom = $('#edit--time_from').val();
@@ -1455,7 +1482,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 timeFrom: newTimeFrom,
                 timeTo: newTimeTo,
                 addInfo: addInfo,
-                modifiedEvent: editModifiedEvent
+                modifiedEvent: editModifiedEvent,
+                isAll: isAll
             };
             data[csrfParam] = csrfToken;
             $.ajax({

@@ -202,25 +202,31 @@ class WeekWord extends Model {
                                         $roomObjects[$col]->addText(" (" . $eventData['add_info'] . ")");
                                     }
                                 }
-
-                                if ($eventData['allUsersInEvent'] && !in_array($eventData['eventType']['id'], $spectacleEventConfig)) {
-                                    $allUsersArr = [];
-                                    // Сортируем по алфавиту
-                                    foreach ($eventData['allUsersInEvent'] as $keyUser => $valUser){
-                                        $eventData['allUsersInEvent'][$keyUser]['userSurname'] = $valUser['userWithProf']['surname'];
-                                    }
-                                    $eventData['allUsersInEvent'] = \app\components\ScheduleComponent::sortFirstLetter($eventData['allUsersInEvent'], 'userSurname');
-                                    foreach ($eventData['allUsersInEvent'] as $keyUser => $valUser) {
-                                        if (+$valUser['userWithProf']['userProfession']['prof']['proff_cat_id'] == 8) {
-                                            $allUsersArr[] = $valUser['userWithProf']['surname'] .(+$valUser['userWithProf']['show_full_name'] == 1?" " .$valUser['userWithProf']['name']:"");;
+                                
+                                // Если is_all > 0, то отображаем слово ВСЕ, иначе- фамилии
+                                $allUsersArr = [];
+                                if((int)$eventData['is_all'] > 0){
+                                    $allUsersArr[] = '(ВСЕ)';
+                                }else{
+                                    if ($eventData['allUsersInEvent'] && !in_array($eventData['eventType']['id'], $spectacleEventConfig)) {
+                                        $allUsersArr = [];
+                                        // Сортируем по алфавиту
+                                        foreach ($eventData['allUsersInEvent'] as $keyUser => $valUser){
+                                            $eventData['allUsersInEvent'][$keyUser]['userSurname'] = $valUser['userWithProf']['surname'];
+                                        }
+                                        $eventData['allUsersInEvent'] = \app\components\ScheduleComponent::sortFirstLetter($eventData['allUsersInEvent'], 'userSurname');
+                                        foreach ($eventData['allUsersInEvent'] as $keyUser => $valUser) {
+                                            if (+$valUser['userWithProf']['userProfession']['prof']['proff_cat_id'] == 8) {
+                                                $allUsersArr[] = $valUser['userWithProf']['surname'] .(+$valUser['userWithProf']['show_full_name'] == 1?" " .$valUser['userWithProf']['name']:"");;
+                                            }
                                         }
                                     }
-                                    if ($allUsersArr) {
-                                        if((int) $eventData['is_modified'] === 1) {
-                                            $roomObjects[$col]->addText(" " . implode(', ', $allUsersArr) . ".", ['size' => 10, 'color' => '#FD3333']);
-                                        }else{
-                                            $roomObjects[$col]->addText(" " . implode(', ', $allUsersArr) . ".", ['size' => 10]);
-                                        }
+                                }
+                                if ($allUsersArr) {
+                                    if((int) $eventData['is_modified'] === 1) {
+                                        $roomObjects[$col]->addText(" " . implode(', ', $allUsersArr) . ".", ['size' => 10, 'color' => '#FD3333']);
+                                    }else{
+                                        $roomObjects[$col]->addText(" " . implode(', ', $allUsersArr) . ".", ['size' => 10]);
                                     }
                                 }
 
@@ -252,7 +258,7 @@ class WeekWord extends Model {
             }
         }
 
-        $filename = "Расписание_" .$dateFrom ."-" .$dateTo .".docx";
+        $filename = "Week_" .$dateFrom ."-" .$dateTo .".docx";
         
         $objWriter = IOFactory::createWriter($phpWord, 'Word2007');
         $objWriter->save('files/week_schedule/' .$filename);
