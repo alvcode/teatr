@@ -328,6 +328,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
+            <div id="search-cast" class="btn btn-sm btn-info">Найти состав</div>
             <div class="modal-body">
                 <div class="user-modal-container">
                     <?php foreach ($users as $key => $value): ?>
@@ -1270,6 +1271,12 @@ $this->params['breadcrumbs'][] = $this->title;
         });
         
         $('#add-user-in-schedule-button').click(function(){
+            // Хардкод! Для актеров доступен функционал поиска состава
+            if(+selectedShowProfCat == 8){
+                document.getElementById('search-cast').style.display = 'block';
+            }else{
+                document.getElementById('search-cast').style.display = 'none';
+            }
             var literContainers = document.getElementsByClassName('user-modal-liter-container');
             $('.user-modal-liter-container').css({'display': 'block'});
             for(var i = 0; i < literContainers.length; i++){
@@ -1311,7 +1318,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 this.classList.add('selected');
                 selectedUsers[selectedUsers.length] = actorId;
             }
-//            console.log(selectedActor);
+            console.log(selectedUsers);
         });
         
         $('#usersListModal').on('hide.bs.modal', function (e) {
@@ -1373,6 +1380,53 @@ $this->params['breadcrumbs'][] = $this->title;
                             }
                         }
                         showNotifications(textNotification, 7000, NOTIF_RED);
+                    }else if(result.response == 'error'){
+                        showNotifications(result.result, 4000, NOTIF_RED);
+                    }
+                    stopPreloader();
+                },
+                error: function () {
+                    showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                    stopPreloader();
+                }
+            });
+        });
+        
+        $('#search-cast').click(function(){
+            goPreloader();
+            var searchEvent = false;
+            for (var key in scheduleData) {
+                if (scheduleData[key].id == editEventId) {
+                    searchEvent = scheduleData[key].event.id;
+                }
+            }
+            var data = {
+                trigger: 'search-cast',
+                month: (nowDate.getMonth()) +1,
+                year: nowDate.getFullYear(),
+                event: searchEvent
+            };
+            data[csrfParam] = csrfToken;
+            $.ajax({
+                type: "POST",
+                url: '/schedule/three',
+                data: data,
+                success: function (data) {
+                    var result = JSON.parse(data);
+                    if(result.response == 'ok'){
+                        var usersList = document.getElementsByClassName('actor-list-item');
+                        selectedUsers = [];
+                        for(var i = 0; i < usersList.length; i++){
+                            usersList[i].classList.remove('selected');
+                        }
+                        for(var i = 0; i < result.data.length; i++){
+                            for(var z = 0; z < usersList.length; z++){
+                                if(+usersList[z].dataset.id == +result.data[i]){
+                                    usersList[z].classList.add('selected');
+                                    selectedUsers[selectedUsers.length] = result.data[i];
+                                }
+                            }
+                        }
                     }else if(result.response == 'error'){
                         showNotifications(result.result, 4000, NOTIF_RED);
                     }

@@ -592,6 +592,26 @@ class ScheduleController extends AccessController
                 }
             }
             
+            if(Yii::$app->request->post('trigger') == 'search-cast'){
+                $searchCast = ScheduleComponent::searchLastCast(Yii::$app->request->post('month'), Yii::$app->request->post('year'), Yii::$app->request->post('event'), 18);
+                if($searchCast){
+                    $data = ScheduleComponent::loadCastInSchedule($searchCast['month'], $searchCast['year'], Yii::$app->request->post('event'));
+                    $data['cast'] = ScheduleComponent::joinUnderstudy($data['cast']);
+                    $castIds = [];
+                    foreach ($data['cast'] as $key => $value){
+                        if(!in_array($value['id'], $castIds)) $castIds[] = $value['id'];
+                        if(isset($value['understudy'])){
+                            foreach ($value['understudy'] as $keyUnd => $valUnd){
+                                if(!in_array($valUnd['id'], $castIds)) $castIds[] = $valUnd['id'];
+                            }
+                        }
+                    }
+                    return json_encode(['response' => 'ok', 'data' => $castIds]);
+                }else{
+                    return json_encode(['response' => 'error', 'result' => 'Состав не найден']);
+                }
+            }
+            
             if(Yii::$app->request->post('trigger') == 'copy-event'){
                 $configSpectacle = Config::getConfig('spectacle_event');
                 $getEvent = ScheduleEvents::find()->where(['id' => Yii::$app->request->post('id')])->asArray()->one();

@@ -199,7 +199,8 @@ window.onload = function () {
                 profCat: result.profCat,
                 is_modified: result.is_modified,
                 users: result.allUsersInEvent,
-                addInfo: result.add_info
+                addInfo: result.add_info,
+                is_all: result.is_all
             };
             return cellData;
         };
@@ -267,12 +268,17 @@ window.onload = function () {
                             var userListArr = [];
                             var createUserList = document.createElement('div');
                             createUserList.className = 'three--user-actors-list';
-                            for(var key in params.users){
-                                // Хардкод на prof_cat_id
-                                if(+params.users[key].userWithProf.userProfession.prof.proff_cat_id == 8){
-                                    userListArr[userListArr.length] = params.users[key].userWithProf.surname +(params.users[key].userWithProf.show_full_name == 1?" " + params.users[key].userWithProf.name:"");
+                            if(+params.is_all > 0){
+                                createUserList.innerHTML = '(ВСЕ)';
+                            }else{
+                                for(var key in params.users){
+                                    // Хардкод на prof_cat_id
+                                    if(+params.users[key].userWithProf.userProfession.prof.proff_cat_id == 8){
+                                        userListArr[userListArr.length] = params.users[key].userWithProf.surname +(params.users[key].userWithProf.show_full_name == 1?" " + params.users[key].userWithProf.name:"");
+                                    }
                                 }
                             }
+                            
                             if(userListArr.length){
                                 createUserList.innerHTML = userListArr.join(', ');
                             }

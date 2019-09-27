@@ -318,6 +318,7 @@ class ScheduleComponent extends Model{
         return true;
     }
     
+    // Поиск последнего состава
     public static function searchLastCast($month, $year, $eventId, $monthCount){
         $result = [];
         for($i = 0; $i <= $monthCount; $i++){
