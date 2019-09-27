@@ -1272,10 +1272,14 @@ $this->params['breadcrumbs'][] = $this->title;
         
         $('#add-user-in-schedule-button').click(function(){
             // Хардкод! Для актеров доступен функционал поиска состава
-            if(+selectedShowProfCat == 8){
-                document.getElementById('search-cast').style.display = 'block';
-            }else{
-                document.getElementById('search-cast').style.display = 'none';
+            for (var key in scheduleData) {
+                if (+scheduleData[key].id == +editEventId) {
+                    if(scheduleData[key].event != null && +selectedShowProfCat == 8){
+                        document.getElementById('search-cast').style.display = 'block';
+                    }else{
+                        document.getElementById('search-cast').style.display = 'none';
+                    }
+                }
             }
             var literContainers = document.getElementsByClassName('user-modal-liter-container');
             $('.user-modal-liter-container').css({'display': 'block'});
@@ -1396,7 +1400,7 @@ $this->params['breadcrumbs'][] = $this->title;
             goPreloader();
             var searchEvent = false;
             for (var key in scheduleData) {
-                if (scheduleData[key].id == editEventId) {
+                if (+scheduleData[key].id == +editEventId) {
                     searchEvent = scheduleData[key].event.id;
                 }
             }
