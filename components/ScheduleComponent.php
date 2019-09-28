@@ -192,6 +192,11 @@ class ScheduleComponent extends Model{
         $allEvents = ScheduleEvents::find()->where(['date' => $dateParam])->with('event')->asArray()->all();
         if($findUsers && $allEvents){
             foreach ($allEvents as $key => $value){
+                if($value['event']){
+                    $thisEvent = ['name' => $value['event']['name']];
+                }else{
+                    $thisEvent = ['name' => null];
+                }
                 if($value['time_to'] && $findSchedule->time_to && +$value['id'] != +$findSchedule->id){
                     if(((+$value['time_from'] < +$findSchedule->time_to && +$value['time_from'] >= +$findSchedule->time_from))
                         || (+$value['time_to'] <= +$findSchedule->time_to && +$value['time_to'] > +$findSchedule->time_from) 
@@ -202,7 +207,7 @@ class ScheduleComponent extends Model{
                             foreach ($findUsers as $keyList => $valueList){
                                 if(+$valueThis['user']['id'] == +$valueList['user']['id']){
                                     $valueThis['user']['user_name'] = $valueThis['user']['name'];
-                                    $result[] = array_merge($valueThis['user'], $value['event']);
+                                    $result[] = array_merge($valueThis['user'], $thisEvent);
                                 }
                             }
                         }
