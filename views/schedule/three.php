@@ -894,7 +894,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             } else {
                                 var p = false;
                                 for (var k = 0; k < eventsCell.length; k++) {
-                                    if (!p && +params.timeFrom < +eventsCell[k].dataset.timeFrom) {
+                                    if (!p && +params.timeFrom <= +eventsCell[k].dataset.timeFrom) {
                                         roomsCell[z].insertBefore(createContainer, eventsCell[k]);
                                         return true;
                                     }
