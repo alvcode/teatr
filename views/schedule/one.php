@@ -562,7 +562,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                         roomsCell[z].insertBefore(createContainer, eventsCell[k]);
                                         return true;
                                             }
-                                    if (p && +params.timeFrom < +eventsCell[k].dataset.timeFrom &&
+                                    if (p && +params.timeFrom <= +eventsCell[k].dataset.timeFrom &&
                                             +params.timeFrom > +p.dataset.timeFrom) {
                                         roomsCell[z].insertBefore(createContainer, eventsCell[k]);
                                         return true;
@@ -572,7 +572,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 if (p && +params.timeFrom > +p.dataset.timeFrom) {
                                     roomsCell[z].append(createContainer);
                                     return true;
-                                } else if (p && +params.timeFrom < +p.dataset.timeFrom) {
+                                } else if (p && +params.timeFrom <= +p.dataset.timeFrom) {
                                     roomsCell[z].insertBefore(createContainer, p);
                                     return true;
                                 }
