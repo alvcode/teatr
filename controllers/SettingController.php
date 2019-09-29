@@ -56,7 +56,7 @@ class SettingController extends AccessController
          */
         if(Yii::$app->request->isAjax){
             if(Yii::$app->request->post('trigger') == 'add-simple-config'){
-                $setConfig = Config::setConfig(Yii::$app->request->post('configName'), Yii::$app->request->post('configValue'));
+                $setConfig = Config::setConfig(Yii::$app->request->post('configName'), [Yii::$app->request->post('configValue')]);
                 if($setConfig){
                     return 1;
                 }
@@ -70,24 +70,26 @@ class SettingController extends AccessController
             return 0;
         }
         
-        $scheduleOneRooms = Config::getConfig('schedule_one_rooms');
+//        $scheduleOneRooms = Config::getConfig('schedule_one_rooms');
         $rooms = Room::find()->where(['is_active' => 1])->asArray()->all();
         
-        $scheduleTwoEventType = Config::getConfig('schedule_two_event_type');
-        $spectacleEvent = Config::getConfig('spectacle_event');
+//        $scheduleTwoEventType = Config::getConfig('schedule_two_event_type');
+//        $spectacleEvent = Config::getConfig('spectacle_event');
         $eventType = EventType::find()->where(['is_active' => 1])->asArray()->all();
         
-        $actorsProfCat = Config::getConfig('actors_prof_cat');
+//        $actorsProfCat = Config::getConfig('actors_prof_cat');
+        $allConfig = Config::getAllConfig();
         $actorsCat = ProffCategories::find()->asArray()->all();
         
         return $this->render('index', [
             'rooms' => $rooms,
-            'scheduleOneRooms' => $scheduleOneRooms,
-            'scheduleTwoEventType' => $scheduleTwoEventType,
+//            'scheduleOneRooms' => $scheduleOneRooms,
+//            'scheduleTwoEventType' => $scheduleTwoEventType,
             'eventType' => $eventType,
             'actorsCat' => $actorsCat,
-            'actorsProfCat' => $actorsProfCat,
-            'spectacleEvent' => $spectacleEvent,
+            'allConfig' => $allConfig,
+//            'actorsProfCat' => $actorsProfCat,
+//            'spectacleEvent' => $spectacleEvent,
         ]);
     }
     

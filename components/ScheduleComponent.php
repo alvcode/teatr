@@ -477,7 +477,7 @@ class ScheduleComponent extends Model{
      */
     public static function removeNeedUsers($schedule){
         $spectacleEventConfig = Config::getConfig('spectacle_event');
-        $profCatLeave = ['8', '5', '16', '11', '14'];
+        $profCatLeave = Config::getConfig('show_in_schedule_prof_cat');
 
         foreach ($schedule as $key => $value){
             if(!in_array($value['event_type_id'], $spectacleEventConfig)){

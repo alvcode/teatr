@@ -438,6 +438,8 @@ $this->params['breadcrumbs'][] = $this->title;
 
         var csrfParam = $('meta[name="csrf-param"]').attr("content");
         var csrfToken = $('meta[name="csrf-token"]').attr("content");
+        
+        var config = false;
 
         Object.defineProperty(Array.prototype, 'includes', {
             value: function (searchElement, fromIndex) {
@@ -837,7 +839,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             createAdminList.className = 'three--user-admin-list';
                             for(var key in params.users){
                                 // Хардкод на prof_cat_id
-                                if(+params.users[key].userWithProf.userProfession.prof.proff_cat_id != 8){
+                                if(+params.users[key].userWithProf.userProfession.prof.proff_cat_id != config.actors_prof_cat[0]){
                                     adminListArr[adminListArr.length] = params.users[key].userWithProf.surname +(params.users[key].userWithProf.show_full_name == 1?" " + params.users[key].userWithProf.name:"");
                                 }
                             }
@@ -862,7 +864,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             }else{
                                 for(var key in params.users){
                                     // Хардкод на prof_cat_id
-                                    if(+params.users[key].userWithProf.userProfession.prof.proff_cat_id == 8){
+                                    if(+params.users[key].userWithProf.userProfession.prof.proff_cat_id == config.actors_prof_cat[0]){
                                         userListArr[userListArr.length] = params.users[key].userWithProf.surname +(params.users[key].userWithProf.show_full_name == 1?" " + params.users[key].userWithProf.name:"");
                                     }
                                 }
@@ -877,9 +879,10 @@ $this->params['breadcrumbs'][] = $this->title;
                             if (params.profCat && params.profCat.length) {
                                 var profCatArr = [];
                                 for (var k = 0; k < params.profCat.length; k++) {
-//                                    var profCatSpan = document.createElement('span');
-//                                    profCatSpan.innerHTML = params.profCat[k].profCat.alias;
-                                    profCatArr[profCatArr.length] = params.profCat[k].profCat.alias;
+                                    // Используем конфиг для скрытия служб
+                                    if(!config.hide_prof_cat.includes(params.profCat[k].profCat.id)){
+                                        profCatArr[profCatArr.length] = params.profCat[k].profCat.alias;
+                                    }
                                 }
                                 createProfCat.innerHTML = profCatArr.join(', ');
                             }
@@ -950,9 +953,8 @@ $this->params['breadcrumbs'][] = $this->title;
 
 
         /**
-         * Загружает расписание на месяц и рендерит в нужные ячейки
-         * @param {int} month
-         * @param {int} year
+         * Загружает расписание на неделю и рендерит в нужные ячейки
+         * @param {obj} period
          */
         function loadSchedule(period) {
             goPreloader();
@@ -966,8 +968,10 @@ $this->params['breadcrumbs'][] = $this->title;
                 url: '/schedule/three',
                 data: data,
                 success: function (data) {
-                    scheduleData = JSON.parse(data);
-                    console.log(scheduleData);
+                    var result = JSON.parse(data);
+                    scheduleData = result.schedule;
+                    config = result.config;
+                    console.log(result);
                     for (var key in scheduleData) {
                         var dateT = new Date(scheduleData[key].date);
                             addEventInCalendar(generateCellData(scheduleData[key]));

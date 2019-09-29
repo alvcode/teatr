@@ -15,6 +15,7 @@ use app\components\ScheduleComponent;
 use yii\base\Exception;
 use yii\web\NotFoundHttpException;
 use app\models\Room;
+use app\models\Config;
 
 class SiteController extends Controller
 {
@@ -123,7 +124,10 @@ class SiteController extends Controller
                 $searchHash = ScheduleViewHash::find()->where(['date_from' => Yii::$app->request->post('from'), 'date_to' => Yii::$app->request->post('to')])->asArray()->one();
                 if($searchHash['hash'] == Yii::$app->request->post('hash')){
                     $period = Yii::$app->request->post('period');
-                    return json_encode(['result' => 'ok', 'response' => ScheduleComponent::loadThreeSchedule($period)]);
+                    $result = [];
+                    $result['schedule'] = ScheduleComponent::loadThreeSchedule($period);
+                    $result['config'] = Config::getAllConfig();
+                    return json_encode(['result' => 'ok', 'response' => $result]);
                 }else{
                     return json_encode(['result' => 'error', 'response' => 'Хэш не прошел проверку на подлинность. Обратитесь к разработчику, если считаете это ошибкой программы']);
                 }

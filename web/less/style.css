@@ -132,7 +132,7 @@ a:hover {
   font-size: 14px;
 }
 .schedule-controls {
-  width: 300px;
+  width: 340px;
   font-size: 20px;
   display: flex;
   -webkit-flex-direction: row;
@@ -145,7 +145,7 @@ a:hover {
   justify-content: space-around;
 }
 .schedule-controls .name {
-  width: 240px;
+  width: 320px;
   font-weight: 700;
   color: #F97979;
   text-decoration: underline;

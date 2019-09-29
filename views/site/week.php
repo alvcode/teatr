@@ -41,6 +41,8 @@ window.onload = function () {
 
     var csrfParam = $('meta[name="csrf-param"]').attr("content");
     var csrfToken = $('meta[name="csrf-token"]').attr("content");
+    
+    var config = false;
 
     Object.defineProperty(Array.prototype, 'includes', {
             value: function (searchElement, fromIndex) {
@@ -249,7 +251,7 @@ window.onload = function () {
                             createAdminList.className = 'three--user-admin-list';
                             for(var key in params.users){
                                 // Хардкод на prof_cat_id
-                                if(+params.users[key].userWithProf.userProfession.prof.proff_cat_id != 8){
+                                if(+params.users[key].userWithProf.userProfession.prof.proff_cat_id != config.actors_prof_cat[0]){
                                     adminListArr[adminListArr.length] = params.users[key].userWithProf.surname +(params.users[key].userWithProf.show_full_name == 1?" " + params.users[key].userWithProf.name:"");
                                 }
                             }
@@ -273,7 +275,7 @@ window.onload = function () {
                             }else{
                                 for(var key in params.users){
                                     // Хардкод на prof_cat_id
-                                    if(+params.users[key].userWithProf.userProfession.prof.proff_cat_id == 8){
+                                    if(+params.users[key].userWithProf.userProfession.prof.proff_cat_id == config.actors_prof_cat[0]){
                                         userListArr[userListArr.length] = params.users[key].userWithProf.surname +(params.users[key].userWithProf.show_full_name == 1?" " + params.users[key].userWithProf.name:"");
                                     }
                                 }
@@ -289,9 +291,9 @@ window.onload = function () {
                             if (params.profCat && params.profCat.length) {
                                 var profCatArr = [];
                                 for (var k = 0; k < params.profCat.length; k++) {
-//                                    var profCatSpan = document.createElement('span');
-//                                    profCatSpan.innerHTML = params.profCat[k].profCat.alias;
-                                    profCatArr[profCatArr.length] = params.profCat[k].profCat.alias;
+                                    if(!config.hide_prof_cat.includes(params.profCat[k].profCat.id)){
+                                        profCatArr[profCatArr.length] = params.profCat[k].profCat.alias;
+                                    }
                                 }
                                 createProfCat.innerHTML = profCatArr.join(', ');
                             }
@@ -354,7 +356,8 @@ window.onload = function () {
                 success: function (data) {
                     var result = JSON.parse(data);
                     if(result.result == 'ok'){
-                        scheduleData = result.response;
+                        scheduleData = result.response.schedule;
+                        config = result.response.config;
                         for (var key in scheduleData) {
                         var dateT = new Date(scheduleData[key].date);
                             addEventInCalendar(generateCellData(scheduleData[key]));

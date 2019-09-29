@@ -446,7 +446,10 @@ class ScheduleController extends AccessController
             if(Yii::$app->request->post('trigger') == 'load-schedule'){ 
                 // В javascript страницы есть хардкод отображения аткров и других служб по prof_cat
                 $period = Yii::$app->request->post('period');
-                return json_encode(ScheduleComponent::loadThreeSchedule($period));
+                $result = [];
+                $result['schedule'] = ScheduleComponent::loadThreeSchedule($period);
+                $result['config'] = Config::getAllConfig();
+                return json_encode($result);
             }
             
             if(Yii::$app->request->post('trigger') == 'load-user-in-schedule'){

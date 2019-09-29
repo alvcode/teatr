@@ -50,6 +50,7 @@ class WeekWord extends Model {
 
         $spectacleEventConfig = Config::getConfig('spectacle_event');
         $actorsProfCat = Config::getConfig('actors_prof_cat');
+        $hideProfCat = Config::getConfig('hide_prof_cat');
 
         $activesRoom = [];
 
@@ -182,7 +183,7 @@ class WeekWord extends Model {
                                     }
                                     $eventData['allUsersInEvent'] = \app\components\ScheduleComponent::sortFirstLetter($eventData['allUsersInEvent'], 'userSurname');
                                     foreach ($eventData['allUsersInEvent'] as $keyUser => $valUser) {
-                                        if (+$valUser['userWithProf']['userProfession']['prof']['proff_cat_id'] != 8) {
+                                        if (+$valUser['userWithProf']['userProfession']['prof']['proff_cat_id'] != $actorsProfCat[0]) {
                                             $allUsersArr[] = $valUser['userWithProf']['surname'] .(+$valUser['userWithProf']['show_full_name'] == 1?" " .$valUser['userWithProf']['name']:"");
                                         }
                                     }
@@ -216,7 +217,7 @@ class WeekWord extends Model {
                                         }
                                         $eventData['allUsersInEvent'] = \app\components\ScheduleComponent::sortFirstLetter($eventData['allUsersInEvent'], 'userSurname');
                                         foreach ($eventData['allUsersInEvent'] as $keyUser => $valUser) {
-                                            if (+$valUser['userWithProf']['userProfession']['prof']['proff_cat_id'] == 8) {
+                                            if (+$valUser['userWithProf']['userProfession']['prof']['proff_cat_id'] == $actorsProfCat[0]) {
                                                 $allUsersArr[] = $valUser['userWithProf']['surname'] .(+$valUser['userWithProf']['show_full_name'] == 1?" " .$valUser['userWithProf']['name']:"");;
                                             }
                                         }
@@ -239,7 +240,10 @@ class WeekWord extends Model {
                                     }
                                     $eventData['profCat'] = \app\components\ScheduleComponent::sortFirstLetter($eventData['profCat'], 'alias');
                                     foreach ($eventData['profCat'] as $keyProf => $valProf) {
-                                        $allProffArr[] = $valProf['profCat']['alias'];
+                                        // Скрываем службы, согласно настройкам
+                                        if(!in_array($valProf['profCat']['id'], $hideProfCat)){
+                                            $allProffArr[] = $valProf['profCat']['alias'];
+                                        }
                                     }
                                     if ($allProffArr) {
                                         if((int) $eventData['is_modified'] === 1) {

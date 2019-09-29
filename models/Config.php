@@ -10,6 +10,7 @@ use Yii;
  * @property int $id
  * @property string $name_config
  * @property array $value
+ * @property string $description
  */
 class Config extends \yii\db\ActiveRecord
 {
@@ -30,6 +31,7 @@ class Config extends \yii\db\ActiveRecord
             [['name_config'], 'required'],
             [['value'], 'safe'],
             [['name_config'], 'string', 'max' => 65],
+            [['description'], 'string', 'max' => 125],
         ];
     }
     
@@ -106,6 +108,20 @@ class Config extends \yii\db\ActiveRecord
             $configArr = json_decode($findConfig->value, true);
             if(!$configArr) return false;
             return $configArr;
+        }
+    }
+    
+    public static function getAllConfig(){
+        $findConfig = self::find()->all();
+        $result = [];
+        if(!$findConfig){
+            return false;
+        }else{
+            foreach ($findConfig as $key => $value){
+                $result[$value['name_config']] = json_decode($value['value'], true);
+                if(!$result[$value['name_config']]) $result[$value['name_config']] = null;
+            }
+            return $result;
         }
     }
     
