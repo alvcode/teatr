@@ -1041,6 +1041,8 @@ $this->params['breadcrumbs'][] = $this->title;
         var editEventRoom = false;
         var editModifiedEvent = 0;
         $('body').on('click', '.event-cell', function (e) {
+            this.getElementsByClassName('badge')[0].classList.remove('badge-info');
+            this.getElementsByClassName('badge')[0].classList.add('badge-success');
             $('#edit--time_from').val('');
             $('#edit--time_to').val('');
             editWithoutIntersect = 0;
