@@ -255,6 +255,92 @@ class ScheduleComponent extends Model{
     }
     
     /**
+     * Выполняет проверку на возможность изменения типа мероприятия или самого мероприятия. 
+     * Если уже проставлены актеры, то запрещаем
+     * 
+     * @param integer $scheduleId
+     * @param integer $eventType
+     * @param integer $eventId
+     * @param integer $withoutEvent
+     */
+    public static function checkEditEvent($scheduleId, $eventType, $eventId, $withoutEvent){
+        $result = [];
+        $result['result'] = 'ok';
+        $event = ScheduleEvents::find()->where(['id' => $scheduleId])
+                ->with('eventType')->with('event')->with('profCat')->with('allUsersInEvent')->asArray()->one();
+        
+        $spectacleConfig = Config::getConfig('spectacle_event');
+        $actorsCat = Config::getConfig('actors_prof_cat');
+        
+        $existActors = 0; // Будет хранить инфу, имеются ли проставленные актеры на данном мероприятии
+        
+        if($event['allUsersInEvent']){
+            foreach ($event['allUsersInEvent'] as $key => $value){
+                if(in_array($value['userWithProf']['userProfession']['prof']['proff_cat_id'], $actorsCat)){
+                    $existActors = 1;
+                    break;
+                }
+            }
+        }
+        
+        if($existActors){
+            if((int)$withoutEvent > 0){
+                if(in_array($event['eventType']['id'], $spectacleConfig)){
+                    $result['result'] = 'error';
+                    $result['text'][] = 'Вы пытаетесь удалить название спектакля. Сначала удалите актеров, иначе это нарушит работу программы';
+                }
+            }else{
+                
+                if((int)$event['eventType']['id'] != (int)$eventType && (in_array($event['eventType']['id'], $spectacleConfig) || in_array($eventType, $spectacleConfig))){
+                    $result['result'] = 'error';
+                    $result['text'][] = 'Вы пытаетесь изменить тип мероприятия со спектакля или на спектакль. Сначала удалите актеров, иначе это нарушит работу программы';
+                }
+
+                if((int)$event['event']['id'] != (int)$eventId && in_array($event['eventType']['id'], $spectacleConfig)){
+                    $result['result'] = 'error';
+                    $result['text'][] = 'Вы пытаетесь изменить мероприятие. Сначала удалите актеров, иначе это нарушит работу программы';
+                }
+            }
+        }
+        Yii::warning($result);
+        return $result;
+    }
+    
+    /**
+     * Проверка при копировании записи в расписании.
+     * 
+     * @param int $scheduleId
+     * @param int $moveUsers
+     * @return array
+     */
+    public static function checkCopyEvent($scheduleId, $moveUsers){
+        $result = [];
+        $result['result'] = 'ok';
+        $event = ScheduleEvents::find()->where(['id' => $scheduleId])
+                ->with('eventType')->with('event')->with('profCat')->with('allUsersInEvent')->asArray()->one();
+        
+        $spectacleConfig = Config::getConfig('spectacle_event');
+        $actorsCat = Config::getConfig('actors_prof_cat');
+        
+        $existActors = 0; // Будет хранить инфу, имеются ли проставленные актеры на данном мероприятии
+        
+        if($event['allUsersInEvent']){
+            foreach ($event['allUsersInEvent'] as $key => $value){
+                if(in_array($value['userWithProf']['userProfession']['prof']['proff_cat_id'], $actorsCat)){
+                    $existActors = 1;
+                    break;
+                }
+            }
+        }
+        
+        if($existActors && in_array($event['eventType']['id'], $spectacleConfig) && (int)$moveUsers > 0){
+            $result['result'] = 'error';
+            $result['text'][] = 'Вы пытаетесь скопировать из спектакля в котором стоят актеры. Сначала удалите актеров, иначе это нарушит работу программы';
+        }
+        return $result;
+    }
+    
+    /**
      * Загружает состав и проставленные дни из user_in_schedule для него
      * Внимание! Не загружает дубли
      * 
@@ -474,6 +560,8 @@ class ScheduleComponent extends Model{
 
     /**
      * Удаляет пользователей в соответствии с конфигурацией.
+     * 
+     * @param array $schedule - Передаем в виде массива, а не 1 записи
      */
     public static function removeNeedUsers($schedule){
         $spectacleEventConfig = Config::getConfig('spectacle_event');

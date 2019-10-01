@@ -239,6 +239,43 @@ $this->params['breadcrumbs'][] = $this->title;
                             </div>
                         </td>
                     </tr>
+                    <tr>
+                        <th scope="row">Тип мероприятия</th>
+                        <td id="add--event_type">
+                            <div class="form-group">
+                                <select id="select-edit-event-type" class="form-control form-control-sm">
+                                    <?php foreach ($eventType as $key => $value): ?>
+                                        <option value="<?= $value['id'] ?>"><?= $value['name'] ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>
+                            Мероприятие
+                        </th>
+                        <td>
+                            <div>
+                                <input type="checkbox" class="" id="edit--without-event">
+                                <label class="form-check-label" for="edit--without-event">Без мероприятия</label>
+                            </div>
+                            <div class="form-group mrg-top15">
+                                <select id="select-edit-event-category" class="form-control form-control-sm">
+                                    <?php foreach ($eventCategories as $key => $value): ?>
+                                        <option value="<?= $value['id'] ?>"><?= $value['name'] ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <select id="select-edit-event" class="form-control form-control-sm">
+                                    <?php foreach ($events as $key => $value): ?>
+                                        <option data-category="<?= $value['category_id'] ?>" data-other-name="<?= $value['other_name'] ?>" value="<?= $value['id'] ?>"><?= $value['name'] ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
             <div>
@@ -566,6 +603,20 @@ $this->params['breadcrumbs'][] = $this->title;
                     events.options[i].style.display = 'none';
                 }
             }
+            var editEventCategory = $('#select-edit-event-category').val();
+            var editEvents = document.getElementById('select-edit-event');
+            var k = 0;
+            for (var i = 0; i < editEvents.options.length; i++) {
+                if (editEvents.options[i].dataset.category == editEventCategory) {
+                    editEvents.options[i].style.display = 'block';
+                    if (k === 0) {
+                        editEvents.options[i].selected = true;
+                        k++;
+                    }
+                } else {
+                    editEvents.options[i].style.display = 'none';
+                }
+            }
         }
         eventCatSort();
         
@@ -600,7 +651,7 @@ $this->params['breadcrumbs'][] = $this->title;
             }
         });
 
-        $('#select-event-category').change(function () {
+        $('#select-event-category, #select-edit-event-category').change(function () {
             eventCatSort();
         });
         
@@ -838,8 +889,7 @@ $this->params['breadcrumbs'][] = $this->title;
                             var createAdminList = document.createElement('div');
                             createAdminList.className = 'three--user-admin-list';
                             for(var key in params.users){
-                                // Хардкод на prof_cat_id
-                                if(+params.users[key].userWithProf.userProfession.prof.proff_cat_id != config.actors_prof_cat[0]){
+                                if(!config.actors_prof_cat.includes(params.users[key].userWithProf.userProfession.prof.proff_cat_id)){
                                     adminListArr[adminListArr.length] = params.users[key].userWithProf.surname +(params.users[key].userWithProf.show_full_name == 1?" " + params.users[key].userWithProf.name:"");
                                 }
                             }
@@ -863,8 +913,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 createUserList.innerHTML = '(ВСЕ)';
                             }else{
                                 for(var key in params.users){
-                                    // Хардкод на prof_cat_id
-                                    if(+params.users[key].userWithProf.userProfession.prof.proff_cat_id == config.actors_prof_cat[0]){
+                                    if(config.actors_prof_cat.includes(params.users[key].userWithProf.userProfession.prof.proff_cat_id)){
                                         userListArr[userListArr.length] = params.users[key].userWithProf.surname +(params.users[key].userWithProf.show_full_name == 1?" " + params.users[key].userWithProf.name:"");
                                     }
                                 }
@@ -1004,6 +1053,7 @@ $this->params['breadcrumbs'][] = $this->title;
             editEventId = this.dataset.id;
             for (var key in scheduleData) {
                 if (scheduleData[key].id == editEventId) {
+                    console.log(scheduleData[key]);
                     $('#edit--time_from').val(normalizeTime(minuteToTime(scheduleData[key].time_from)));
                     if (scheduleData[key].time_to) {
                         $('#edit--time_to').val(normalizeTime(minuteToTime(scheduleData[key].time_to)));
@@ -1016,6 +1066,20 @@ $this->params['breadcrumbs'][] = $this->title;
                     $('#three--right-more-meta').html(normalizeDate(dateT.getDate() + "." + dateT.getMonth() + "." + dateT.getFullYear()) +
                             ", " + minuteToTime(scheduleData[key].time_from) +
                             " / " + (scheduleData[key].event !== null ? scheduleData[key].event.name : '') +" (" + scheduleData[key].eventType.name + ")");
+                    
+                    $('#select-edit-event-type').val(scheduleData[key].eventType.id);
+                    
+                    if(scheduleData[key].event != null){
+                        $('#select-edit-event-category').val(scheduleData[key].event.category_id);
+                        $('#select-edit-event').val(scheduleData[key].event.id);
+                        $('#edit--without-event').prop('checked', false);
+                        $('#select-edit-event-category').attr('disabled', false);
+                        $('#select-edit-event').prop('disabled', false);
+                    }else{
+                        $('#edit--without-event').prop('checked', true);
+                        $('#select-edit-event-category').attr('disabled', true);
+                        $('#select-edit-event').prop('disabled', true);
+                    }
                     
                     if(scheduleData[key].profCat){
                         addRightProfCatButton(scheduleData[key].profCat);
@@ -1036,6 +1100,16 @@ $this->params['breadcrumbs'][] = $this->title;
             }
             loadUserInEvent(editEventId);
             $('.three--right-more').removeClass('zoomOutRight').addClass('zoomInRight animated').css({'display': 'block'});
+        });
+        
+        $('#edit--without-event').click(function(){
+            if($(this).prop('checked')){
+                $('#select-edit-event-category').prop('disabled', true);
+                $('#select-edit-event').prop('disabled', true);
+            }else{
+                $('#select-edit-event-category').prop('disabled', false);
+                $('#select-edit-event').prop('disabled', false);
+            }
         });
 
         $('#three--right-more-close').click(function () {
@@ -1522,6 +1596,14 @@ $this->params['breadcrumbs'][] = $this->title;
             var newTimeFrom = $('#edit--time_from').val();
             var newTimeTo = $('#edit--time_to').val();
             var addInfo = $('#edit--add-info').val();
+            var eventType = $('#select-edit-event-type').val();
+            var eventId = $('#select-edit-event').val();
+            var editWithoutEvent = false;
+            if($('#edit--without-event').prop('checked')){
+                editWithoutEvent = 1;
+            }else{
+                editWithoutEvent = 0;
+            }
             if (!newTimeFrom) {
                 showNotifications('Кажется вы не указали время начала мероприятия', 7000, NOTIF_RED);
                 return false;
@@ -1544,6 +1626,9 @@ $this->params['breadcrumbs'][] = $this->title;
                 timeFrom: newTimeFrom,
                 timeTo: newTimeTo,
                 addInfo: addInfo,
+                eventType: eventType,
+                eventId: eventId,
+                withoutEvent: editWithoutEvent,
                 modifiedEvent: editModifiedEvent,
                 isAll: isAll
             };
@@ -1568,7 +1653,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         }
                         showNotifications(textNotification, 7000, NOTIF_RED);
                     }else if(result.response == 'error'){
-                        showNotifications(result.data, 7000, NOTIF_RED);
+                        showNotifications(result.data, 8000, NOTIF_RED);
                     }
                     stopPreloader();
                 },
@@ -1613,6 +1698,21 @@ $this->params['breadcrumbs'][] = $this->title;
         // Копирование мероприятия
         $('#copy--save-copy').click(function(){
             var room = $('#copy--select-room').val();
+            var addInfo = $('#edit--add-info').val();
+            var eventType = $('#select-edit-event-type').val();
+            var eventId = $('#select-edit-event').val();
+            var copyIsAll = false;
+            if($('#edit--is-all').prop('checked')){
+                copyIsAll = 1;
+            }else{
+                copyIsAll = 0;
+            }
+            var editWithoutEvent = false;
+            if($('#edit--without-event').prop('checked')){
+                editWithoutEvent = 1;
+            }else{
+                editWithoutEvent = 0;
+            }
             var moveUsers = false;
             var date = {
                 day: $('#copy--select-date').find(':selected').attr('data-day'),
@@ -1649,10 +1749,15 @@ $this->params['breadcrumbs'][] = $this->title;
                 id: editEventId,
                 date: date,
                 room: room,
+                addInfo: addInfo,
+                eventType: eventType,
+                eventId: eventId,
+                withoutEvent: editWithoutEvent,
                 timeFrom: newTimeFrom,
                 timeTo: newTimeTo,
                 moveUsers: moveUsers,
-                modifiedEvent: editModifiedEvent
+                modifiedEvent: editModifiedEvent,
+                isAll: copyIsAll
             };
             data[csrfParam] = csrfToken;
             $.ajax({

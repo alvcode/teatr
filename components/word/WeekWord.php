@@ -183,7 +183,7 @@ class WeekWord extends Model {
                                     }
                                     $eventData['allUsersInEvent'] = \app\components\ScheduleComponent::sortFirstLetter($eventData['allUsersInEvent'], 'userSurname');
                                     foreach ($eventData['allUsersInEvent'] as $keyUser => $valUser) {
-                                        if (+$valUser['userWithProf']['userProfession']['prof']['proff_cat_id'] != $actorsProfCat[0]) {
+                                        if (!in_array($valUser['userWithProf']['userProfession']['prof']['proff_cat_id'], $actorsProfCat)) {
                                             $allUsersArr[] = $valUser['userWithProf']['surname'] .(+$valUser['userWithProf']['show_full_name'] == 1?" " .$valUser['userWithProf']['name']:"");
                                         }
                                     }
@@ -217,7 +217,7 @@ class WeekWord extends Model {
                                         }
                                         $eventData['allUsersInEvent'] = \app\components\ScheduleComponent::sortFirstLetter($eventData['allUsersInEvent'], 'userSurname');
                                         foreach ($eventData['allUsersInEvent'] as $keyUser => $valUser) {
-                                            if (+$valUser['userWithProf']['userProfession']['prof']['proff_cat_id'] == $actorsProfCat[0]) {
+                                            if (in_array($valUser['userWithProf']['userProfession']['prof']['proff_cat_id'], $actorsProfCat)) {
                                                 $allUsersArr[] = $valUser['userWithProf']['surname'] .(+$valUser['userWithProf']['show_full_name'] == 1?" " .$valUser['userWithProf']['name']:"");;
                                             }
                                         }

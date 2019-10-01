@@ -573,12 +573,22 @@ class ScheduleController extends AccessController
             }
             
             if(Yii::$app->request->post('trigger') == 'edit-event'){
+                $checkEditEvent = ScheduleComponent::checkEditEvent(Yii::$app->request->post('id'), Yii::$app->request->post('eventType'), Yii::$app->request->post('eventId'), Yii::$app->request->post('withoutEvent'));
+                if($checkEditEvent['result'] == 'error'){
+                    return json_encode(['response' => 'error', 'data' => implode('<br><br>', $checkEditEvent['text'])]);
+                }
                 $findEvent = ScheduleEvents::findOne(Yii::$app->request->post('id'));
                 $findEvent->time_from = \app\components\Formatt::timeToMinute(Yii::$app->request->post('timeFrom'));
                 if(\app\components\Formatt::timeToMinute(Yii::$app->request->post('timeTo'))){
                     $findEvent->time_to = \app\components\Formatt::timeToMinute(Yii::$app->request->post('timeTo'));
                 }else{
                     $findEvent->time_to = '';
+                }
+                $findEvent->event_type_id = Yii::$app->request->post('eventType');
+                if((int)Yii::$app->request->post('withoutEvent') > 0){
+                    $findEvent->event_id = '';
+                }else{
+                    $findEvent->event_id = Yii::$app->request->post('eventId');
                 }
                 $findEvent->add_info = Yii::$app->request->post('addInfo');
                 $findEvent->is_modified = Yii::$app->request->post('modifiedEvent');
@@ -591,7 +601,8 @@ class ScheduleController extends AccessController
                     $record = ScheduleEvents::find()
                         ->where(['id' => $findEvent->id])
                         ->with('eventType')->with('event')->with('profCat')->with('allUsersInEvent')->asArray()->one();
-                return json_encode(['response' => 'ok', 'data' => $record]);
+                    $record = ScheduleComponent::removeNeedUsers([$record]);
+                return json_encode(['response' => 'ok', 'data' => $record[0]]);
                 }
             }
             
@@ -616,12 +627,12 @@ class ScheduleController extends AccessController
             }
             
             if(Yii::$app->request->post('trigger') == 'copy-event'){
-                $configSpectacle = Config::getConfig('spectacle_event');
                 $getEvent = ScheduleEvents::find()->where(['id' => Yii::$app->request->post('id')])->asArray()->one();
                 $timeFrom = Formatt::timeToMinute(Yii::$app->request->post('timeFrom'));
                 $timeTo = Formatt::timeToMinute(Yii::$app->request->post('timeTo'));
-                if(in_array($getEvent['event_type_id'], $configSpectacle)){
-                    return json_encode(['response' => 'error', 'result' => 'Спектакли можно копировать только в сводном расписании']);
+                $checkCopyEvent = ScheduleComponent::checkCopyEvent($getEvent['id'], Yii::$app->request->post('moveUsers'));
+                if($checkCopyEvent['result'] == 'error'){
+                    return json_encode(['response' => 'error', 'result' => implode('<br><br>', $checkCopyEvent['text'])]);
                 }
                 if(+Yii::$app->request->post('moveUsers') > 0){
                     $checkIntersect = ScheduleComponent::checkIntersectEdit($getEvent['id'], date('Y-m-d', mktime(0, 0, 0, Yii::$app->request->post('date')['month'] + 1, Yii::$app->request->post('date')['day'], Yii::$app->request->post('date')['year'])), $timeFrom, $timeTo);
@@ -633,16 +644,21 @@ class ScheduleController extends AccessController
                 $transaction = $db->beginTransaction();
                 try {
                     $newScheduleEvent = new ScheduleEvents();
-                    $newScheduleEvent->event_type_id = $getEvent['event_type_id'];
-                    $newScheduleEvent->event_id = $getEvent['event_id'];
+                    $newScheduleEvent->event_type_id = Yii::$app->request->post('eventType');
+                    if((int)Yii::$app->request->post('withoutEvent') > 0){
+                        $newScheduleEvent->event_id = '';
+                    }else{
+                        $newScheduleEvent->event_id = Yii::$app->request->post('eventId');
+                    }
                     $newScheduleEvent->room_id = Yii::$app->request->post('room');
                     $newScheduleEvent->date = date('Y-m-d', mktime(0, 0, 0, Yii::$app->request->post('date')['month'] + 1, Yii::$app->request->post('date')['day'], Yii::$app->request->post('date')['year']));
                     $newScheduleEvent->time_from = $timeFrom;
                     $newScheduleEvent->time_to = $timeTo?$timeTo:null;
                     $newScheduleEvent->is_modified = Yii::$app->request->post('modifiedEvent');
-                    $newScheduleEvent->add_info = $getEvent['add_info'];
+                    $newScheduleEvent->add_info = Yii::$app->request->post('addInfo');
+                    $newScheduleEvent->is_all = Yii::$app->request->post('isAll');
                     if($newScheduleEvent->save()){
-                        if(+Yii::$app->request->post('moveUsers') > 0){
+                        if((int)Yii::$app->request->post('moveUsers') > 0){
                             $getUserInSchedule = UserInSchedule::find()->where([
                                 'schedule_event_id' => Yii::$app->request->post('id')
                             ])->asArray()->all();
@@ -670,19 +686,10 @@ class ScheduleController extends AccessController
                     $record = ScheduleEvents::find()
                         ->where(['id' => $newScheduleEvent->id])
                         ->with('eventType')->with('event')->with('profCat')->with('allUsersInEvent')->asArray()->one();
-                    // $actorsProfCat = Config::getConfig('actors_prof_cat');
-                    // ****************************************** ВЫНЕСТИ В МЕТОД
-                    if(!in_array($record['event_type_id'], $configSpectacle)){
-                        foreach ($record['allUsersInEvent'] as $allKey => $allVal){
-                            if(!in_array($allVal['userWithProf']['userProfession']['prof']['proff_cat_id'], $profCatLeave)){
-                                unset($record['allUsersInEvent'][$allKey]);
-                            }
-                        }
-                    }else{
-                        $record['allUsersInEvent'] = [];
-                    }
+                    $record = ScheduleComponent::removeNeedUsers([$record]);
+                    
                     $response['result'] = 'ok';
-                    return json_encode(['response' => 'ok', 'result' => $record]);
+                    return json_encode(['response' => 'ok', 'result' => $record[0]]);
                 } catch (\Exception $e) {
                     $transaction->rollBack();
                     //throw $e;
