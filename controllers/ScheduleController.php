@@ -140,8 +140,8 @@ class ScheduleController extends AccessController
         
         $roomConfig = Config::getConfig('schedule_one_rooms');
         $rooms = Room::find()->where(['is_active' => 1, 'id' => $roomConfig])->asArray()->all();
-        $eventType = EventType::find()->where(['is_active' => 1])->asArray()->all();
-        $events = Events::find()->where(['is_active' => 1])->asArray()->all();
+        $eventType = ScheduleComponent::sortFirstLetter(EventType::find()->where(['is_active' => 1])->asArray()->all(), 'name');
+        $events = ScheduleComponent::sortFirstLetter(Events::find()->where(['is_active' => 1])->asArray()->all(), 'name');
         $eventCategories = EventCategories::find()->asArray()->all();
         
         return $this->render('one', [
@@ -732,9 +732,9 @@ class ScheduleController extends AccessController
         
         
         $rooms = Room::find()->where(['is_active' => 1])->asArray()->all();
-        $profCategories = ProffCategories::find()->asArray()->all();
-        $eventType = EventType::find()->where(['is_active' => 1])->asArray()->all();
-        $events = Events::find()->where(['is_active' => 1])->asArray()->all();
+        $profCategories = ScheduleComponent::sortFirstLetter(ProffCategories::find()->asArray()->all(), 'name');
+        $eventType = ScheduleComponent::sortFirstLetter(EventType::find()->where(['is_active' => 1])->asArray()->all(), 'name');
+        $events = ScheduleComponent::sortFirstLetter(Events::find()->where(['is_active' => 1])->asArray()->all(), 'name');
         $eventCategories = EventCategories::find()->asArray()->all();
         $users = User::find()->select('user.id, user.name, user.surname')
                 ->with('userProfessionJoinProf')

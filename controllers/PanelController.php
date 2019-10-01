@@ -168,8 +168,13 @@ class PanelController extends AccessController
         }
         
         $rooms = Room::find()->where(['is_active' => '1'])->asArray()->all();
-        $eventType = EventType::find()->where(['is_active' => '1'])->asArray()->all();
+        $eventType = ScheduleComponent::sortFirstLetter(EventType::find()->where(['is_active' => 1])->asArray()->all(), 'name');
         $events = EventCategories::find()->with('events')->asArray()->all();
+        foreach ($events as $key => $value){
+            if($value['events']){
+                $events[$key]['events'] = ScheduleComponent::sortFirstLetter($value['events'], 'name');
+            }
+        }
         $eventCategories = EventCategories::find()->asArray()->all();
         
         return $this->render('room_event', [

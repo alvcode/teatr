@@ -9,6 +9,7 @@ use yii\bootstrap\ActiveForm;
 $this->title = 'Залы и мероприятия';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
+
 <!--<div class="site-login">-->
 <div class="container-fluid">
     <div class="row">
@@ -56,6 +57,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     $form->field($eventsModel, 'name', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
                                     ->textInput(['class' => 'form-control form-control-sm'])
                                     ->label("Название <span class='text-danger'>*</span>")
+                                    ->hint('Первый символ названия может быть английской или русской буквой, либо символы: ? . ( !', ['class' => 'hint-block'])
                             ?>
 
                             <?=
