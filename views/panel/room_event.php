@@ -57,7 +57,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                     $form->field($eventsModel, 'name', ['errorOptions' => ['class' => 'form-text text-danger', 'tag' => 'small']])
                                     ->textInput(['class' => 'form-control form-control-sm'])
                                     ->label("Название <span class='text-danger'>*</span>")
-                                    ->hint('Первый символ названия может быть английской или русской буквой, либо символы: ? . ( !', ['class' => 'hint-block'])
+                                    ->hint('Первый символ названия может быть цифрой, английской или русской буквой, либо одним из символов: ? . ( !', ['class' => 'hint-block'])
                             ?>
 
                             <?=
