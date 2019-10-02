@@ -26,6 +26,7 @@ use app\models\ScheduleViewHash;
 use app\components\excel\WeekExcel;
 use app\components\excel\WeekExcelTwo;
 use app\components\word\WeekWord;
+use app\models\RoomSetting;
 
 class ScheduleController extends AccessController
 {
@@ -449,6 +450,7 @@ class ScheduleController extends AccessController
                 $result = [];
                 $result['schedule'] = ScheduleComponent::loadThreeSchedule($period);
                 $result['config'] = Config::getAllConfig();
+                $result['room_setting'] = RoomSetting::getSetting($period);
                 return json_encode($result);
             }
             
@@ -554,21 +556,11 @@ class ScheduleController extends AccessController
                 $schedule = ScheduleEvents::find()
                         ->where(['id' => Yii::$app->request->post('eventSchedule')])
                         ->with('eventType')->with('event')->with('profCat')->with('allUsersInEvent')->asArray()->one();
-                // ************************************************************ ВЫНЕСТИ В МЕТОД *************************************************
-                $spectacleEventConfig = Config::getConfig('spectacle_event');
-                $actorsProfCat = Config::getConfig('actors_prof_cat');
-                if(!in_array($schedule['event_type_id'], $spectacleEventConfig)){
-                    foreach ($schedule['allUsersInEvent'] as $allKey => $allVal){
-                        if(!in_array($allVal['userWithProf']['userProfession']['prof']['proff_cat_id'], $profCatLeave)){
-                            unset($schedule['allUsersInEvent'][$allKey]);
-                        }
-                    }
-                }else{
-                    $schedule['allUsersInEvent'] = [];
-                }
+                $schedule = ScheduleComponent::removeNeedUsers([$schedule]);
+                
                 return json_encode([
                     'response' => 'ok',
-                    'result' => $schedule,
+                    'result' => $schedule[0],
                 ]);
             }
             
@@ -726,8 +718,18 @@ class ScheduleController extends AccessController
                 return json_encode(['response' => 'error', 'result' => 'Ошибка при генерации ссылки. Сообщите разработчику']);
             }
             
+            if(Yii::$app->request->post('trigger') == 'set-room-config'){
+                $checkSetting = RoomSetting::checkSetting(Yii::$app->request->post('period'), Yii::$app->request->post('roomIds'));
+                if(!$checkSetting){
+                    return json_encode(['response' => 'error', 'result' => 'Кажется вы пытаетесь убрать залы в которых стоят мероприятия. Сначала удалите их']);
+                }
+                RoomSetting::setSetting(Yii::$app->request->post('period'), Yii::$app->request->post('roomIds'));
+                $setting = RoomSetting::getSetting(Yii::$app->request->post('period'));
+                return json_encode(['response' => 'ok', 'result' => $setting]);
+            }
             
-            return 0;
+            
+            return json_encode(['response' => 'error', 'result' => 'Ajax запрос не вошел ни в одно условие. Сообщите разработчику о данной ошибке']);
         }
         
         

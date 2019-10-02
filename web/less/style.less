@@ -145,9 +145,19 @@
     }
 }
 .schedule-controls{
-    width: 340px;
+    width: 100%;
     font-size: 20px;
     .flex();
+    
+    &>div{
+        width: 50%;
+    }
+    &>div:nth-of-type(1){
+        .flex(row, nowrap, flex-start);
+    }
+    &>div:nth-of-type(2){
+        .flex(row, nowrap, flex-end);
+    }
 
     .name{
         width: 320px;
@@ -522,4 +532,7 @@ display: none;
 }
 .site-week-schedule{
     width: 100%;
+}
+.room-setting-item.selected{
+    color: @orange;
 }

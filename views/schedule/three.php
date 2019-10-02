@@ -63,9 +63,14 @@ $this->params['breadcrumbs'][] = $this->title;
 
         <div id="three--schedule-content">
             <div class="schedule-controls">
-                <div id="control-name" class="name"></div>
-                <div class="arrow-left"><i id="month-left" class="fas fa-arrow-circle-left cursor-pointer" aria-hidden="true"></i></div>
-                <div class="arrow-right"><i id="month-right" class="fas fa-arrow-circle-right cursor-pointer" aria-hidden="true"></i></div>
+                <div>
+                    <div id="control-name" class="name"></div>
+                    <div class="arrow-left"><i id="month-left" class="fas fa-arrow-circle-left cursor-pointer" aria-hidden="true"></i></div>
+                    <div class="arrow-right"><i id="month-right" class="fas fa-arrow-circle-right cursor-pointer" aria-hidden="true"></i></div>
+                </div>
+                <div>
+                    <div id="room-setting" class="btn btn-sm btn-info">Настройка залов</div>
+                </div>
             </div>
             <div class="three--title-row mrg-top15">
                 <div class="date">Дата</div>
@@ -77,7 +82,7 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
         <br>
         
-        <a href="/schedule/excel" id="excel-download" target="_blank" class="btn btn-sm btn-info">Выгрузить в Excel</a>
+        <!--<a href="/schedule/excel" id="excel-download" target="_blank" class="btn btn-sm btn-info">Выгрузить в Excel</a>-->
         <a href="/schedule/word" id="word-download" target="_blank" class="btn btn-sm btn-info">Выгрузить в Word</a>
         <div id="generate-link" class="btn btn-sm btn-info">Сгенерировать ссылку</div>
     </div>
@@ -470,13 +475,37 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
 </div>
 
+<!-- Modal room setting --> 
+<div class="modal fade" id="roomSettingModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Настройка залов</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <?php foreach ($rooms as $key => $value): ?>
+                    <div data-room="<?= $value['id'] ?>" class="room-setting-item cursor-pointer"><?= $value['name'] ?></div>
+                <?php endforeach; ?>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Отмена</button>
+                <button id="room-setting-submit" type="button" class="btn btn-sm btn-success">Сохранить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     window.onload = function () {
 
         var csrfParam = $('meta[name="csrf-param"]').attr("content");
         var csrfToken = $('meta[name="csrf-token"]').attr("content");
         
-        var config = false;
+        var config = false; // Храним все настройки приложения
+        var roomSetting = false; // Храним настройки отображения залов
 
         Object.defineProperty(Array.prototype, 'includes', {
             value: function (searchElement, fromIndex) {
@@ -738,7 +767,7 @@ $this->params['breadcrumbs'][] = $this->title;
             datePeriod[1].month = (dateObj.getMonth() + 1);
             datePeriod[1].year = dateObj.getFullYear();
             
-            document.getElementById('excel-download').setAttribute('href', '/schedule/excel-one?from=' +datePeriod[0].year +"-" +datePeriod[0].month +"-" +datePeriod[0].day +"&to="+datePeriod[1].year +"-" +datePeriod[1].month +"-" +datePeriod[1].day);
+//            document.getElementById('excel-download').setAttribute('href', '/schedule/excel-one?from=' +datePeriod[0].year +"-" +datePeriod[0].month +"-" +datePeriod[0].day +"&to="+datePeriod[1].year +"-" +datePeriod[1].month +"-" +datePeriod[1].day);
             document.getElementById('word-download').setAttribute('href', '/schedule/word?from=' +datePeriod[0].year +"-" +datePeriod[0].month +"-" +datePeriod[0].day +"&to="+datePeriod[1].year +"-" +datePeriod[1].month +"-" +datePeriod[1].day);
             return true;
         };
@@ -1020,6 +1049,8 @@ $this->params['breadcrumbs'][] = $this->title;
                     var result = JSON.parse(data);
                     scheduleData = result.schedule;
                     config = result.config;
+                    roomSetting = result.room_setting;
+                    applyRoomSetting(roomSetting);
                     console.log(result);
                     for (var key in scheduleData) {
                         var dateT = new Date(scheduleData[key].date);
@@ -1055,7 +1086,7 @@ $this->params['breadcrumbs'][] = $this->title;
             editEventId = this.dataset.id;
             for (var key in scheduleData) {
                 if (scheduleData[key].id == editEventId) {
-                    console.log(scheduleData[key]);
+//                    console.log(scheduleData[key]);
                     $('#edit--time_from').val(normalizeTime(minuteToTime(scheduleData[key].time_from)));
                     if (scheduleData[key].time_to) {
                         $('#edit--time_to').val(normalizeTime(minuteToTime(scheduleData[key].time_to)));
@@ -1864,6 +1895,88 @@ $this->params['breadcrumbs'][] = $this->title;
                 }
             });
             // console.log(datePeriod);
+        });
+        
+        // Применяем настройку отображения залов
+        function applyRoomSetting(roomSetting){
+            if(!roomSetting.length){
+                $('.room').css({'display': 'block'});
+            }else{
+                $('.room').css({'display': 'block'});
+                var roomCells = document.getElementsByClassName('room');
+                for(var i = 0; i < roomCells.length; i++){
+                    if(!roomSetting.includes(roomCells[i].dataset.room)){
+                        roomCells[i].style.display = 'none';
+                    }
+                }
+            }
+        }
+        
+        $('#room-setting').click(function(){
+            var settingItems = document.getElementsByClassName('room-setting-item');
+            if(!roomSetting.length){
+                for(var i = 0; i < settingItems.length; i++){
+                    settingItems[i].classList.add('selected');
+                }
+            }else{
+                for(var i = 0; i < settingItems.length; i++){
+                    if(roomSetting.includes(settingItems[i].dataset.room)){
+                        settingItems[i].classList.add('selected');
+                    }else{
+                        settingItems[i].classList.remove('selected');
+                    }
+                }
+            }
+            
+            
+           $('#roomSettingModal').modal('show'); 
+        });
+        
+        $('.room-setting-item').click(function(){
+           if(this.classList.contains('selected')){
+               this.classList.remove('selected');
+           }else{
+               this.classList.add('selected');
+           }
+        });
+        
+        $('#room-setting-submit').click(function(){
+            var roomIds = [];
+            var settingItems = document.getElementsByClassName('room-setting-item');
+            for(var i = 0; i < settingItems.length; i++){
+                if(settingItems[i].classList.contains('selected')){
+                    roomIds[roomIds.length] = settingItems[i].dataset.room
+                }
+            }
+            goPreloader();
+            var data = {
+                trigger: 'set-room-config',
+                period: datePeriod,
+                roomIds: roomIds
+            };
+            data[csrfParam] = csrfToken;
+            $.ajax({
+                type: "POST",
+                url: '/schedule/three',
+                data: data,
+                success: function (data) {
+                    var result = JSON.parse(data);
+                    console.log(result);
+                    if(result.response == 'ok'){
+                        roomSetting = result.result;
+                        applyRoomSetting(roomSetting);
+                        $('#roomSettingModal').modal('hide');
+                    }else if(result.response == 'error'){
+                        showNotifications(result.result, 5000, NOTIF_RED);
+                    }
+                        
+                    stopPreloader();
+                },
+                error: function () {
+                    showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                    stopPreloader();
+                }
+            });
         });
         
         // Копирование ссылки для просмотра расписания в буфер обмена
