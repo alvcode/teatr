@@ -25,9 +25,14 @@ $this->params['breadcrumbs'][] = $this->title;
     
     <div id="all-events-buttons"></div>
     <div class="schedule-controls">
-        <div id="control-name" class="name"></div>
-        <div class="arrow-left"><i id="month-left" class="fas fa-arrow-circle-left cursor-pointer" aria-hidden="true"></i></div>
-        <div class="arrow-right"><i id="month-right" class="fas fa-arrow-circle-right cursor-pointer" aria-hidden="true"></i></div>
+        <div>
+            <div id="control-name" class="name"></div>
+            <div class="arrow-left"><i id="month-left" class="fas fa-arrow-circle-left cursor-pointer" aria-hidden="true"></i></div>
+            <div class="arrow-right"><i id="month-right" class="fas fa-arrow-circle-right cursor-pointer" aria-hidden="true"></i></div>
+        </div>
+        <div>
+            
+        </div>
     </div>
     <div id="two--notification-banner"></div>
     <div class="two--table-container">
