@@ -47,7 +47,7 @@ class ScheduleComponent extends Model{
             }
             $result['schedule'][$date][$eventId][] = $value;
         }
-        if($result['allEvents']){
+        if(isset($result['allEvents'])){
             $result['allEvents'] = self::sortFirstLetter($result['allEvents'], 'name');
         }
         
