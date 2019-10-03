@@ -198,7 +198,7 @@ $this->params['breadcrumbs'][] = $this->title;
         });
 
         $('.two--table-container').css({'height': $(window).height() - 140});
-
+        
         var selectedEvent = false;
         var activeCells = false;
         var selectedActor = [];
@@ -245,6 +245,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         console.log(scheduleData);
                         document.getElementById('control-name').innerHTML = monthName[nowDate.getMonth()] + ", " + nowDate.getFullYear();
                         renderThead(scheduleData);
+                        setHeadEventTop();
                     }
                     stopPreloader();
                 },
@@ -332,8 +333,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 }
 
             }
-        }
-        ;
+        };
 
         // Выделение спектакля
         var lastCastDate = false;
@@ -867,6 +867,12 @@ $this->params['breadcrumbs'][] = $this->title;
                     }
                 }
             }
+        }
+        
+        function setHeadEventTop(){
+//            alert($('.two--thead-event>th').height());
+            $('.two--thead-event th').css({'top': $('.two--thead-date').height()});
+            $('.two--thead-time th').css({'top': $('.two--thead-date').height() + $('.two--thead-event').height()});
         }
 
         // Выделение ячеек при наведении

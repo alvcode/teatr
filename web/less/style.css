@@ -222,6 +222,9 @@ a:hover {
   position: sticky;
   top: 0;
 }
+.two--table-container .two--thead-event th {
+  position: sticky;
+}
 .two--table-container .two--thead-time th {
   position: sticky;
   top: 30px;
