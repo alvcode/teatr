@@ -1382,10 +1382,10 @@ $this->params['breadcrumbs'][] = $this->title;
         });
         
         $('#add-user-in-schedule-button').click(function(){
-            // Хардкод! Для актеров доступен функционал поиска состава
+            // Для актеров доступен функционал поиска состава
             for (var key in scheduleData) {
                 if (+scheduleData[key].id == +editEventId) {
-                    if(scheduleData[key].event != null && +selectedShowProfCat == 8){
+                    if(scheduleData[key].event != null && config.actors_prof_cat.includes(selectedShowProfCat)){
                         document.getElementById('search-cast').style.display = 'block';
                     }else{
                         document.getElementById('search-cast').style.display = 'none';
@@ -1416,6 +1416,17 @@ $this->params['breadcrumbs'][] = $this->title;
                 }
                 if(k == usersList.length){
                     literContainers[i].style.display = 'none';
+                }
+            }
+            var allUsersList = document.getElementsByClassName('actor-list-item');
+            for(var z = 0; z < allUsersList.length; z++){
+                allUsersList[z].classList.remove('set');
+            }
+            for(var i = 0; i < usersInEvent.length; i++){
+                for(var z = 0; z < allUsersList.length; z++){
+                    if(+usersInEvent[i].userWithProf.id == allUsersList[z].dataset.id){
+                        allUsersList[z].classList.add('set');
+                    }
                 }
             }
             $('#usersListModal').modal('show');
@@ -1698,6 +1709,11 @@ $this->params['breadcrumbs'][] = $this->title;
         });
         
         $('#copy--event').click(function(){
+            $('.three--right-save-button').slideUp(200);
+            $('.three--copy-event').slideDown(200);
+        });
+        
+        function updateCopyField(){
             var firstDate = new Date(datePeriod[0].year +"-" +datePeriod[0].month +"-" +datePeriod[0].day);
             var lastDate = new Date(datePeriod[1].year +"-" +datePeriod[1].month +"-" +datePeriod[1].day);
             $('#copy--select-date').empty();
@@ -1709,9 +1725,6 @@ $this->params['breadcrumbs'][] = $this->title;
                 createOption.innerHTML = firstDate.getDate() +" " +monthNameDec[firstDate.getMonth()] +" " +firstDate.getFullYear();
                 document.getElementById('copy--select-date').append(createOption);
                 firstDate.setDate(firstDate.getDate()+1);
-//                if(firstDate.getTime() === lastDate.getTime()){
-//                    alert('yes');
-//                }
             }
             var roomsSelect = document.getElementById('copy--select-room');
             for (var i = 0; i < roomsSelect.options.length; i++) {
@@ -1719,9 +1732,9 @@ $this->params['breadcrumbs'][] = $this->title;
                     roomsSelect.options[i].selected = true;
                 }
             }
-            $('.three--right-save-button').slideUp(200);
-            $('.three--copy-event').slideDown(200);
-        });
+        }
+        
+        updateCopyField();
         
         $('#copy--cancel-copy').click(function(){
             $('.three--right-save-button').slideDown(200);
