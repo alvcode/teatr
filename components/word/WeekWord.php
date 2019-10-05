@@ -134,7 +134,11 @@ class WeekWord extends Model {
                                             if (isset($events[$z])) {
                                                 foreach ($events[$z] as $keyCheck => $eventCheck) {
                                                     if (+$eventData['event']['id'] == +$eventCheck['event']['id'] && +$eventData['eventType']['id'] == +$eventCheck['eventType']['id'] /* && +$eventData['id'] != +$eventCheck['id'] */) {
-                                                        $timeRepeatText[] = self::minuteToTime($eventCheck['time_from'], $eventCheck['time_to']);
+                                                        if((int)$eventCheck['time_from'] == 0 && $eventCheck['time_to'] && (int)$eventCheck['time_to'] == 1440){
+                                                            $timeRepeatText[] = 'Весь день!';
+                                                        }else{
+                                                            $timeRepeatText[] = self::minuteToTime($eventCheck['time_from'], $eventCheck['time_to']);
+                                                        }
                                                     }
                                                 }
                                             }
@@ -145,11 +149,20 @@ class WeekWord extends Model {
                                             $roomObjects[$col]->addText(implode(" / ", $timeRepeatText), ['bold' => true, 'underline' => 'single']);
                                         }
                                     } else {
-                                        if((int) $eventData['is_modified'] === 1) {
-                                            $roomObjects[$col]->addText(self::minuteToTime($eventData['time_from'], $eventData['time_to']) . " ", ['bold' => true, 'color' => '#FD3333', 'underline' => 'single']);
-                                        } else {
-                                            $roomObjects[$col]->addText(self::minuteToTime($eventData['time_from'], $eventData['time_to']) . " ", ['bold' => true, 'underline' => 'single']);
+                                        if((int)$eventData['time_from'] == 0 && $eventData['time_to'] && (int)$eventData['time_to'] == 1440){
+                                                if((int) $eventData['is_modified'] === 1) {
+                                                    $roomObjects[$col]->addText('Весь день', ['bold' => true, 'color' => '#FD3333', 'underline' => 'single']);
+                                                } else {
+                                                    $roomObjects[$col]->addText('Весь день', ['bold' => true, 'underline' => 'single']);
+                                                }
+                                        }else{
+                                            if((int) $eventData['is_modified'] === 1) {
+                                                $roomObjects[$col]->addText(self::minuteToTime($eventData['time_from'], $eventData['time_to']) . " ", ['bold' => true, 'color' => '#FD3333', 'underline' => 'single']);
+                                            } else {
+                                                $roomObjects[$col]->addText(self::minuteToTime($eventData['time_from'], $eventData['time_to']) . " ", ['bold' => true, 'underline' => 'single']);
+                                            }
                                         }
+                                        
                                     }
 //                                }
 

@@ -231,7 +231,11 @@ window.onload = function () {
                             }
                             var createBudgie = document.createElement('span');
                             createBudgie.className = 'badge badge-pill badge-info';
-                            createBudgie.innerHTML = minuteToTime(params.timeFrom) + (params.timeTo && params.timeTo != '' ? " - " + minuteToTime(params.timeTo) : "");
+                            if(+params.timeFrom == 0 && params.timeTo && +params.timeTo == 1440){
+                                createBudgie.innerHTML = 'Весь день';
+                            }else{
+                                createBudgie.innerHTML = minuteToTime(params.timeFrom) + (params.timeTo && params.timeTo != '' ? " - " + minuteToTime(params.timeTo) : "");
+                            }
 
                             var createEventType = document.createElement('span');
                             createEventType.className = 'type';

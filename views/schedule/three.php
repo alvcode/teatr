@@ -112,6 +112,10 @@ $this->params['breadcrumbs'][] = $this->title;
                         <tr>
                             <th scope="row">Время начала</th>
                             <td>
+                                <div>
+                                    <input type="checkbox" class="" id="add--all-day">
+                                    <label class="form-check-label noselect cursor-pointer" for="add--all-day">Весь день</label>
+                                </div>
                                 <div class="input-group mb-3">
                                     <input type="text" class="form-control form-control-sm" id="add--time_from">
                                     <div class="input-group-append">
@@ -162,11 +166,11 @@ $this->params['breadcrumbs'][] = $this->title;
                             <td id="add--event">
                                  <div>
                                     <input type="checkbox" class="" id="add--modified-event">
-                                    <label class="form-check-label" for="add--modified-event">Измененное!</label>
+                                    <label class="form-check-label noselect cursor-pointer" for="add--modified-event">Измененное!</label>
                                 </div>
                                 <div>
                                     <input type="checkbox" class="" id="add--without-event">
-                                    <label class="form-check-label" for="add--without-event">Без мероприятия</label>
+                                    <label class="form-check-label noselect cursor-pointer" for="add--without-event">Без мероприятия</label>
                                 </div>
                                 <div id="add-div-category" class="form-group mrg-top15">
                                     <select id="select-event-category" class="form-control form-control-sm">
@@ -184,7 +188,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 </div>
                                 <div>
                                     <input type="checkbox" class="" id="add--without-intersect">
-                                    <label class="form-check-label" for="add--without-intersect">Не проверять на пересечения</label>
+                                    <label class="form-check-label noselect cursor-pointer" for="add--without-intersect">Не проверять на пересечения</label>
                                 </div>
                             </td>
                         </tr>
@@ -211,6 +215,10 @@ $this->params['breadcrumbs'][] = $this->title;
                     <tr>
                         <th scope="row">Время начала</th>
                         <td>
+                            <div>
+                                <input type="checkbox" class="" id="edit--all-day">
+                                <label class="form-check-label noselect cursor-pointer" for="edit--all-day">Весь день</label>
+                            </div>
                             <div class="input-group mb-3">
                                 <input type="text" class="form-control form-control-sm" id="edit--time_from">
                                 <div class="input-group-append">
@@ -263,7 +271,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         <td>
                             <div>
                                 <input type="checkbox" class="" id="edit--without-event">
-                                <label class="form-check-label" for="edit--without-event">Без мероприятия</label>
+                                <label class="form-check-label noselect cursor-pointer" for="edit--without-event">Без мероприятия</label>
                             </div>
                             <div class="form-group mrg-top15">
                                 <select id="select-edit-event-category" class="form-control form-control-sm">
@@ -285,15 +293,15 @@ $this->params['breadcrumbs'][] = $this->title;
             </table>
             <div>
                 <input type="checkbox" class="" id="edit--modified-event">
-                <label class="form-check-label" for="edit--modified-event">Измененное!</label>
+                <label class="form-check-label noselect cursor-pointer" for="edit--modified-event">Измененное!</label>
             </div>
             <div>
                 <input type="checkbox" class="" id="edit--without-intersect">
-                <label class="form-check-label" for="edit--without-intersect">Не проверять на пересечения</label>
+                <label class="form-check-label noselect cursor-pointer" for="edit--without-intersect">Не проверять на пересечения</label>
             </div>
             <div>
                 <input type="checkbox" class="" id="edit--is-all">
-                <label class="form-check-label" for="edit--is-all">Все</label>
+                <label class="form-check-label noselect cursor-pointer" for="edit--is-all">Все</label>
             </div>
             <div class="three--copy-event">
                 <h5 class="text-info">Копировать запись на другой день</h5>
@@ -313,7 +321,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div>
                 <div class="form-group form-check">
                     <input type="checkbox" class="form-check-input" id="copy--checkbox-move-users">
-                    <label class="form-check-label" for="copy--checkbox-move-users">Перенести сотрудников</label>
+                    <label class="form-check-label noselect cursor-pointer" for="copy--checkbox-move-users">Перенести сотрудников</label>
                 </div>
                 <div class="three--copy-buttons">
                     <div id="copy--save-copy" class="btn btn-sm btn-success">Копировать</div>
@@ -684,6 +692,24 @@ $this->params['breadcrumbs'][] = $this->title;
             eventCatSort();
         });
         
+        // Мероприятие на ВЕСЬ ДЕНЬ
+        var addAllDay = 0;
+        $('#add--all-day').click(function(){
+            if($(this).prop('checked')){
+                addAllDay = 1;
+                $('#add--time_from').prop('disabled', true);
+                $('#add--time_to').prop('disabled', true);
+                $('#add--time_from').val('00:00');
+                $('#add--time_to').val('24:00');
+            }else{
+                addAllDay = 0;
+                $('#add--time_from').prop('disabled', false);
+                $('#add--time_to').prop('disabled', false);
+                $('#add--time_from').val('');
+                $('#add--time_to').val('');
+            }
+        });
+        
         // Добавляем мероприятие через стандартное добавление
         $('#add-event-submit').click(function () {
             var timeFrom = $('#add--time_from').val();
@@ -717,7 +743,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 eventCategory: eventCategory,
                 event: event,
                 withoutEvent: withoutEvent,
-                modifiedEvent: modifiedEvent
+                modifiedEvent: modifiedEvent,
+                allDay: addAllDay
             };
             data[csrfParam] = csrfToken;
             $.ajax({
@@ -899,7 +926,11 @@ $this->params['breadcrumbs'][] = $this->title;
                             }
                             var createBudgie = document.createElement('span');
                             createBudgie.className = 'badge badge-pill badge-info';
-                            createBudgie.innerHTML = minuteToTime(params.timeFrom) + (params.timeTo && params.timeTo != '' ? " - " + minuteToTime(params.timeTo) : "");
+                            if(+params.timeFrom == 0 && params.timeTo && +params.timeTo == 1440){
+                                createBudgie.innerHTML = 'Весь день';
+                            }else{
+                                createBudgie.innerHTML = minuteToTime(params.timeFrom) + (params.timeTo && params.timeTo != '' ? " - " + minuteToTime(params.timeTo) : "");
+                            }
 
                             var createEventType = document.createElement('span');
                             createEventType.className = 'type';
@@ -1065,6 +1096,33 @@ $this->params['breadcrumbs'][] = $this->title;
             });
         }
         loadSchedule(datePeriod);
+        
+        // Мероприятие на ВЕСЬ ДЕНЬ при редактировании
+        var editAllDay = 0;
+        $('#edit--all-day').click(function(){
+            if($(this).prop('checked')){
+                editAllDay = 1;
+                $('#edit--time_from').prop('disabled', true);
+                $('#edit--time_to').prop('disabled', true);
+                $('#edit--time_from').val('00:00');
+                $('#edit--time_to').val('24:00');
+            }else{
+                editAllDay = 0;
+                $('#edit--time_from').prop('disabled', false);
+                $('#edit--time_to').prop('disabled', false);
+                for (var key in scheduleData) {
+                    if (scheduleData[key].id == editEventId) {
+                        $('#edit--time_from').val(minuteToTime(scheduleData[key].time_from));
+                        if(scheduleData[key].time_to){
+                            $('#edit--time_to').val(minuteToTime(scheduleData[key].time_to));
+                        }else{
+                            $('#edit--time_to').val('');
+                        }
+                        
+                    }
+                }
+            }
+        });
 
         // Редактирование мероприятия
         var editEventId = false;
@@ -1086,7 +1144,17 @@ $this->params['breadcrumbs'][] = $this->title;
             editEventId = this.dataset.id;
             for (var key in scheduleData) {
                 if (scheduleData[key].id == editEventId) {
-//                    console.log(scheduleData[key]);
+                    if(+scheduleData[key].time_from == 0 && scheduleData[key].time_to && +scheduleData[key].time_to == 1440){
+                        editAllDay = 1;
+                        $('#edit--all-day').prop('checked', true);
+                        $('#edit--time_from').prop('disabled', true);
+                        $('#edit--time_to').prop('disabled', true);
+                    }else{
+                        editAllDay = 0;
+                        $('#edit--all-day').prop('checked', false);
+                        $('#edit--time_from').prop('disabled', false);
+                        $('#edit--time_to').prop('disabled', false);
+                    }
                     $('#edit--time_from').val(normalizeTime(minuteToTime(scheduleData[key].time_from)));
                     if (scheduleData[key].time_to) {
                         $('#edit--time_to').val(normalizeTime(minuteToTime(scheduleData[key].time_to)));
@@ -1674,7 +1742,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 eventId: eventId,
                 withoutEvent: editWithoutEvent,
                 modifiedEvent: editModifiedEvent,
-                isAll: isAll
+                isAll: isAll,
+                allDay: editAllDay
             };
             data[csrfParam] = csrfToken;
             $.ajax({

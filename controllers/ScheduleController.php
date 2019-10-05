@@ -422,21 +422,18 @@ class ScheduleController extends AccessController
                 }
                 $scheduleEvent->room_id = Yii::$app->request->post('room');
                 $scheduleEvent->date = date('Y-m-d', mktime(0, 0, 0, Yii::$app->request->post('date')['month'] + 1, Yii::$app->request->post('date')['day'], Yii::$app->request->post('date')['year']));
-                $scheduleEvent->time_from = \app\components\Formatt::timeToMinute(Yii::$app->request->post('timeFrom'));
-                if(\app\components\Formatt::timeToMinute(Yii::$app->request->post('timeTo'))){
-                    $scheduleEvent->time_to = \app\components\Formatt::timeToMinute(Yii::$app->request->post('timeTo'));
+                if((int)Yii::$app->request->post('allDay') > 0){
+                    $scheduleEvent->time_from = 0;
+                    $scheduleEvent->time_to = 1440;
+                }else{
+                    $scheduleEvent->time_from = \app\components\Formatt::timeToMinute(Yii::$app->request->post('timeFrom'));
+                    if(\app\components\Formatt::timeToMinute(Yii::$app->request->post('timeTo'))){
+                        $scheduleEvent->time_to = \app\components\Formatt::timeToMinute(Yii::$app->request->post('timeTo'));
+                    }
                 }
                 $scheduleEvent->add_info = Yii::$app->request->post('addInfo');
                 $scheduleEvent->is_modified = Yii::$app->request->post('modifiedEvent');
                 if($scheduleEvent->validate() && $scheduleEvent->save()){
-                    // Хардкод для eventCategory
-//                    if(in_array($scheduleEvent->event_type_id, $spectacleEventConfig) && Yii::$app->request->post('eventCategory') == 1){
-//                        $actorsProfCat = Config::getConfig('actors_prof_cat');
-//                        $profInSchedule = new ProfCatInSchedule();
-//                        $profInSchedule->prof_cat_id = $actorsProfCat[0];
-//                        $profInSchedule->schedule_id = $scheduleEvent->id;
-//                        $profInSchedule->save();
-//                    }
                     $record = ScheduleEvents::find()
                         ->where(['id' => $scheduleEvent->id])
                         ->with('eventType')->with('event')->with('profCat')->asArray()->one();
@@ -570,12 +567,23 @@ class ScheduleController extends AccessController
                     return json_encode(['response' => 'error', 'data' => implode('<br><br>', $checkEditEvent['text'])]);
                 }
                 $findEvent = ScheduleEvents::findOne(Yii::$app->request->post('id'));
-                $findEvent->time_from = \app\components\Formatt::timeToMinute(Yii::$app->request->post('timeFrom'));
-                if(\app\components\Formatt::timeToMinute(Yii::$app->request->post('timeTo'))){
-                    $findEvent->time_to = \app\components\Formatt::timeToMinute(Yii::$app->request->post('timeTo'));
+                if((int)Yii::$app->request->post('allDay') > 0){
+                    $findEvent->time_from = 0;
+                    $findEvent->time_to = 1440;
                 }else{
-                    $findEvent->time_to = '';
+                    $findEvent->time_from = \app\components\Formatt::timeToMinute(Yii::$app->request->post('timeFrom'));
+                    if(\app\components\Formatt::timeToMinute(Yii::$app->request->post('timeTo'))){
+                        $findEvent->time_to = \app\components\Formatt::timeToMinute(Yii::$app->request->post('timeTo'));
+                    }else{
+                        $findEvent->time_to = '';
+                    }
                 }
+//                $findEvent->time_from = \app\components\Formatt::timeToMinute(Yii::$app->request->post('timeFrom'));
+//                if(\app\components\Formatt::timeToMinute(Yii::$app->request->post('timeTo'))){
+//                    $findEvent->time_to = \app\components\Formatt::timeToMinute(Yii::$app->request->post('timeTo'));
+//                }else{
+//                    $findEvent->time_to = '';
+//                }
                 $findEvent->event_type_id = Yii::$app->request->post('eventType');
                 if((int)Yii::$app->request->post('withoutEvent') > 0){
                     $findEvent->event_id = '';
