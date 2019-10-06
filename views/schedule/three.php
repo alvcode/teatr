@@ -603,12 +603,14 @@ $this->params['breadcrumbs'][] = $this->title;
             nowDate.setDate(nowDate.getDate() + 7);
             renderCalendar(nowDate);
             loadSchedule(datePeriod);
+            updateCopyField();
         });
         $('#month-left').click(function () {
             nowDate.setDay(1);
             nowDate.setDate(nowDate.getDate() - 7);
             renderCalendar(nowDate);
             loadSchedule(datePeriod);
+            updateCopyField();
         });
         
         $('body').on('dblclick', '.room-cell', function (e) {
@@ -1786,7 +1788,7 @@ $this->params['breadcrumbs'][] = $this->title;
             var firstDate = new Date(datePeriod[0].year +"-" +datePeriod[0].month +"-" +datePeriod[0].day);
             var lastDate = new Date(datePeriod[1].year +"-" +datePeriod[1].month +"-" +datePeriod[1].day);
             $('#copy--select-date').empty();
-            for(var i = 0; i < 7; i++){
+            for(var i = 0; i < 14; i++){
                 var createOption = document.createElement('option');
                 createOption.dataset.day = firstDate.getDate();
                 createOption.dataset.month = (firstDate.getMonth() +1);
@@ -1847,12 +1849,12 @@ $this->params['breadcrumbs'][] = $this->title;
             }
 //            alert(editEventId);
 //            return false;
-            if(editWithoutIntersect == 0){
-                if (!checkTimesInterval(timeToMinute(newTimeFrom), timeToMinute(newTimeTo), date, room)) {
-                    showNotifications("Изменяемое мероприятие пересекается с другими в этот день", 3000, NOTIF_RED);
-                    return false;
-                }
-            }
+//            if(editWithoutIntersect == 0){
+//                if (!checkTimesInterval(timeToMinute(newTimeFrom), timeToMinute(newTimeTo), date, room)) {
+//                    showNotifications("Изменяемое мероприятие пересекается с другими в этот день", 3000, NOTIF_RED);
+//                    return false;
+//                }
+//            }
             if($('#edit--modified-event').prop('checked')){
                 editModifiedEvent = 1;
             }else{
@@ -1872,7 +1874,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 timeTo: newTimeTo,
                 moveUsers: moveUsers,
                 modifiedEvent: editModifiedEvent,
-                isAll: copyIsAll
+                isAll: copyIsAll,
+                withoutIntersect: editWithoutIntersect
             };
             data[csrfParam] = csrfToken;
             $.ajax({

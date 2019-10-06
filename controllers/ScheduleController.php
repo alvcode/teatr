@@ -566,6 +566,7 @@ class ScheduleController extends AccessController
                 if($checkEditEvent['result'] == 'error'){
                     return json_encode(['response' => 'error', 'data' => implode('<br><br>', $checkEditEvent['text'])]);
                 }
+                
                 $findEvent = ScheduleEvents::findOne(Yii::$app->request->post('id'));
                 if((int)Yii::$app->request->post('allDay') > 0){
                     $findEvent->time_from = 0;
@@ -630,9 +631,16 @@ class ScheduleController extends AccessController
                 $getEvent = ScheduleEvents::find()->where(['id' => Yii::$app->request->post('id')])->asArray()->one();
                 $timeFrom = Formatt::timeToMinute(Yii::$app->request->post('timeFrom'));
                 $timeTo = Formatt::timeToMinute(Yii::$app->request->post('timeTo'));
+                $date = date('Y-m-d', mktime(0, 0, 0, Yii::$app->request->post('date')['month'] + 1, Yii::$app->request->post('date')['day'], Yii::$app->request->post('date')['year']));
                 $checkCopyEvent = ScheduleComponent::checkCopyEvent($getEvent['id'], Yii::$app->request->post('moveUsers'));
                 if($checkCopyEvent['result'] == 'error'){
                     return json_encode(['response' => 'error', 'result' => implode('<br><br>', $checkCopyEvent['text'])]);
+                }
+                if((int)Yii::$app->request->post('withoutIntersect') == 0){
+                    $checkIntersectEvent = ScheduleComponent::checkIntersectEvent(Formatt::timeToMinute(Yii::$app->request->post('timeFrom')), Formatt::timeToMinute(Yii::$app->request->post('timeTo')), $date, Yii::$app->request->post('room'));
+                    if(!$checkIntersectEvent){
+                        return json_encode(['response' => 'error', 'result' => 'Изменяемое мероприятие пересекается с другими в этот день']);
+                    }
                 }
                 if(+Yii::$app->request->post('moveUsers') > 0){
                     $checkIntersect = ScheduleComponent::checkIntersectEdit($getEvent['id'], date('Y-m-d', mktime(0, 0, 0, Yii::$app->request->post('date')['month'] + 1, Yii::$app->request->post('date')['day'], Yii::$app->request->post('date')['year'])), $timeFrom, $timeTo);
@@ -651,7 +659,7 @@ class ScheduleController extends AccessController
                         $newScheduleEvent->event_id = Yii::$app->request->post('eventId');
                     }
                     $newScheduleEvent->room_id = Yii::$app->request->post('room');
-                    $newScheduleEvent->date = date('Y-m-d', mktime(0, 0, 0, Yii::$app->request->post('date')['month'] + 1, Yii::$app->request->post('date')['day'], Yii::$app->request->post('date')['year']));
+                    $newScheduleEvent->date = $date;
                     $newScheduleEvent->time_from = $timeFrom;
                     $newScheduleEvent->time_to = $timeTo?$timeTo:null;
                     $newScheduleEvent->is_modified = Yii::$app->request->post('modifiedEvent');

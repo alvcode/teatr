@@ -144,33 +144,47 @@ class ScheduleComponent extends Model{
                     }
                 }
             }
-//            if($findSchedule->time_to){
-//                foreach ($getAllEvents as $key => $value){
-//                    if($value['time_to']){
-//                        if(((+$value['time_from'] < +$findSchedule->time_to && +$value['time_from'] >= +$findSchedule->time_from))
-//                                || (+$value['time_to'] <= +$findSchedule->time_to && +$value['time_to'] > +$findSchedule->time_from) 
-//                                || (+$value['time_from'] <= +$findSchedule->time_from && +$value['time_to'] >= +$findSchedule->time_to)){
-//                                    $result[] = $value;
-//                        }
-//                    }else{
-//                        if(+$findSchedule->time_from == $value['time_from']){
-//                            $result[] = $value;
-//                        }
-//                    }
-//                }
-//            }else{
-//                foreach ($getAllEvents as $key => $value){
-//                    if(+$findSchedule->time_from == $value['time_from']){
-//                        $result[] = $value;
-//                    }
-//                }
-//            }
         }
         if($result){
             return $result;
         }else{
             return false;
         }
+    }
+    
+    /**
+     * Проверка на пересечения мероприятий
+     * 
+     * @param int $timeFrom
+     * @param int $timeTo
+     * @param date $date
+     * @param int $room
+     * @return boolean
+     */
+    public static function checkIntersectEvent($timeFrom, $timeTo, $date, $room){
+        $events = ScheduleEvents::find()->where(['date' => $date, 'room_id' => $room])->asArray()->all();
+        foreach ($events as $key => $value){
+            if($value['time_to'] && $timeTo){
+                if(((+$value['time_from'] < +$timeTo && +$value['time_from'] >= +$timeFrom))
+                    || (+$value['time_to'] <= +$timeTo && +$value['time_to'] > +$timeFrom) 
+                    || (+$value['time_from'] <= +$timeFrom && +$value['time_to'] >= +$timeTo)){
+                    return false;
+                }
+            }elseif($value['time_to'] && !$timeTo){
+                if(+$value['time_from'] <= +$timeFrom && +$value['time_to'] > +$timeFrom){
+                    return false;
+                }
+            }elseif(!$value['time_to'] && $timeTo){
+                if(+$timeFrom <= +$value['time_from'] && +$timeTo > +$value['time_from']){
+                    return false;
+                }
+            }elseif(!$value['time_to'] && !$timeTo){
+                if(+$timeFrom == +$value['time_from']){
+                    return false;
+                }
+            }
+        }
+        return true;
     }
     
     /**
