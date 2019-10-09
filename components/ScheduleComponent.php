@@ -206,7 +206,6 @@ class ScheduleComponent extends Model{
         }else{
             $findSchedule->time_to = null;
         }
-        
         $allEvents = ScheduleEvents::find()->where(['date' => $dateParam])->with('event')->asArray()->all();
         if($findUsers && $allEvents){
             foreach ($allEvents as $key => $value){
@@ -215,12 +214,12 @@ class ScheduleComponent extends Model{
                 }else{
                     $thisEvent = ['name' => null];
                 }
-                if($value['time_to'] && $findSchedule->time_to && +$value['id'] != +$findSchedule->id){
+                if($value['time_to'] && $findSchedule->time_to && (+$value['id'] != +$findSchedule->id || +$value['room_id'] >= +$findSchedule->room_id )){
                     if(((+$value['time_from'] < +$findSchedule->time_to && +$value['time_from'] >= +$findSchedule->time_from))
                         || (+$value['time_to'] <= +$findSchedule->time_to && +$value['time_to'] > +$findSchedule->time_from) 
                         || (+$value['time_from'] <= +$findSchedule->time_from && +$value['time_to'] >= +$findSchedule->time_to)){
-
-                        $users = UserInSchedule::find()->where(['schedule_event_id' => $value['id']])->with('user')->asArray()->all();
+                        
+                            $users = UserInSchedule::find()->where(['schedule_event_id' => $value['id']])->with('user')->asArray()->all();
                         foreach ($users as $keyThis => $valueThis){
                             foreach ($findUsers as $keyList => $valueList){
                                 if(+$valueThis['user']['id'] == +$valueList['user']['id']){
@@ -230,7 +229,7 @@ class ScheduleComponent extends Model{
                             }
                         }
                     }
-                }elseif($value['time_to'] && !$findSchedule->time_to && +$value['id'] != +$findSchedule->id){
+                }elseif($value['time_to'] && !$findSchedule->time_to && (+$value['id'] != +$findSchedule->id || +$value['room_id'] >= +$findSchedule->room_id )){
                     if(+$value['time_from'] <= +$findSchedule->time_from && +$value['time_to'] > +$findSchedule->time_from){
                         $users = UserInSchedule::find()->where(['schedule_event_id' => $value['id']])->with('user')->asArray()->all();
                         foreach ($users as $keyThis => $valueThis){
@@ -242,7 +241,7 @@ class ScheduleComponent extends Model{
                             }
                         }
                     }
-                }elseif(!$value['time_to'] && $findSchedule->time_to && +$value['id'] != +$findSchedule->id){
+                }elseif(!$value['time_to'] && $findSchedule->time_to && (+$value['id'] != +$findSchedule->id || +$value['room_id'] >= +$findSchedule->room_id )){
                     if(+$findSchedule->time_from <= +$value['time_from'] && +$findSchedule->time_to > +$value['time_from']){
                         $users = UserInSchedule::find()->where(['schedule_event_id' => $value['id']])->with('user')->asArray()->all();
                         foreach ($users as $keyThis => $valueThis){
@@ -254,7 +253,7 @@ class ScheduleComponent extends Model{
                             }
                         }
                     }
-                }elseif(!$value['time_to'] && !$findSchedule->time_to && +$value['id'] != +$findSchedule->id){
+                }elseif(!$value['time_to'] && !$findSchedule->time_to && (+$value['id'] != +$findSchedule->id || +$value['room_id'] >= +$findSchedule->room_id )){
                     if(+$findSchedule->time_from == +$value['time_from']){
                         $users = UserInSchedule::find()->where(['schedule_event_id' => $value['id']])->with('user')->asArray()->all();
                         foreach ($users as $keyThis => $valueThis){

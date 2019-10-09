@@ -838,7 +838,7 @@ $this->params['breadcrumbs'][] = $this->title;
             var dateRows = document.getElementsByClassName('three--date-row');
             for (var i = 0; i < dateRows.length; i++) {
                 if (+date.day == +dateRows[i].dataset.day && +date.month == +dateRows[i].dataset.month && +date.year == +dateRows[i].dataset.year) {
-                    var roomsCell = dateRows[i].getElementsByClassName('room-cell');
+                    var roomsCell = dateRows[i].getElementsByClassName('room-cell ui-droppable');
                     for (var z = 0; z < roomsCell.length; z++) {
                         if (+roomsCell[z].dataset.room == +room) {
                             var eventsCell = roomsCell[z].getElementsByClassName('event-cell');
@@ -917,7 +917,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     for (var z = 0; z < roomsCell.length; z++) {
                         if (roomsCell[z].dataset.room == params.room) {
                             var createContainer = document.createElement('div');
-                            createContainer.className = 'event-cell noselect';
+                            createContainer.className = 'event-cell noselect ui-draggable ui-draggable-handle';
                             if(+params.is_modified > 0){
                                 createContainer.classList.add('text-danger', 'font-weight-bold');
                             }
@@ -1033,6 +1033,74 @@ $this->params['breadcrumbs'][] = $this->title;
                 }
             }
         }
+        
+        $("#three--schedule-items").on("DOMNodeInserted", ".event-cell", function () {
+            $(this).draggable({helper: "clone", delay: 400, start: function(e, ui){$(ui.helper).css({'width': '160px'})} }); 
+        });
+        $("#three--schedule-items").on("DOMNodeInserted", ".room-cell", function () {
+            $('.room-cell').droppable({
+                classes: {
+//            "ui-droppable-hover": "ui-state-hover"
+                },
+                drop: function (event, ui) {
+                    for (var key in scheduleData) {
+                        if (scheduleData[key].id == ui.draggable[0].dataset.id) {
+                            var dateObj = {
+                                day: event.target.parentNode.dataset.day,
+                                month: event.target.parentNode.dataset.month,
+                                year: event.target.parentNode.dataset.year
+                            };
+                            var data = {
+                                trigger: 'copy-event',
+                                id: scheduleData[key].id,
+                                date: dateObj,
+                                room: event.target.dataset.room,
+                                addInfo: scheduleData[key].add_info,
+                                eventType: scheduleData[key].eventType.id,
+                                eventId: (scheduleData[key].event.id == null?'':scheduleData[key].event.id),
+                                withoutEvent: (scheduleData[key].event.id == null?'1':'0'),
+                                timeFrom: minuteToTime(scheduleData[key].time_from),
+                                timeTo: (scheduleData[key].time_to == null?'':minuteToTime(scheduleData[key].time_to)),
+                                moveUsers: '1',
+                                modifiedEvent: (+scheduleData[key].is_modified == 0?'0':'1'),
+                                isAll: (+scheduleData[key].is_all == 0?'0':'1'),
+                                withoutIntersect: '0'
+                            };
+                            data[csrfParam] = csrfToken;
+                            goPreloader();
+                            $.ajax({
+                                type: "POST",
+                                url: '/schedule/three',
+                                data: data,
+                                success: function (data) {
+                                    var result = JSON.parse(data);
+                                    if(result.response == 'ok'){
+                                        scheduleData[scheduleData.length] = result.result;
+                                        addEventInCalendar(generateCellData(result.result));
+                                    }else if(result.response == 'intersect'){
+                                        var textNotification = '';
+                                        for(var key in result.data){
+                                            textNotification += "Конфликт! "+ result.data[key].user_name +" " +result.data[key].surname +" стоит на \n\
+                                                "+ (result.data[key].name?result.data[key].name:"другом мероприятии") +" в это время";
+                                        }
+                                        showNotifications(textNotification, 7000, NOTIF_RED);
+                                    }else if(result.response == 'error'){
+                                        showNotifications(result.result, 4000, NOTIF_RED);
+                                    }
+
+                                    stopPreloader();
+                                },
+                                error: function () {
+                                    showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                                    stopPreloader();
+                                }
+                            });
+                        }
+                    }
+                    // end for
+                }
+            });
+        });
         
         function updateUserListInEvent(users, eventId){
             var eventCells = document.getElementsByClassName('event-cell');
@@ -1877,6 +1945,8 @@ $this->params['breadcrumbs'][] = $this->title;
                 isAll: copyIsAll,
                 withoutIntersect: editWithoutIntersect
             };
+//            console.log(data);
+//            return false;
             data[csrfParam] = csrfToken;
             $.ajax({
                 type: "POST",
