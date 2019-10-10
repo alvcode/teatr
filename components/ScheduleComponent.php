@@ -190,13 +190,14 @@ class ScheduleComponent extends Model{
     /**
      * Функция подобная checkIntersect, но принимает на вход новое время, т.к используется
      * для поиска конфликтов при изменении времени мероприятия
+     * @param string $mode - edit|copy - Копируем мероприятие или просто изменяем
      * @param integer $scheduleId
      * @param string $dateParam
      * @param integer $timeFrom
      * @param integer $timeTo
      * @return array
      */
-    public static function checkIntersectEdit($scheduleId, $dateParam, $timeFrom, $timeTo = null){
+    public static function checkIntersectEdit($mode, $scheduleId, $dateParam, $timeFrom, $timeTo = null){
         $result = [];
         $findSchedule = ScheduleEvents::findOne($scheduleId);
         $findUsers = UserInSchedule::find()->where(['schedule_event_id' => $findSchedule->id])->with('user')->asArray()->all();
@@ -214,7 +215,7 @@ class ScheduleComponent extends Model{
                 }else{
                     $thisEvent = ['name' => null];
                 }
-                if($value['time_to'] && $findSchedule->time_to && (+$value['id'] != +$findSchedule->id || +$value['room_id'] >= +$findSchedule->room_id )){
+                if($value['time_to'] && $findSchedule->time_to && (($mode == 'edit' && +$value['id'] != +$findSchedule->id) || ($mode == 'copy' && $value['date'] == $findSchedule->date))){
                     if(((+$value['time_from'] < +$findSchedule->time_to && +$value['time_from'] >= +$findSchedule->time_from))
                         || (+$value['time_to'] <= +$findSchedule->time_to && +$value['time_to'] > +$findSchedule->time_from) 
                         || (+$value['time_from'] <= +$findSchedule->time_from && +$value['time_to'] >= +$findSchedule->time_to)){
@@ -229,7 +230,7 @@ class ScheduleComponent extends Model{
                             }
                         }
                     }
-                }elseif($value['time_to'] && !$findSchedule->time_to && (+$value['id'] != +$findSchedule->id || +$value['room_id'] >= +$findSchedule->room_id )){
+                }elseif($value['time_to'] && !$findSchedule->time_to && (($mode == 'edit' && +$value['id'] != +$findSchedule->id) || ($mode == 'copy' && $value['date'] == $findSchedule->date))){
                     if(+$value['time_from'] <= +$findSchedule->time_from && +$value['time_to'] > +$findSchedule->time_from){
                         $users = UserInSchedule::find()->where(['schedule_event_id' => $value['id']])->with('user')->asArray()->all();
                         foreach ($users as $keyThis => $valueThis){
@@ -241,7 +242,7 @@ class ScheduleComponent extends Model{
                             }
                         }
                     }
-                }elseif(!$value['time_to'] && $findSchedule->time_to && (+$value['id'] != +$findSchedule->id || +$value['room_id'] >= +$findSchedule->room_id )){
+                }elseif(!$value['time_to'] && $findSchedule->time_to && (($mode == 'edit' && +$value['id'] != +$findSchedule->id) || ($mode == 'copy' && $value['date'] == $findSchedule->date))){
                     if(+$findSchedule->time_from <= +$value['time_from'] && +$findSchedule->time_to > +$value['time_from']){
                         $users = UserInSchedule::find()->where(['schedule_event_id' => $value['id']])->with('user')->asArray()->all();
                         foreach ($users as $keyThis => $valueThis){
@@ -253,7 +254,7 @@ class ScheduleComponent extends Model{
                             }
                         }
                     }
-                }elseif(!$value['time_to'] && !$findSchedule->time_to && (+$value['id'] != +$findSchedule->id || +$value['room_id'] >= +$findSchedule->room_id )){
+                }elseif(!$value['time_to'] && !$findSchedule->time_to && (($mode == 'edit' && +$value['id'] != +$findSchedule->id) || ($mode == 'copy' && $value['date'] == $findSchedule->date))){
                     if(+$findSchedule->time_from == +$value['time_from']){
                         $users = UserInSchedule::find()->where(['schedule_event_id' => $value['id']])->with('user')->asArray()->all();
                         foreach ($users as $keyThis => $valueThis){

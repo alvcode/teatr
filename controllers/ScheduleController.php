@@ -123,7 +123,7 @@ class ScheduleController extends AccessController
                 }else{
                     $findEvent->time_to = '';
                 }
-                $checkIntersect = ScheduleComponent::checkIntersectEdit($findEvent->id, $findEvent->date, $findEvent->time_from, $findEvent->time_to);
+                $checkIntersect = ScheduleComponent::checkIntersectEdit('edit', $findEvent->id, $findEvent->date, $findEvent->time_from, $findEvent->time_to);
                 if($checkIntersect){
                     return json_encode(['response' => 'intersect', 'data' => $checkIntersect]);
                 }
@@ -594,7 +594,7 @@ class ScheduleController extends AccessController
                 $findEvent->add_info = Yii::$app->request->post('addInfo');
                 $findEvent->is_modified = Yii::$app->request->post('modifiedEvent');
                 $findEvent->is_all = Yii::$app->request->post('isAll');
-                $checkIntersect = ScheduleComponent::checkIntersectEdit($findEvent->id, $findEvent->date, $findEvent->time_from, $findEvent->time_to);
+                $checkIntersect = ScheduleComponent::checkIntersectEdit('edit', $findEvent->id, $findEvent->date, $findEvent->time_from, $findEvent->time_to);
                 if($checkIntersect){
                     return json_encode(['response' => 'intersect', 'data' => $checkIntersect]);
                 }
@@ -643,7 +643,7 @@ class ScheduleController extends AccessController
                     }
                 }
                 if(+Yii::$app->request->post('moveUsers') > 0){
-                    $checkIntersect = ScheduleComponent::checkIntersectEdit($getEvent['id'], date('Y-m-d', mktime(0, 0, 0, Yii::$app->request->post('date')['month'] + 1, Yii::$app->request->post('date')['day'], Yii::$app->request->post('date')['year'])), $timeFrom, $timeTo);
+                    $checkIntersect = ScheduleComponent::checkIntersectEdit('copy', $getEvent['id'], date('Y-m-d', mktime(0, 0, 0, Yii::$app->request->post('date')['month'] + 1, Yii::$app->request->post('date')['day'], Yii::$app->request->post('date')['year'])), $timeFrom, $timeTo);
                     if($checkIntersect){
                         return json_encode(['response' => 'intersect', 'data' => $checkIntersect]);
                     }
