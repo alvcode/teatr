@@ -10,6 +10,30 @@ use app\components\Formatt;
 $this->title = 'Сотрудники';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
+
+<style>
+    @media print {
+        .board--top-sidebar{
+            display: none;
+        }
+        .board--left-sidebar{
+            display: none;
+        }
+        .board-content{
+            margin-left: 0;
+        }
+        #search-form{
+            display: none; 
+        }
+        .user-title-and-filter{
+            display: none; 
+        }
+        .new-user-container{
+            display: none; 
+        }
+}
+</style>
+
 <!--<div class="site-login">-->
 <div class="container-fluid">
     <div class="hidden" hidden>
@@ -44,7 +68,7 @@ $this->params['breadcrumbs'][] = $this->title;
 //            print_r($users);
             ?>
 
-            <div>
+            <div class="new-user-container">
                 <button type="button" class="btn btn-outline-success btn-sm" data-toggle="modal" data-target="#newUserModal"><i class="fas fa-plus"></i> Новый пользователь</button>
             </div>
 
@@ -74,6 +98,8 @@ $this->params['breadcrumbs'][] = $this->title;
                             <th scope="col">E-mail</th>
                             <th scope="col">Телефон</th>
                             <th scope="col">Роль</th>
+                            <th scope="col">Должность</th>
+                            <th scope="col">Табель</th>
                             <th scope="col">Создан</th>
                             <th scope="col">Последний визит</th>
                             <th scope="col">Action</th>
@@ -86,14 +112,14 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
 
             <div class="mrg-top45 table-responsive-sm">
-                <div class="row justify-content-between">
+                <div class="row justify-content-between user-title-and-filter">
                     <div class="col-4">
                         <h4>Список сотрудников:</h4>
                     </div>
                     <div class="col-3"></div>
                     <div class="col-5 text-right form-inline">
                         <div class="input-group mb-3">
-                            <a href="/user/index?act=sort&val=asc" class="btn btn-sm <?= (isset($sort['act']) && $sort['act'] == 'sort' && $sort['val'] == 'asc') ? "btn-success" : "btn-outline-info" ?> ml-1">По порядку</a>
+                            <!--<a href="/user/index?act=sort&val=asc" class="btn btn-sm <?= (isset($sort['act']) && $sort['act'] == 'sort' && $sort['val'] == 'asc') ? "btn-success" : "btn-outline-info" ?> ml-1">По порядку</a>-->
                             <a href="/user/index?act=sort&val=surname" class="btn btn-sm <?= (isset($sort['act']) && $sort['act'] == 'sort' && $sort['val'] == 'surname') ? "btn-success" : "btn-outline-info" ?> ml-1">По фамилии</a>
                             <form method="get" class="form-inline my-lg-0 mrg-top15">
                                 <input type="hidden" name="act" value="sortProf">
@@ -445,7 +471,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         for (var key in result) {
                             console.log(result);
                             var createTR = document.createElement('tr');
-                            createTR.className = 'user-row';
+                            createTR.className = 'user-row f-s13';
                             createTR.dataset.user = result[key].id;
 
                             var item1 = document.createElement('th');
@@ -457,6 +483,12 @@ $this->params['breadcrumbs'][] = $this->title;
                             var item7 = document.createElement('td');
                             var item8 = document.createElement('td');
                             var item9 = document.createElement('td');
+                            var item10 = document.createElement('td');
+                            var item11 = document.createElement('td');
+                            
+                            item8.className = 'get-timesheet cursor-pointer';
+                            
+                            var dateRegister = new Date(result[key].date_register);
 
                             item1.innerHTML = result[key].id;
                             item2.innerHTML = result[key].name;
@@ -464,8 +496,11 @@ $this->params['breadcrumbs'][] = $this->title;
                             item4.innerHTML = result[key].email;
                             item5.innerHTML = '+' + result[key].number;
                             item6.innerHTML = "<span class='badge badge-success'>" + result[key].role.item_name + "</span>";
-                            item7.innerHTML = result[key].date_register;
-                            item8.innerHTML = result[key].last_login;
+                            item7.innerHTML = (result[key].userProfession == null?'-':result[key].userProfession.prof.name);
+                            item8.innerHTML = "<i class='fas fa-hand-point-up'></i>";
+                            item9.innerHTML = datetimeFormat(result[key].date_register);
+                            item10.innerHTML = datetimeFormat(result[key].last_login);
+                            
 
                             var createLoginAs = document.createElement('a');
                             createLoginAs.setAttribute('href', '/user/login-as?id=' + result[key].id);
@@ -481,19 +516,21 @@ $this->params['breadcrumbs'][] = $this->title;
                             createDelete.className = 'btn btn-sm btn-danger f-s10 delete-user';
                             createDelete.innerHTML = '<i class="fas fa-times"></i> ';
 
-                            item9.appendChild(createLoginAs);
-                            item9.appendChild(createEdit);
-                            item9.appendChild(createDelete);
+                            item11.appendChild(createLoginAs);
+                            item11.appendChild(createEdit);
+                            item11.appendChild(createDelete);
 
                             createTR.appendChild(item1);
-                            createTR.appendChild(item2);
                             createTR.appendChild(item3);
+                            createTR.appendChild(item2);
                             createTR.appendChild(item4);
                             createTR.appendChild(item5);
                             createTR.appendChild(item6);
                             createTR.appendChild(item7);
                             createTR.appendChild(item8);
                             createTR.appendChild(item9);
+                            createTR.appendChild(item10);
+                            createTR.appendChild(item11);
 
                             document.getElementById('search-result-tbody').appendChild(createTR);
                         }
@@ -514,7 +551,7 @@ $this->params['breadcrumbs'][] = $this->title;
         });
         
         var changeTimesheetUser = false;
-        $('.get-timesheet').dblclick(function(){
+        $('body').on('dblclick', '.get-timesheet', function(){
             goPreloader();
             this.classList.add('text-success');
             changeTimesheetUser = this.parentNode.dataset.user;
@@ -626,10 +663,20 @@ $this->params['breadcrumbs'][] = $this->title;
             }
         }
         
+        // Форматирует дату из "YYYY-mm-dd hh:mm:ss" в формат "dd.mm.YYYY hh:mm"
+        function datetimeFormat(datetime){
+            if(datetime == null || datetime == '') return '-';
+            
+            var dateObj = new Date(datetime);
+            return (dateObj.getDate() < 10?'0'+dateObj.getDate():dateObj.getDate()) +"." +((dateObj.getMonth())+1 < 10?'0' +((dateObj.getMonth())+1):(dateObj.getMonth())+1)
+                    +"." +dateObj.getFullYear() +" " +dateObj.getHours() +":" +(dateObj.getMinutes() < 10?'0'+dateObj.getMinutes():dateObj.getMinutes());
+        }
+        
         $('#timesheetUserModal').on('hidden.bs.modal', function (e) {
             $('.get-timesheet-name').empty();
             $('.get-timesheet-content').empty();
         });
+        
 
 
     }

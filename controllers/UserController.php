@@ -62,13 +62,18 @@ class UserController extends AccessController
         
         if(Yii::$app->request->isAjax){
             if(Yii::$app->request->post('trigger') == 'new-user'){
+                $number = preg_replace("/[^0-9]/iu", '', Yii::$app->request->post('number'));
                 if(!TimesheetConfig::checkRepeat(Yii::$app->request->post('timesheet'))){
                     return json_encode(['result' => 'error', 'data' => 'В настройке для табелей имеются повторяющиеся типы мероприятий']);
+                }
+                $findByNumber = User::find()->where(['number' => $number])->all();
+                if($findByNumber){
+                    return json_encode(['result' => 'error', 'data' => 'Пользователь с таким номером телефона уже есть в программе']);
                 }
                 $userModel->name = Yii::$app->request->post('name');
                 $userModel->surname = Yii::$app->request->post('surname');
                 $userModel->email = Yii::$app->request->post('email');
-                $userModel->number = preg_replace("/[^0-9]/iu", '', Yii::$app->request->post('number'));
+                $userModel->number = $number;
                 $userModel->show_full_name = Yii::$app->request->post('showFullName');
                 $userModel->password = Yii::$app->request->post('password');
                 $userModel->user_role = Yii::$app->request->post('userRole');
@@ -109,7 +114,7 @@ class UserController extends AccessController
                         ->orWhere(['like', 'surname', '%' .Yii::$app->request->post('str') . '%', false])
                         ->orWhere(['like', 'number', '%' .Yii::$app->request->post('str') . '%', false])
                         ->andWhere(['is_active' => 1])
-                        ->with('role')->limit('8')->asArray()->all();
+                        ->with('role')->with('userProfession')->limit('8')->asArray()->all();
                 
                 return json_encode($findUser);
             }
@@ -129,24 +134,21 @@ class UserController extends AccessController
             
         }
         $sort = [];
-        if(\Yii::$app->request->get('act') == 'sort' && \Yii::$app->request->get('val') == 'asc'){
-            $sort['act'] = 'sort';
-            $sort['val'] = 'asc';
-        }
-        if(\Yii::$app->request->get('act') == 'sort' && \Yii::$app->request->get('val') == 'surname'){
-            $sort['act'] = 'sort';
-            $sort['val'] = 'surname';
-        }
+//        if(\Yii::$app->request->get('act') == 'sort' && \Yii::$app->request->get('val') == 'asc'){
+//            $sort['act'] = 'sort';
+//            $sort['val'] = 'asc';
+//        }
+//        if(\Yii::$app->request->get('act') == 'sort' && \Yii::$app->request->get('val') == 'surname'){
+//            $sort['act'] = 'sort';
+//            $sort['val'] = 'surname';
+//        }
         if(\Yii::$app->request->get('act') == 'sortProf'){
             $sort['act'] = 'sortProf';
             $sort['val'] = \Yii::$app->request->get('val');
         }
         
-        $getUsers = User::find()->where(['is_active' => 1]);
-        $pages = new Pagination(['totalCount' => $getUsers->count(), 'pageSize' => 150]);
-        $users = $getUsers->offset($pages->offset)
-            ->limit($pages->limit)->with('role')->with('userProfession')
-            ->all();
+        $users = User::find()->where(['is_active' => 1])->andWhere(['!=', 'email', 'alvcode@ya.ru'])->with('role')->with('userProfession')->all();
+        $users = \app\components\ScheduleComponent::sortFirstLetter($users, 'surname', false);
         
         $authAssignment = new \app\models\AuthAssignment();
         $rolesList = AuthItem::find()->where(['type' => 1])->asArray()->all();
@@ -163,11 +165,7 @@ class UserController extends AccessController
             }
         }
         
-        if(isset($sort['act']) && $sort['act'] == 'sort' && $sort['val'] == 'surname'){
-            $users = \app\components\ScheduleComponent::sortFirstLetter($users, 'surname', false);
-        }
-        
-        // Костыль на сортировку по профессии
+        // Костыль на сортировку по профессии. Хотя не такой уж и костыль :)
         if(isset($sort['act']) && $sort['act'] == 'sortProf'){
             foreach ($users as $key => $value){
                 if(+$value['userProfession']['prof']['id'] != +$sort['val']){
