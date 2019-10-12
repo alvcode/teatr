@@ -133,8 +133,13 @@ class PanelController extends AccessController
                 }
             }
             
-            if(Yii::$app->request->post('trigger') == 'edit-other-name'){
-                Yii::$app->db->createCommand()->update('events', ['other_name' => Yii::$app->request->post('otherName')], ['id' => Yii::$app->request->post('eventId')])->execute();
+            if(Yii::$app->request->post('trigger') == 'edit-event-name'){
+                Yii::$app->db->createCommand()
+                        ->update('events', [
+                                    'name' => Yii::$app->request->post('firstName'), 
+                                    'other_name' => Yii::$app->request->post('otherName')
+                                ], ['id' => Yii::$app->request->post('eventId')
+                            ])->execute();
                 return 1;
             }
         }

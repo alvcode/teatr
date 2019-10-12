@@ -405,24 +405,32 @@ $this->params['breadcrumbs'][] = $this->title;
         var otherNameEvent = false;
         $('.edit-event-other-name').click(function(){
             otherNameEvent = this.parentNode.parentNode.dataset.event;
+            var firstName = this.parentNode.parentNode.getElementsByClassName('proff-name')[0];
             var otherName = this.parentNode.parentNode.getElementsByClassName('other-name')[0];
-            var createInput = document.createElement('input');
-            createInput.value = otherName.innerHTML.trim();
+            var createInput1 = document.createElement('input');
+            var createInput2 = document.createElement('input');
+            createInput1.value = firstName.innerHTML.trim();
+            createInput2.value = otherName.innerHTML.trim();
+            firstName.innerHTML = '';
             otherName.innerHTML = '';
             var createOk = document.createElement('div');
-            createOk.className = 'btn btn-sm btn-success edit-other-name-submit';
+            createOk.className = 'btn btn-sm btn-success edit-event-name-submit';
             createOk.innerHTML = 'ok';
-            otherName.append(createInput);
+            firstName.append(createInput1);
+            otherName.append(createInput2);
             otherName.append(createOk);
         });
         
-        $('body').on('click', '.edit-other-name-submit', function(){
+        $('body').on('click', '.edit-event-name-submit', function(){
+            goPreloader();
+            var firstName = this.parentNode.parentNode.querySelector('.proff-name').querySelector('input');
             var otherName = this.parentNode.querySelector('input');
-//            var otherName = $(this).parent().find('input');
+            
             var self = this;
             var data = {
-                trigger: 'edit-other-name',
+                trigger: 'edit-event-name',
                 eventId: otherNameEvent,
+                firstName: firstName.value,
                 otherName: otherName.value,
             };
             data[csrfParam] = csrfToken;
@@ -432,6 +440,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 data: data,
                 success: function (data) {
                     if (data == 1) {
+                        self.parentNode.parentNode.getElementsByClassName('proff-name')[0].innerHTML = firstName.value;
                         self.parentNode.innerHTML = otherName.value;
                         showNotifications("Поле успешно изменено!", 2000, NOTIF_GREEN);
                     } else if (data == 0) {
