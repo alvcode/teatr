@@ -409,7 +409,7 @@ a:hover {
   width: 100%;
 }
 .three-ind--title-row .date {
-  width: 130px;
+  width: 150px;
   /*min-width: 150px;*/
   border: 1px solid #000;
   padding: 4px;
@@ -441,7 +441,7 @@ a:hover {
   width: 100%;
 }
 .three-ind--date-row .date {
-  width: 130px;
+  width: 150px;
   /*min-width: 150px;*/
   border-left: 1px solid #000;
   border-bottom: 1px solid #000;
