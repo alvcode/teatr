@@ -16,6 +16,7 @@ use yii\base\Exception;
 use yii\web\NotFoundHttpException;
 use app\models\Room;
 use app\models\Config;
+use app\models\RoomSetting;
 
 class SiteController extends Controller
 {
@@ -119,7 +120,7 @@ class SiteController extends Controller
         $this->layout = 'schedule';
         
         if(Yii::$app->request->isAjax){
-            if(Yii::$app->request->post('trigger') == 'load-schedule'){ 
+            if(Yii::$app->request->post('trigger') == 'load-schedule'){
                 // В javascript страницы есть хардкод отображения аткров и других служб по prof_cat
                 $searchHash = ScheduleViewHash::find()->where(['date_from' => Yii::$app->request->post('from'), 'date_to' => Yii::$app->request->post('to')])->asArray()->one();
                 if($searchHash['hash'] == Yii::$app->request->post('hash')){
@@ -127,6 +128,7 @@ class SiteController extends Controller
                     $result = [];
                     $result['schedule'] = ScheduleComponent::loadThreeSchedule($period);
                     $result['config'] = Config::getAllConfig();
+                    $result['room_setting'] = RoomSetting::getSetting($period);
                     return json_encode(['result' => 'ok', 'response' => $result]);
                 }else{
                     return json_encode(['result' => 'error', 'response' => 'Хэш не прошел проверку на подлинность. Обратитесь к разработчику, если считаете это ошибкой программы']);

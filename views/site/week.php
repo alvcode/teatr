@@ -362,6 +362,7 @@ window.onload = function () {
                     if(result.result == 'ok'){
                         scheduleData = result.response.schedule;
                         config = result.response.config;
+                        applyRoomSetting(result.response.room_setting);
                         for (var key in scheduleData) {
                         var dateT = new Date(scheduleData[key].date);
                             addEventInCalendar(generateCellData(scheduleData[key]));
@@ -380,7 +381,20 @@ window.onload = function () {
         }
         loadSchedule(datePeriod);
         
-        
+        // Применяем настройку отображения залов
+        function applyRoomSetting(roomSetting){
+            if(!roomSetting.length){
+                $('.room').css({'display': 'block'});
+            }else{
+                $('.room').css({'display': 'block'});
+                var roomCells = document.getElementsByClassName('room');
+                for(var i = 0; i < roomCells.length; i++){
+                    if(!roomSetting.includes(roomCells[i].dataset.room)){
+                        roomCells[i].style.display = 'none';
+                    }
+                }
+            }
+        }
         
         
         
