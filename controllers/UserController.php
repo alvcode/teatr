@@ -70,6 +70,10 @@ class UserController extends AccessController
                 if($findByNumber){
                     return json_encode(['result' => 'error', 'data' => 'Пользователь с таким номером телефона уже есть в программе']);
                 }
+                $findByEmail = User::find()->where(['email' => Yii::$app->request->post('email')])->all();
+                if($findByEmail){
+                    return json_encode(['result' => 'error', 'data' => 'Пользователь с таким E-mail уже есть в программе']);
+                }
                 $userModel->name = Yii::$app->request->post('name');
                 $userModel->surname = Yii::$app->request->post('surname');
                 $userModel->email = Yii::$app->request->post('email');
@@ -198,6 +202,20 @@ class UserController extends AccessController
         
         
         if ($getUser->load(Yii::$app->request->post())) {
+            $checkUser = true;
+            $findByNumber = User::find()->where(['number' => preg_replace("/[^0-9]/iu", '', $getUser->number)])
+                    ->andWhere(['!=', 'id', $getUser->id])->all();
+            if($findByNumber){
+                Yii::$app->session->setFlash('error', "Пользователь с таким номером телефона уже существует в программе");
+                $checkUser = false;
+            }
+            $findByEmail = User::find()->where(['email' => $getUser->email])
+                    ->andWhere(['!=', 'id', $getUser->id])->all();
+            if($findByEmail){
+                Yii::$app->session->setFlash('error', "Пользователь с таким E-mail уже есть в программе");
+                $checkUser = false;
+            }
+            if($checkUser){
                 $getUser->number = preg_replace("/[^0-9]/iu", '', $getUser->number);
 
                 if($getUser->save()){
@@ -218,6 +236,7 @@ class UserController extends AccessController
                 }else{
                     Yii::$app->session->setFlash('error', "Что-то пошло не так. Обратитесь в поддержку");
                 }
+            }
         }
 
         
