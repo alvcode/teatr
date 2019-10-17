@@ -369,10 +369,10 @@ $this->params['breadcrumbs'][] = $this->title;
                     console.log(castsData);
                     if(castsData.result == 'ok'){
                         for (var key in castsData.data.cast) {
-                            insertActor(castsData.data.cast[key].name + " " + castsData.data.cast[key].surname, castsData.data.cast[key].id, castsData.data.cast[key].cast_id, 0);
+                            insertActor(castsData.data.cast[key].surname + " " + castsData.data.cast[key].name, castsData.data.cast[key].id, castsData.data.cast[key].cast_id, 0);
                             if (castsData.data.cast[key].understudy) {
                                 for (var keyU in castsData.data.cast[key].understudy) {
-                                    insertActor(castsData.data.cast[key].understudy[keyU].name + " " + castsData.data.cast[key].understudy[keyU].surname, castsData.data.cast[key].understudy[keyU].id, castsData.data.cast[key].cast_id, 1);
+                                    insertActor(castsData.data.cast[key].understudy[keyU].surname + " " + castsData.data.cast[key].understudy[keyU].name, castsData.data.cast[key].understudy[keyU].id, castsData.data.cast[key].cast_id, 1);
                                 }
                             }
                         }

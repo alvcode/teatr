@@ -7,7 +7,7 @@
 use yii\helpers\Html;
 use yii\bootstrap\ActiveForm;
 
-$this->title = 'Teatrium - информационная панель';
+$this->title = 'Teatrium';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <!--<div class="site-login">-->

@@ -69,6 +69,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     <div class="arrow-right"><i id="month-right" class="fas fa-arrow-circle-right cursor-pointer" aria-hidden="true"></i></div>
                 </div>
                 <div>
+                    <div id="width-setting" class="btn btn-sm btn-info mr-1">Ширина столбцов</div> 
                     <div id="room-setting" class="btn btn-sm btn-info">Настройка залов</div>
                 </div>
             </div>
@@ -501,6 +502,62 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="modal-footer">
                 <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Отмена</button>
                 <button id="room-setting-submit" type="button" class="btn btn-sm btn-success">Сохранить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal width setting --> 
+<div class="modal fade" id="widthSettingModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Настройка ширины столбцов</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-danger">
+                    Функционал на стадии разработки. Скоро начнет работать
+                </div>
+                <div class="alert alert-info">
+                    Справа написано кол-во %, которые необходимо распределить по залам. По мере заполнения, вы будете видеть, как меняется ширина
+                </div>
+                <div class="width-rooms-persent text-right">
+                    <span class="badge badge-success">100%</span>
+                </div>
+                <div class="width-rooms-container mrg-top15">
+                    <table class="table table-striped">
+                        <tbody>
+                            <tr>
+                                <th scope="row">
+                                    <div data-room="0" class="room-width-item cursor-pointer">Дата</div>
+                                </th>
+                                <td>
+                                    <i class="fas fa-minus-circle"></i>
+                                    <span class="column-value">0</span>
+                                    <i class="fas fa-plus-circle"></i>
+                                </td>
+                            </tr>
+                            <?php foreach ($rooms as $key => $value): ?>
+                                <tr>
+                                    <th scope="row">
+                                        <div data-room="<?= $value['id'] ?>" class="room-width-item cursor-pointer"><?= $value['name'] ?></div>
+                                    </th>
+                                    <td>
+                                        <i class="fas fa-minus-circle"></i>
+                                        <span class="column-value">0</span>
+                                        <i class="fas fa-plus-circle"></i>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Закрыть</button>
             </div>
         </div>
     </div>
@@ -1200,6 +1257,13 @@ $this->params['breadcrumbs'][] = $this->title;
         var editEventRoom = false;
         var editModifiedEvent = 0;
         $('body').on('click', '.event-cell', function (e) {
+            var cells = document.getElementsByClassName('event-cell');
+            for(var i = 0; i < cells.length; i++){
+                if(cells[i].getElementsByClassName('badge')[0].classList.contains('badge-success')){
+                    cells[i].getElementsByClassName('badge')[0].classList.remove('badge-success');
+                    cells[i].getElementsByClassName('badge')[0].classList.add('badge-info');
+                }
+            }
             this.getElementsByClassName('badge')[0].classList.remove('badge-info');
             this.getElementsByClassName('badge')[0].classList.add('badge-success');
             $('#edit--time_from').val('');
@@ -2195,6 +2259,21 @@ $this->params['breadcrumbs'][] = $this->title;
             }
             return true;
         }
+        
+        // Настройка ширины столбцов
+        $('#width-setting').click(function(){
+            $('#widthSettingModal').modal('show');
+        });
+        
+        function loadColumnWidthSetting(){
+            var setting = JSON.parse(localStorage.getItem('column_width'));
+            if(setting == null){
+                
+            }
+        }
+        
+        localStorage.setItem('test', JSON.stringify({1: '10', 2: '15'}));
+        console.log(JSON.parse(localStorage.getItem('test')));
 
         /**
          * Переводит дату формата 3.6.2019 в 3.07.2019

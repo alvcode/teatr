@@ -25,8 +25,8 @@ AppAsset::register($this);
 </head>
 <body>
 <?php $this->beginBody() ?>
-
-<div class="wrap">
+<!--class="site-login"-->
+<div class="wrap site-login">
     <div class="container">
         <?= $content ?>
     </div>

@@ -456,9 +456,11 @@ class ScheduleComponent extends Model{
         $spectacleEventConfig = Config::getConfig('spectacle_event');
         $result = [];
         $schedule = ScheduleEvents::find()->select('*')
+                ->leftJoin('events', 'schedule_events.event_id = events.id')
                 ->where(['=', 'year(date)', $year])
                 ->andWhere(['=', 'month(date)', $month])
                 ->andWhere(['event_type_id' => $spectacleEventConfig])
+                ->andWhere(['events.category_id' => 1])
                 ->asArray()->all();
         
         $casts = Casts::find()->where(['year' => $year, 'month' => $month])->with('understudy')->asArray()->all();

@@ -51,6 +51,9 @@ class TimesheetExcel extends Model{
     // Конфигурация табеля
     public $timesheetConfig;
     
+    // Настройки приложения
+    public $mainConfig = [];
+    
     // Загруженное расписание
     protected $schedule;
     
@@ -67,10 +70,11 @@ class TimesheetExcel extends Model{
         $this->profId = $profId;
         $this->mode = $mode;
         
-        $this->loadSchedule();
         $this->loadUsers();
         $this->loadTimesheetConfig();
+        $this->loadMainConfig();
         $this->loadProfName();
+        $this->loadSchedule();
     }
     
 //    public function init($from, $to, $profId, $mode){
@@ -102,9 +106,14 @@ class TimesheetExcel extends Model{
         $schedule = ScheduleEvents::find()
             ->leftJoin('events', 'schedule_events.event_id = events.id')
             ->where(['between', 'date', $from, $to])
-            ->andWhere(['or', ['room_id' => array_keys($this->roomIds), 'events.category_id' => 1], ['event_type_id' => array_keys($this->eventTypes), 'events.category_id' => 1]])
+            ->andWhere(['or', [
+                    'room_id' => array_keys($this->roomIds), 
+                    'events.category_id' => 1,
+                    'event_type_id' => $this->mainConfig
+                ], ['event_type_id' => array_keys($this->eventTypes), 'events.category_id' => 1]])
 //            ->andWhere(['events.category_id' => 1])
             ->with('eventType')->with('event')->with('profCat')->with('allUsersInEvent')->orderBy('date ASC, time_from ASC')->asArray()->all();
+        
         
         $this->schedule = ScheduleComponent::transformEventsToTwo($schedule);
 //        echo "<pre>";
@@ -136,6 +145,16 @@ class TimesheetExcel extends Model{
      */
     public function loadTimesheetConfig(){
         $this->timesheetConfig = TimesheetConfig::find()->where(['user_id' => \yii\helpers\ArrayHelper::getColumn($this->users, 'id')])->asArray()->all();
+    }
+    
+    public function loadMainConfig(){
+        $allConfig = Config::getAllConfig();
+        foreach ($allConfig['spectacle_event'] as $value){
+            $this->mainConfig[count($this->mainConfig)] = $value;
+        }
+        foreach ($allConfig['repetition_event_type'] as $value){
+            $this->mainConfig[count($this->mainConfig)] = $value;
+        }
     }
     
     public function loadProfName(){
@@ -358,7 +377,7 @@ class TimesheetExcel extends Model{
                                 if((int)$userValue['id'] == (int)$usVal['user_id']){
                                     $timesheetConfig = $this->checkTimesheetConfig($userValue['id'], $event['eventType']['id']);
                                     // 1 - часы, 2 - выходы
-                                    if($timesheetConfig && $timesheetConfig == 1 && $event['time_to']){
+                                    if($timesheetConfig && (int)$timesheetConfig == 1 && $event['time_to']){
                                         if(in_array($event['eventType']['id'], array_keys($this->eventTypes))){
                                             foreach ($userData as $keyUserData => $valUserData){
                                                 if($valUserData['type'] == 'event' && (int)$valUserData['id'] == (int)$event['eventType']['id']){
@@ -380,7 +399,7 @@ class TimesheetExcel extends Model{
                                                 }
                                             }
                                         }
-                                    }elseif($timesheetConfig && $timesheetConfig == 2){
+                                    }elseif($timesheetConfig && (int)$timesheetConfig == 2){
                                         if(in_array($event['eventType']['id'], array_keys($this->eventTypes))){
                                             foreach ($userData as $keyUserData => $valUserData){
                                                 if($valUserData['type'] == 'event' && (int)$valUserData['id'] == (int)$event['eventType']['id']){
@@ -421,7 +440,7 @@ class TimesheetExcel extends Model{
             }
             // Тут мы должны вписать итоговые значения на основе $userData
         }
-        $filename = "Табель_(" .$this->profName['name'] .")_" .$dateFrom ."-" .$dateTo .".xlsx";
+        $filename = "Tabel_(" .$this->profName['name'] .")_" .$dateFrom ."-" .$dateTo .".xlsx";
         $writer = new Xlsx($spreadsheet);
         $writer->save('files/timesheets/' .$filename);
         return \Yii::$app->response->sendFile('files/timesheets/' .$filename);

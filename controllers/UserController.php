@@ -66,10 +66,10 @@ class UserController extends AccessController
                 if(!TimesheetConfig::checkRepeat(Yii::$app->request->post('timesheet'))){
                     return json_encode(['result' => 'error', 'data' => 'В настройке для табелей имеются повторяющиеся типы мероприятий']);
                 }
-                $findByNumber = User::find()->where(['number' => $number])->all();
-                if($findByNumber){
-                    return json_encode(['result' => 'error', 'data' => 'Пользователь с таким номером телефона уже есть в программе']);
-                }
+//                $findByNumber = User::find()->where(['number' => $number])->all();
+//                if($findByNumber){
+//                    return json_encode(['result' => 'error', 'data' => 'Пользователь с таким номером телефона уже есть в программе']);
+//                }
                 $findByEmail = User::find()->where(['email' => Yii::$app->request->post('email')])->all();
                 if($findByEmail){
                     return json_encode(['result' => 'error', 'data' => 'Пользователь с таким E-mail уже есть в программе']);
@@ -203,12 +203,12 @@ class UserController extends AccessController
         
         if ($getUser->load(Yii::$app->request->post())) {
             $checkUser = true;
-            $findByNumber = User::find()->where(['number' => preg_replace("/[^0-9]/iu", '', $getUser->number)])
-                    ->andWhere(['!=', 'id', $getUser->id])->all();
-            if($findByNumber){
-                Yii::$app->session->setFlash('error', "Пользователь с таким номером телефона уже существует в программе");
-                $checkUser = false;
-            }
+//            $findByNumber = User::find()->where(['number' => preg_replace("/[^0-9]/iu", '', $getUser->number)])
+//                    ->andWhere(['!=', 'id', $getUser->id])->all();
+//            if($findByNumber){
+//                Yii::$app->session->setFlash('error', "Пользователь с таким номером телефона уже существует в программе");
+//                $checkUser = false;
+//            }
             $findByEmail = User::find()->where(['email' => $getUser->email])
                     ->andWhere(['!=', 'id', $getUser->id])->all();
             if($findByEmail){
