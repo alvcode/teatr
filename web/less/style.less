@@ -337,11 +337,13 @@
 .three--fixed-top{
     position: fixed;
     top: 25px;
-    background-color: black;
+    background-color: rgba(0, 0, 0, 0.8);
     color: white;
+    font-size: 15px !important;
+    text-align: center;
 }
 .three--title-row{
-    .flex(row, nowrap, space-between);
+    .flex(row, nowrap, flex-start);
     font-size: 18px;
     font-weight: 700;
     /*text-align: center;*/
@@ -366,7 +368,7 @@
     }
 }
 .three--date-row{
-    .flex(row, nowrap, space-between);
+    .flex(row, nowrap, flex-start);
     /*font-size: 18px;*/
     /*font-weight: 700;*/
     /*text-align: center;*/

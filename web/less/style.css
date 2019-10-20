@@ -329,8 +329,10 @@ a:hover {
 .three--fixed-top {
   position: fixed;
   top: 25px;
-  background-color: black;
+  background-color: rgba(0, 0, 0, 0.8);
   color: white;
+  font-size: 15px !important;
+  text-align: center;
 }
 .three--title-row {
   display: flex;
@@ -340,8 +342,8 @@ a:hover {
   -webkit-flex-wrap: nowrap;
   -ms-flex-wrap: nowrap;
   flex-wrap: nowrap;
-  -webkit-justify-content: space-between;
-  justify-content: space-between;
+  -webkit-justify-content: flex-start;
+  justify-content: flex-start;
   font-size: 18px;
   font-weight: 700;
   /*text-align: center;*/
@@ -372,8 +374,8 @@ a:hover {
   -webkit-flex-wrap: nowrap;
   -ms-flex-wrap: nowrap;
   flex-wrap: nowrap;
-  -webkit-justify-content: space-between;
-  justify-content: space-between;
+  -webkit-justify-content: flex-start;
+  justify-content: flex-start;
   /*font-size: 18px;*/
   /*font-weight: 700;*/
   /*text-align: center;*/

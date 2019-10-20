@@ -518,9 +518,6 @@ $this->params['breadcrumbs'][] = $this->title;
                 </button>
             </div>
             <div class="modal-body">
-                <div class="alert alert-danger">
-                    Функционал на стадии разработки. Скоро начнет работать
-                </div>
                 <div class="alert alert-info">
                     Справа написано кол-во %, которые необходимо распределить по залам. По мере заполнения, вы будете видеть, как меняется ширина
                 </div>
@@ -529,26 +526,26 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div>
                 <div class="width-rooms-container mrg-top15">
                     <table class="table table-striped">
-                        <tbody>
-                            <tr>
+                        <tbody class="noselect">
+                            <tr class="column-width-tr">
                                 <th scope="row">
                                     <div data-room="0" class="room-width-item cursor-pointer">Дата</div>
                                 </th>
-                                <td>
-                                    <i class="fas fa-minus-circle"></i>
+                                <td data-room="0">
+                                    <i class="fas fa-minus-circle cursor-pointer width-setting-left"></i>
                                     <span class="column-value">0</span>
-                                    <i class="fas fa-plus-circle"></i>
+                                    <i class="fas fa-plus-circle cursor-pointer width-setting-right"></i>
                                 </td>
                             </tr>
                             <?php foreach ($rooms as $key => $value): ?>
-                                <tr>
+                                <tr class="column-width-tr">
                                     <th scope="row">
                                         <div data-room="<?= $value['id'] ?>" class="room-width-item cursor-pointer"><?= $value['name'] ?></div>
                                     </th>
-                                    <td>
-                                        <i class="fas fa-minus-circle"></i>
+                                    <td data-room="<?= $value['id'] ?>">
+                                        <i class="fas fa-minus-circle cursor-pointer width-setting-left"></i>
                                         <span class="column-value">0</span>
-                                        <i class="fas fa-plus-circle"></i>
+                                        <i class="fas fa-plus-circle cursor-pointer width-setting-right"></i>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -557,6 +554,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 </div>
             </div>
             <div class="modal-footer">
+                <button type="button" id="reset-column-width" class="btn btn-sm btn-info">Сбросить все настройки</button>
                 <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Закрыть</button>
             </div>
         </div>
@@ -568,6 +566,25 @@ $this->params['breadcrumbs'][] = $this->title;
 
         var csrfParam = $('meta[name="csrf-param"]').attr("content");
         var csrfToken = $('meta[name="csrf-token"]').attr("content");
+        
+        if($(window).width() > 1150){
+            var fixedTop = $('.three--title-row').clone();
+            fixedTop.appendTo('#three--schedule-content');
+            fixedTop.css({'width': fixedTop.width(), 'display': 'none'});
+            fixedTop.addClass('three--fixed-top');
+
+            $( window ).scroll(function() {
+                if($(window).scrollTop() > 300){
+                    $('.three--fixed-top').slideDown(200);
+                }else{
+                    $('.three--fixed-top').slideUp(200);
+                }
+            });
+
+            $(window).resize(function() {
+                $('.three--fixed-top').css({'width': $('.three--title-row:not(.three--fixed-top)').width()});
+            });
+        }
         
         var config = false; // Храним все настройки приложения
         var roomSetting = false; // Храним настройки отображения залов
@@ -1214,6 +1231,8 @@ $this->params['breadcrumbs'][] = $this->title;
                         var dateT = new Date(scheduleData[key].date);
                             addEventInCalendar(generateCellData(scheduleData[key]));
                     }
+                    // Устанавливаем настройки ширины столбцов
+                    setColumnWidth(getLocalStorage('column_width'), roomSetting);
                     stopPreloader();
                 },
                 error: function () {
@@ -1257,6 +1276,7 @@ $this->params['breadcrumbs'][] = $this->title;
         var editEventRoom = false;
         var editModifiedEvent = 0;
         $('body').on('click', '.event-cell', function (e) {
+            $('body').css({'overflow': 'hidden'});
             var cells = document.getElementsByClassName('event-cell');
             for(var i = 0; i < cells.length; i++){
                 if(cells[i].getElementsByClassName('badge')[0].classList.contains('badge-success')){
@@ -1348,6 +1368,7 @@ $this->params['breadcrumbs'][] = $this->title;
         });
 
         $('#three--right-more-close').click(function () {
+            $('body').css({'overflow': 'auto'});
             $('.three--right-more').removeClass('zoomInRight').addClass('zoomOutRight');
             $('.three--right-save-button').slideDown(200);
             $('.three--copy-event').slideUp(200);
@@ -2265,16 +2286,141 @@ $this->params['breadcrumbs'][] = $this->title;
             $('#widthSettingModal').modal('show');
         });
         
-        function loadColumnWidthSetting(){
-            var setting = JSON.parse(localStorage.getItem('column_width'));
-            if(setting == null){
-                
+        $('#reset-column-width').click(function(){
+            resetLocaleStorage('column_width');
+            window.location.reload(false);
+        });
+        
+        $('.width-setting-left').click(function(){
+            var room = this.parentNode.dataset.room;
+            var param = this.parentNode.querySelector('.column-value').innerHTML;
+            var counter = checkColumnPersent();
+            if(counter <= 0 || +param <= 0){
+                showNotifications('Уменьшение невозможно', 3000, NOTIF_RED);
+            }else{
+                this.parentNode.querySelector('.column-value').innerHTML = +param -1;
             }
+            var newConfig = getSettingModal();
+            setColumnWidth(newConfig, roomSetting);
+        });
+        
+        $('.width-setting-right').click(function(){
+            var room = this.parentNode.dataset.room;
+            var param = this.parentNode.querySelector('.column-value').innerHTML;
+            var counter = checkColumnPersent();
+            if(counter >= 100){
+                showNotifications('Увеличение невозможно', 3000, NOTIF_RED);
+            }else{
+                this.parentNode.querySelector('.column-value').innerHTML = +param +1;
+            }
+            var newConfig = getSettingModal();
+            setColumnWidth(newConfig, roomSetting);
+        });
+        
+        // Собирает объект настройки ширины из модального окна
+        function getSettingModal(){
+            var tr = document.getElementsByClassName('column-width-tr');
+            var config = {};
+            for (var i = 0; i < tr.length; i++){
+                config[tr[i].getElementsByClassName('room-width-item')[0].dataset.room] = +tr[i].getElementsByClassName('column-value')[0].innerHTML;
+            }
+            return config;
         }
         
-        localStorage.setItem('test', JSON.stringify({1: '10', 2: '15'}));
-        console.log(JSON.parse(localStorage.getItem('test')));
+        // Возвращает кол-во уже распределенных процентов
+        function checkColumnPersent(){
+            var setting = getLocalStorage('column_width');
+            var counter = 0;
+            if(setting != null){
+                for(var key in setting){
+                    counter += setting[key];
+                }
+            }
+            return counter;
+        }
+        
+        /**
+        * Устанавливает настройки ширины столбцов
 
+         * @param {obj} config
+         * @param {array} roomSetting
+        */
+        function setColumnWidth(config, roomSetting){
+            var rooms = document.getElementsByClassName('room');
+            var widthTr = document.getElementsByClassName('column-width-tr');
+            if(config == null){
+                $('.width-rooms-persent').find('span').html('100%');
+                for(var i = 0; i < widthTr.length; i++){
+                    widthTr[i].getElementsByClassName('column-value')[0].innerHTML = '0';
+                }
+                $('.date').css({'width': ''});
+                for(var i = 0; i < rooms.length; i++){
+                    rooms[i].style.width = '';
+                }
+            }else{
+                var counter = 0;
+                var persentPlus = 0;
+                // Распределим ширину скрытых залов по видимым
+                if(roomSetting.length){
+                    var allRooms = 0;
+                    for(var key in config){
+                        if(+key != 0){
+                            allRooms++;
+                        }
+                    }
+                    if(allRooms > roomSetting.length){
+                        var hideRoom = [];
+                        for(var key in config){
+                            if(!roomSetting.includes(key) && +key != 0){
+                                hideRoom[hideRoom.length] = key;
+                            }
+                        }
+                        var freePersent = 0;
+                        for(var key in config){
+                            if(hideRoom.includes(key)){
+                                freePersent += config[key];
+                            }
+                        }
+                        // +1 комната, это Дата, тут она нам уже нужна
+                        persentPlus = Math.floor(freePersent / ((allRooms +1) - roomSetting.length));
+                    }
+                    console.log(freePersent);
+                }
+                for(var key in config){
+                    counter += config[key];
+                    for(var i = 0; i < rooms.length; i++){
+                        if(+key == 0){
+                            $('.date').css({'width': (+config[key] +persentPlus) +'%'});
+                        }else{
+                            if(+rooms[i].dataset.room == +key){
+                                rooms[i].style.width = (+config[key] +persentPlus) +'%';
+                            }
+                        }
+                    }
+                    for(var i = 0; i < widthTr.length; i++){
+                        if(+widthTr[i].getElementsByClassName('room-width-item')[0].dataset.room == key){
+                            widthTr[i].getElementsByClassName('column-value')[0].innerHTML = config[key];
+                        }
+                    }
+                }
+                
+                setLocalStorage('column_width', config);
+            }
+            $('.width-rooms-persent').find('span').html((100 - checkColumnPersent())+"%");
+        }
+        
+        function getLocalStorage(name){
+            return JSON.parse(localStorage.getItem(name));
+        }
+        
+        function setLocalStorage(name, value){
+            localStorage.setItem(name, JSON.stringify(value));
+        }
+        
+        function resetLocaleStorage(name){
+            localStorage.removeItem(name);
+        }
+        
         /**
          * Переводит дату формата 3.6.2019 в 3.07.2019
          * @param {string} date
