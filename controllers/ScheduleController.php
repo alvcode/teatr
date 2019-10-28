@@ -27,6 +27,7 @@ use app\components\excel\WeekExcel;
 use app\components\excel\WeekExcelTwo;
 use app\components\word\WeekWord;
 use app\models\RoomSetting;
+use app\models\UserProfession;
 
 class ScheduleController extends AccessController
 {
@@ -43,6 +44,26 @@ class ScheduleController extends AccessController
                 'class' => VerbFilter::className(),
                 'actions' => [
                     'logout' => ['post'],
+                ],
+            ],
+            'access' => [
+                'class' => AccessControl::className(),
+                'rules' => [
+                    [
+                        'allow' => true,
+                        'actions' => ['one'],
+                        'roles' => ['visible_s_one'],
+                    ],
+                    [
+                        'allow' => true,
+                        'actions' => ['two'],
+                        'roles' => ['visible_s_two'],
+                    ],
+                    [
+                        'allow' => true,
+                        'actions' => ['three', 'word'],
+                        'roles' => ['visible_s_three'],
+                    ],
                 ],
             ],
         ];
@@ -66,9 +87,12 @@ class ScheduleController extends AccessController
         
         if(Yii::$app->request->isAjax){
             if(Yii::$app->request->post('trigger') == 'add-schedule'){
+                if(!Yii::$app->user->can('create_event')){
+                    return json_encode(['result' => 'error', 'response' => 'У вас нет прав на создание мероприятий']);
+                }
                 $spectacleEventConfig = Config::getConfig('spectacle_event');
                 if(in_array(Yii::$app->request->post('eventType'), $spectacleEventConfig) && +Yii::$app->request->post('withoutEvent') > 0){
-                    return json_encode(['response' => 'error', 'result' => 'На спектакль обязательно нужно выбрать мероприятие']);
+                    return json_encode(['result' => 'error', 'response' => 'На спектакль обязательно нужно выбрать мероприятие']);
                 }
                 $scheduleEvent = new ScheduleEvents();
                 $scheduleEvent->event_type_id = Yii::$app->request->post('eventType');
@@ -94,9 +118,9 @@ class ScheduleController extends AccessController
                     $record = ScheduleEvents::find()
                         ->where(['id' => $scheduleEvent->id])
                         ->with('eventType')->with('event')->asArray()->one();
-                    return json_encode(['response' => 'ok', 'result' => $record]);
+                    return json_encode(['result' => 'ok', 'response' => $record]);
                 }else{
-                    return json_encode(['response' => 'error', 'result' => 'Ошибка']);
+                    return json_encode(['result' => 'error', 'response' => 'Ошибка базы данных']);
                 }
             }
             
@@ -109,13 +133,23 @@ class ScheduleController extends AccessController
             }
             
             if(Yii::$app->request->post('trigger') == 'delete-event'){
+                if(!Yii::$app->user->can('delete_event')){
+                    return json_encode(['result' => 'error', 'response' => 'У вас нет прав на удаление мероприятий']);
+                }
                 $findEvent = ScheduleEvents::findOne(Yii::$app->request->post('id'));
                 Yii::$app->db->createCommand()->delete('prof_cat_in_schedule', ['schedule_id' => Yii::$app->request->post('id')])->execute();
-                if(!$findEvent) return 0;
-                if($findEvent->delete()) return 1;
+                if(!$findEvent){
+                    return json_encode(['result' => 'error', 'response' => 'Мероприятие не найдено']);
+                }
+                if($findEvent->delete()){
+                    return json_encode(['result' => 'ok']);
+                }
             }
             
             if(Yii::$app->request->post('trigger') == 'edit-event'){
+                if(!Yii::$app->user->can('edit_event')){
+                    return json_encode(['response' => 'error', 'data' => 'У вас нет прав на редактирование мероприятий']);
+                }
                 $findEvent = ScheduleEvents::findOne(Yii::$app->request->post('id'));
                 $findEvent->time_from = \app\components\Formatt::timeToMinute(Yii::$app->request->post('timeFrom'));
                 if(\app\components\Formatt::timeToMinute(Yii::$app->request->post('timeTo'))){
@@ -173,6 +207,9 @@ class ScheduleController extends AccessController
             }
             
             if(Yii::$app->request->post('trigger') == 'add-in-cast'){
+                if(!\Yii::$app->user->can('add_casts')){
+                    return json_encode(['result' => 'error', 'response' => 'У вас нет прав на добавление состава']);
+                }
                 $response = [];
                 $response['data'] = [];
                 $actorsArr = Yii::$app->request->post('user');
@@ -232,6 +269,9 @@ class ScheduleController extends AccessController
             }
             
             if(Yii::$app->request->post('trigger') == 'add-last-cast'){
+                if(!\Yii::$app->user->can('add_casts')){
+                    return json_encode(['result' => 'error', 'response' => 'У вас нет прав на добавление состава']);
+                }
                 $data = ScheduleComponent::loadCastInSchedule(Yii::$app->request->post('searchMonth'), Yii::$app->request->post('searchYear'), Yii::$app->request->post('event'));
                 $data['cast'] = ScheduleComponent::joinUnderstudy($data['cast']);
                 if(ScheduleComponent::copyLastCast($data['cast'], Yii::$app->request->post('month'), Yii::$app->request->post('year'), Yii::$app->request->post('event'))){
@@ -247,6 +287,9 @@ class ScheduleController extends AccessController
             }
             
             if(Yii::$app->request->post('trigger') == 'delete-actor-in-cast'){
+                if(!\Yii::$app->user->can('add_casts')){
+                    return json_encode(['result' => 'error', 'response' => 'У вас нет прав на удаление из состава']);
+                }
                 $db = Yii::$app->db;
                 $transaction = $db->beginTransaction();
                 try{
@@ -274,16 +317,19 @@ class ScheduleController extends AccessController
                     ])->execute();
                     if($findCast->delete()){
                         $transaction->commit();
-                        return 1;   
+                        return json_encode(['result' => 'ok']);
                     }
                 }catch (\Exception $e) {
                     $transaction->rollBack();
                     //throw $e;
-                    return 0;
+                    return json_encode(['result' => 'error', 'response' => 'Ошибка базы данных']);
                 }
             }
             
             if(Yii::$app->request->post('trigger') == 'add-in-understudy'){
+                if(!\Yii::$app->user->can('add_casts')){
+                    return json_encode(['result' => 'error', 'response' => 'У вас нет прав на добавление состава']);
+                }
                 $response = [];
                 $response['data'] = [];
                 $actorsArr = Yii::$app->request->post('user');
@@ -307,10 +353,14 @@ class ScheduleController extends AccessController
                     $transaction->rollBack();
                     //throw $e;
                     $response['result'] = 'error';
+                    $response['response'] = 'Ошибка базы данных';
                     return json_encode($response);
                 }
             }
             if(Yii::$app->request->post('trigger') == 'delete-understudy'){
+                if(!\Yii::$app->user->can('add_casts')){
+                    return json_encode(['result' => 'error', 'response' => 'У вас нет прав на удаление из состава']);
+                }
                 $deleteUnderstudy = Yii::$app->db->createCommand()->delete('cast_understudy', [
                     'cast_id' => Yii::$app->request->post('cast'),
                     'user_id' => Yii::$app->request->post('user'),
@@ -319,14 +369,32 @@ class ScheduleController extends AccessController
                     'user_id' => Yii::$app->request->post('user'),
                     'cast_id' => Yii::$app->request->post('cast')
                 ])->execute();
-                if($deleteUnderstudy) return 1;
+                if($deleteUnderstudy){
+                    return json_encode(['result' => 'ok']);
+                }
             }
             /**
              * ok - Добавлен на мероприятие
              * deleted - Удален с мероприятия
              * error - есть пересечения
+             * permission - нет прав
              */
             if(Yii::$app->request->post('trigger') == 'add-user-schedule'){
+                if(!Yii::$app->user->can('add_all_in_schedule') && Yii::$app->user->can('add_cat_in_schedule')){
+                    $getProfCat = UserProfession::find()->select('profession.proff_cat_id')->where(['user_id' => Yii::$app->user->identity->id])
+                    ->leftJoin('profession', 'profession.id = user_profession.prof_id')->asArray()->one();
+                    $thisUserProfCat = $getProfCat["proff_cat_id"];
+                    
+                    $getUsersProfCat = UserProfession::find()->select('profession.proff_cat_id')->where(['user_id' => Yii::$app->request->post('user')])
+                    ->leftJoin('profession', 'profession.id = user_profession.prof_id')->asArray()->one();
+                    $insertUsersProfCat = $getUsersProfCat["proff_cat_id"];
+                    
+                    if((int)$thisUserProfCat != (int)$insertUsersProfCat){
+                        return json_encode(['result' => 'permission', 'response' => 'Вы можете добавлять сотрудников только из своей службы']);
+                    }
+                }elseif(!Yii::$app->user->can('add_all_in_schedule') && !Yii::$app->user->can('add_cat_in_schedule')){
+                    return json_encode(['result' => 'permission', 'response' => 'У вас нет прав на добавление сотрудников в мероприятие']);
+                }
                 $findInSchedule = UserInSchedule::find()->where([
                     'schedule_event_id' => Yii::$app->request->post('schedule'),
                     'user_id' => Yii::$app->request->post('user'),
@@ -354,6 +422,21 @@ class ScheduleController extends AccessController
             }
             
             if(Yii::$app->request->post('trigger') == 'magic-add-schedule'){
+                if(!Yii::$app->user->can('add_all_in_schedule') && Yii::$app->user->can('add_cat_in_schedule')){
+                    $getProfCat = UserProfession::find()->select('profession.proff_cat_id')->where(['user_id' => Yii::$app->user->identity->id])
+                    ->leftJoin('profession', 'profession.id = user_profession.prof_id')->asArray()->one();
+                    $thisUserProfCat = $getProfCat["proff_cat_id"];
+                    
+                    $getUsersProfCat = UserProfession::find()->select('profession.proff_cat_id')->where(['user_id' => Yii::$app->request->post('user')])
+                    ->leftJoin('profession', 'profession.id = user_profession.prof_id')->asArray()->one();
+                    $insertUsersProfCat = $getUsersProfCat["proff_cat_id"];
+                    
+                    if((int)$thisUserProfCat != (int)$insertUsersProfCat){
+                        return json_encode(['response' => 'permission', 'result' => 'Вы можете добавлять сотрудников только из своей службы']);
+                    }
+                }elseif(!Yii::$app->user->can('add_all_in_schedule') && !Yii::$app->user->can('add_cat_in_schedule')){
+                    return json_encode(['response' => 'permission', 'result' => 'У вас нет прав на добавление сотрудников в мероприятие']);
+                }
                 $scheduleList = Yii::$app->request->post('scheduleList');
                 $db = Yii::$app->db;
                 $transaction = $db->beginTransaction();
@@ -411,6 +494,9 @@ class ScheduleController extends AccessController
         $profCatLeave = ['8', '5', '16', '11', '14'];
         if(Yii::$app->request->isAjax){
             if(Yii::$app->request->post('trigger') == 'add-schedule'){
+                if(!Yii::$app->user->can('create_event')){
+                    return json_encode(['response' => 'error', 'result' => 'У вас нет прав на создание мероприятий']);
+                }
                 $spectacleEventConfig = Config::getConfig('spectacle_event');
                 if(in_array(Yii::$app->request->post('eventType'), $spectacleEventConfig) && +Yii::$app->request->post('withoutEvent') > 0){
                     return json_encode(['response' => 'error', 'result' => 'На спектакль обязательно нужно выбрать мероприятие']);
@@ -464,6 +550,18 @@ class ScheduleController extends AccessController
             if(Yii::$app->request->post('trigger') == 'add-prof-cat-in-event'){
                 $profCategories = Yii::$app->request->post('profCat');
                 $event = Yii::$app->request->post('event');
+                
+                if(!Yii::$app->user->can('add_all_prof_cat') && Yii::$app->user->can('add_my_prof_cat')){
+                    $getProfCat = UserProfession::find()->select('profession.proff_cat_id')->where(['user_id' => Yii::$app->user->identity->id])
+                    ->leftJoin('profession', 'profession.id = user_profession.prof_id')->asArray()->one();
+                    $thisUserProfCat = $getProfCat["proff_cat_id"];
+                    if(count($profCategories) > 1 || (int)$profCategories[0] != (int)$thisUserProfCat){
+                        return json_encode(['response' => 'error', 'result' => 'Вы можете добавлять только свою службу']);
+                    }
+                }elseif(!Yii::$app->user->can('add_all_prof_cat') && !Yii::$app->user->can('add_my_prof_cat')){
+                    return json_encode(['response' => 'error', 'result' => 'У вас нет прав на добавление служб в мероприятие']);
+                }
+                
                 foreach ($profCategories as $value){
                     $profCatInScheduleObj = new ProfCatInSchedule();
                     $profCatInScheduleObj->prof_cat_id = $value;
@@ -480,13 +578,31 @@ class ScheduleController extends AccessController
             }
             
             if(Yii::$app->request->post('trigger') == 'add-user-in-schedule'){
+                $users = Yii::$app->request->post('users');
+                
+                if(!Yii::$app->user->can('add_all_in_schedule') && Yii::$app->user->can('add_cat_in_schedule')){
+                    $getProfCat = UserProfession::find()->select('profession.proff_cat_id')->where(['user_id' => Yii::$app->user->identity->id])
+                    ->leftJoin('profession', 'profession.id = user_profession.prof_id')->asArray()->one();
+                    $thisUserProfCat = $getProfCat["proff_cat_id"];
+                    
+                    $getUsersProfCat = UserProfession::find()->select('profession.proff_cat_id')->where(['user_id' => $users])
+                    ->leftJoin('profession', 'profession.id = user_profession.prof_id')->asArray()->one();
+                    $insertUsersProfCat = $getUsersProfCat["proff_cat_id"];
+                    
+                    if((int)$thisUserProfCat != (int)$insertUsersProfCat){
+                        return json_encode(['response' => 'error', 'result' => 'Вы можете добавлять сотрудников только из своей службы']);
+                    }
+                }elseif(!Yii::$app->user->can('add_all_in_schedule') && !Yii::$app->user->can('add_cat_in_schedule')){
+                    return json_encode(['response' => 'error', 'result' => 'У вас нет прав на добавление сотрудников в мероприятие']);
+                }
+                
                 $configSpectacle = Config::getConfig('spectacle_event');
                 $configActor = Config::getConfig('actors_prof_cat');
                 $eventSchedule = ScheduleEvents::findOne(Yii::$app->request->post('eventSchedule'));
                 if(in_array($eventSchedule['event_type_id'], $configSpectacle) && in_array(Yii::$app->request->post('profCat'), $configActor)){
                     return json_encode(['response' => 'error', 'result' => 'Для заполнения актеров в спектаклях, воспользуйтесь расписанием актеров']);
                 }
-                $users = Yii::$app->request->post('users');
+                
                 foreach($users as $value){
                     $checkIntersect = ScheduleComponent::checkIntersect(Yii::$app->request->post('eventSchedule'), $value);
                     if($checkIntersect){
@@ -523,16 +639,41 @@ class ScheduleController extends AccessController
             
             if(Yii::$app->request->post('trigger') == 'delete-in-schedule'){
                 $userInSchedule = UserInSchedule::find()->where(['id' => Yii::$app->request->post('userInSchedule')])->one();
+                
+                if(!Yii::$app->user->can('add_all_in_schedule') && Yii::$app->user->can('add_cat_in_schedule')){
+                    $getProfCat = UserProfession::find()->select('profession.proff_cat_id')->where(['user_id' => Yii::$app->user->identity->id])
+                    ->leftJoin('profession', 'profession.id = user_profession.prof_id')->asArray()->one();
+                    $thisUserProfCat = $getProfCat["proff_cat_id"];
+                    
+                    $getUsersProfCat = UserProfession::find()->select('profession.proff_cat_id')->where(['user_id' => $userInSchedule['user_id']])
+                    ->leftJoin('profession', 'profession.id = user_profession.prof_id')->asArray()->one();
+                    $insertUsersProfCat = $getUsersProfCat["proff_cat_id"];
+                    
+                    if((int)$thisUserProfCat != (int)$insertUsersProfCat){
+                        return json_encode(['response' => 'error', 'result' => 'Вы можете удалять сотрудников только из своей службы']);
+                    }
+                }elseif(!Yii::$app->user->can('add_all_in_schedule') && !Yii::$app->user->can('add_cat_in_schedule')){
+                    return json_encode(['response' => 'error', 'result' => 'У вас нет прав на удаление сотрудников из мероприятие']);
+                }
                 $eventId = $userInSchedule['schedule_event_id'];
                 $userInSchedule->delete();
                 $userInSchedule = UserInSchedule::find()->select('user_in_schedule.*')
                         ->where(['schedule_event_id' => $eventId])
                         ->with('userWithProf')->asArray()->all();
-//                $actorsProfCat = Config::getConfig('actors_prof_cat');
                 return json_encode(['response' => 'ok', 'result' => $userInSchedule, 'event_schedule' => $eventId]);
             }
             
             if(Yii::$app->request->post('trigger') == 'delete-prof-cat'){
+                if(!Yii::$app->user->can('add_all_prof_cat') && Yii::$app->user->can('add_my_prof_cat')){
+                    $getProfCat = UserProfession::find()->select('profession.proff_cat_id')->where(['user_id' => Yii::$app->user->identity->id])
+                    ->leftJoin('profession', 'profession.id = user_profession.prof_id')->asArray()->one();
+                    $thisUserProfCat = $getProfCat["proff_cat_id"];
+                    if((int)Yii::$app->request->post('profCat') != (int)$thisUserProfCat){
+                        return json_encode(['response' => 'error', 'result' => 'Вы можете удалять только свою службу']);
+                    }
+                }elseif(!Yii::$app->user->can('add_all_prof_cat') && !Yii::$app->user->can('add_my_prof_cat')){
+                    return json_encode(['response' => 'error', 'result' => 'У вас нет прав на добавление служб в мероприятие']);
+                }
                 $userInSchedule = UserInSchedule::find()->select('user_in_schedule.*')
                         ->where(['schedule_event_id' => Yii::$app->request->post('eventSchedule')])
                         ->with('userWithProf')->asArray()->all();
@@ -562,6 +703,9 @@ class ScheduleController extends AccessController
             }
             
             if(Yii::$app->request->post('trigger') == 'edit-event'){
+                if(!Yii::$app->user->can('edit_event')){
+                    return json_encode(['response' => 'error', 'data' => 'У вас нет прав на редактирование мероприятий']);
+                }
                 $checkEditEvent = ScheduleComponent::checkEditEvent(Yii::$app->request->post('id'), Yii::$app->request->post('eventType'), Yii::$app->request->post('eventId'), Yii::$app->request->post('withoutEvent'));
                 if($checkEditEvent['result'] == 'error'){
                     return json_encode(['response' => 'error', 'data' => implode('<br><br>', $checkEditEvent['text'])]);
@@ -628,6 +772,9 @@ class ScheduleController extends AccessController
             }
             
             if(Yii::$app->request->post('trigger') == 'copy-event'){
+                if(!Yii::$app->user->can('copy_event')){
+                    return json_encode(['response' => 'error', 'result' => 'У вас нет прав на копирование мероприятий']);
+                }
                 $getEvent = ScheduleEvents::find()->where(['id' => Yii::$app->request->post('id')])->asArray()->one();
                 $timeFrom = Formatt::timeToMinute(Yii::$app->request->post('timeFrom'));
                 $timeTo = Formatt::timeToMinute(Yii::$app->request->post('timeTo'));
@@ -706,6 +853,9 @@ class ScheduleController extends AccessController
             }
             
             if(Yii::$app->request->post('trigger') == 'delete-event'){
+                if(!Yii::$app->user->can('delete_event')){
+                    return json_encode(['response' => 'error', 'result' => 'У вас нет прав на удаление мероприятий']);
+                }
                 $getEvent = ScheduleEvents::find()->where(['id' => Yii::$app->request->post('id')])->one();
                 Yii::$app->db->createCommand()->delete('prof_cat_in_schedule', ['schedule_id' => Yii::$app->request->post('id')])->execute();
                 if($getEvent->delete()){
@@ -719,22 +869,23 @@ class ScheduleController extends AccessController
                 $period = Yii::$app->request->post('period');
                 $from = $period[0]['year'] ."-" .$period[0]['month'] ."-" .$period[0]['day'];
                 $to = $period[1]['year'] ."-" .$period[1]['month'] ."-" .$period[1]['day'];
-                $searchHash = ScheduleViewHash::find()->where(['date_from' => $from, 'date_to' => $to])->asArray()->one();
-                if($searchHash){
-                    return json_encode(['response' => 'ok', 'result' => $_SERVER["REQUEST_SCHEME"] .'://' .$_SERVER["HTTP_HOST"] .'/site/week-schedule?from=' .$from .'&to=' .$to .'&hash=' .$searchHash['hash']]);
-                }else{
-                    $newHash = new ScheduleViewHash();
-                    $newHash->date_from = $from;
-                    $newHash->date_to = $to;
-                    $newHash->hash = \Yii::$app->getSecurity()->generateRandomString();
-                    if($newHash->save()){
-                        return json_encode(['response' => 'ok', 'result' => $_SERVER["REQUEST_SCHEME"] .'://' .$_SERVER["HTTP_HOST"] .'/site/week-schedule?from=' .$from .'&to=' .$to .'&hash=' .$newHash->hash]);
-                    }
-                }
-                return json_encode(['response' => 'error', 'result' => 'Ошибка при генерации ссылки. Сообщите разработчику']);
+                $scheduleHash = ScheduleViewHash::returnInfoByDate($from, $to);
+                return json_encode(['response' => 'ok', 'result' => $scheduleHash]);
+            }
+            
+            if(Yii::$app->request->post('trigger') == 'schedule-hash-show'){
+                $period = Yii::$app->request->post('period');
+                $from = $period[0]['year'] ."-" .$period[0]['month'] ."-" .$period[0]['day'];
+                $to = $period[1]['year'] ."-" .$period[1]['month'] ."-" .$period[1]['day'];
+                Yii::$app->db->createCommand()
+                        ->update('schedule_view_hash', ['show' => Yii::$app->request->post('result')], ['date_from' => $from, 'date_to' => $to])->execute();
+                return json_encode(['response' => 'ok']);
             }
             
             if(Yii::$app->request->post('trigger') == 'set-room-config'){
+                if(!Yii::$app->user->can('room_config')){
+                    return json_encode(['response' => 'error', 'result' => 'У вас нет прав на настройку отображения залов']);
+                }
                 $checkSetting = RoomSetting::checkSetting(Yii::$app->request->post('period'), Yii::$app->request->post('roomIds'));
                 if(!$checkSetting){
                     return json_encode(['response' => 'error', 'result' => 'Кажется вы пытаетесь убрать залы в которых стоят мероприятия. Сначала удалите их']);
@@ -774,20 +925,20 @@ class ScheduleController extends AccessController
     /**
      * Action выгрузки в excel
      */
-    public function actionExcelOne(){
-        
-        WeekExcel::excelWeekSchedule(Yii::$app->request->get('from'), Yii::$app->request->get('to'));
-        
-    }
+//    public function actionExcelOne(){
+//        
+//        WeekExcel::excelWeekSchedule(Yii::$app->request->get('from'), Yii::$app->request->get('to'));
+//        
+//    }
     
     /**
      * Action выгрузки в excel
      */
-    public function actionExcelTwo(){
-        
-        WeekExcelTwo::excelWeekSchedule(Yii::$app->request->get('from'), Yii::$app->request->get('to'));
-        
-    }
+//    public function actionExcelTwo(){
+//        
+//        WeekExcelTwo::excelWeekSchedule(Yii::$app->request->get('from'), Yii::$app->request->get('to'));
+//        
+//    }
     
     /**
      * Action выгрузки в word

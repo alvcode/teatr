@@ -17,6 +17,7 @@ use yii\web\NotFoundHttpException;
 use app\models\Room;
 use app\models\Config;
 use app\models\RoomSetting;
+use app\models\User;
 
 class SiteController extends Controller
 {
@@ -79,6 +80,24 @@ class SiteController extends Controller
             'model' => $model,
         ]);
     }
+    
+    public function actionEditPassword(){
+        if (Yii::$app->getUser()->isGuest){
+            return $this->redirect('/panel');
+        }
+        $userModel = User::find()->where(['id' => Yii::$app->user->identity->id])->one();
+        
+        if($userModel->load(Yii::$app->request->post())){
+            $userModel->modified_password = 1;
+            if($userModel->save(false)){
+                return $this->redirect('/panel');
+            }
+        }
+        
+        return $this->render('edit-password', [
+            'user' => $userModel
+        ]);
+    }
 
     
     /**
@@ -86,17 +105,17 @@ class SiteController extends Controller
      *
      * @return Response|string
      */
-    public function actionRegister()
-    {
-       $model = new \app\models\User();
-       $model->email = 'alvcode@ya.ru';
-       $model->username = 'Александр';
-       $model->password = 'blackjack163';
-       $model->save();
-       
-
-        return $this->render('index');
-    }
+//    public function actionRegister()
+//    {
+//       $model = new \app\models\User();
+//       $model->email = 'alvcode@ya.ru';
+//       $model->username = 'Александр';
+//       $model->password = 'blackjack163';
+//       $model->save();
+//       
+//
+//        return $this->render('index');
+//    }
 
     /**
      * Logout action.
@@ -121,7 +140,6 @@ class SiteController extends Controller
         
         if(Yii::$app->request->isAjax){
             if(Yii::$app->request->post('trigger') == 'load-schedule'){
-                // В javascript страницы есть хардкод отображения аткров и других служб по prof_cat
                 $searchHash = ScheduleViewHash::find()->where(['date_from' => Yii::$app->request->post('from'), 'date_to' => Yii::$app->request->post('to')])->asArray()->one();
                 if($searchHash['hash'] == Yii::$app->request->post('hash')){
                     $period = Yii::$app->request->post('period');

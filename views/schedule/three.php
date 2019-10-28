@@ -85,7 +85,7 @@ $this->params['breadcrumbs'][] = $this->title;
         
         <!--<a href="/schedule/excel" id="excel-download" target="_blank" class="btn btn-sm btn-info">Выгрузить в Excel</a>-->
         <a href="/schedule/word" id="word-download" target="_blank" class="btn btn-sm btn-info">Выгрузить в Word</a>
-        <div id="generate-link" class="btn btn-sm btn-info">Сгенерировать ссылку</div>
+        <div id="generate-link" class="btn btn-sm btn-info">Ссылка на просмотр</div>
     </div>
 
 
@@ -476,6 +476,12 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="modal-body">
                 <a href="#" class="generate-link-container" id="generate-link-container" target="_blank"></a>
                 <div style="display:block;" id="copy-link-button" class="btn btn-sm btn-info mrg-top15">Двойной клик для копирования</div>
+                <div class="mrg-top15">
+                    <div class="form-group form-check">
+                        <input type="checkbox" class="form-check-input" id="generate-link-show">
+                        <label class="form-check-label noselect cursor-pointer" for="generate-link-show">Разрешить просмотр</label>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal">Закрыть</button>
@@ -1490,6 +1496,8 @@ $this->params['breadcrumbs'][] = $this->title;
                                 $('#profCatModal').modal('hide');
                             }
                         }
+                    }else if(result.response == 'error'){
+                        showNotifications(result.result, 4000, NOTIF_RED);
                     }
                     stopPreloader();
                 },
@@ -2120,8 +2128,13 @@ $this->params['breadcrumbs'][] = $this->title;
                     var result = JSON.parse(data);
                     console.log(result);
                     if(result.response == 'ok'){
-                        $('#generate-link-container').html(result.result);
-                        $('#generate-link-container').attr('href', result.result);
+                        $('#generate-link-container').html(result.result.link);
+                        $('#generate-link-container').attr('href', result.result.link);
+                        if(+result.result.show == 1){
+                            $('#generate-link-show').prop('checked', true);
+                        }else{
+                            $('#generate-link-show').prop('checked', false);
+                        }
                         $('#generateLinkModal').modal('show');
                     }else if(result.response == 'error'){
                         showNotifications(result.result, 4000, NOTIF_RED);
@@ -2135,6 +2148,40 @@ $this->params['breadcrumbs'][] = $this->title;
                 }
             });
             // console.log(datePeriod);
+        });
+        
+        $('#generate-link-show').click(function(){
+            var showResult = 0;
+            if($(this).prop('checked')){
+                showResult = 1;
+            }else{
+                showResult = 0;
+            }
+            goPreloader();
+            var data = {
+                trigger: 'schedule-hash-show',
+                result: showResult,
+                period: datePeriod
+            };
+            data[csrfParam] = csrfToken;
+            $.ajax({
+                type: "POST",
+                url: '/schedule/three',
+                data: data,
+                success: function (data) {
+                    var result = JSON.parse(data);
+                    if(result.response == 'ok'){
+                        showNotifications('Успешно изменено', 3000, NOTIF_GREEN);
+                    }else if(result.response == 'error'){
+                        showNotifications(result.result, 4000, NOTIF_RED);
+                    }
+                    stopPreloader();
+                },
+                error: function () {
+                    showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                    stopPreloader();
+                }
+            });
         });
         
         // Применяем настройку отображения залов
@@ -2251,7 +2298,7 @@ $this->params['breadcrumbs'][] = $this->title;
             for(var keyProf in obj){
                 var createButton = document.createElement('div');
                 createButton.dataset.id = obj[keyProf].profCat.id;
-                createButton.className = 'btn btn-sm btn-outline-secondary ml-1';
+                createButton.className = 'btn btn-sm btn-outline-secondary ml-1 mrg-top5';
                 createButton.innerHTML = obj[keyProf].profCat.alias + " <span class='badge badge-danger three--remove-prof-cat-button'><i class='fas fa-times'></i></span>";
                 document.getElementById('prof-cat-right-button-container').append(createButton);
             }

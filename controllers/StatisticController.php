@@ -28,6 +28,16 @@ class StatisticController extends AccessController
                     'logout' => ['post'],
                 ],
             ],
+            'access' => [
+                'class' => AccessControl::className(),
+                'rules' => [
+                    [
+                        'allow' => true,
+                        'actions' => ['index'],
+                        'roles' => ['visible_statistic_index'],
+                    ],
+                ],
+            ],
         ];
     }
 

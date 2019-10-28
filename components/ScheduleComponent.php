@@ -629,5 +629,6 @@ class ScheduleComponent extends Model{
         }
         return $schedule;
     }
+    
    
 }

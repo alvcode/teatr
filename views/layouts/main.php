@@ -32,6 +32,9 @@ AppAsset::register($this);
     </div>
 </div>
 
+<!--Блок уведомлений-->
+<div class="pop-up-notification"></div>
+
 <?php $this->endBody() ?>
 </body>
 </html>

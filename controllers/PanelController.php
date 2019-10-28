@@ -16,6 +16,7 @@ use app\models\EventCategories;
 use app\models\ScheduleEvents;
 use app\components\Formatt;
 use app\components\ScheduleComponent;
+use app\models\ScheduleViewHash;
 
 class PanelController extends AccessController
 {
@@ -32,6 +33,21 @@ class PanelController extends AccessController
                 'class' => VerbFilter::className(),
                 'actions' => [
                     'logout' => ['post'],
+                ],
+            ],
+            'access' => [
+                'class' => AccessControl::className(),
+                'rules' => [
+                    [
+                        'allow' => true,
+                        'actions' => ['index'],
+                        'roles' => ['visible_panel'],
+                    ],
+                    [
+                        'allow' => true,
+                        'actions' => ['room-event'],
+                        'roles' => ['visible_room_event'],
+                    ],
                 ],
             ],
         ];
@@ -77,11 +93,11 @@ class PanelController extends AccessController
             $nearSchedule[$k]['date'] = Formatt::panelHumanDate($v['date']);
         }
 
-            // echo "<pre>";
-            // var_dump($nearSchedule); exit();
+        $getScheduleLinks = ScheduleViewHash::returnLinksByWeekCount([0,1]);
         
         return $this->render('index', [
-            'nearSchedule' => $nearSchedule
+            'nearSchedule' => $nearSchedule,
+            'scheduleLinks' => $getScheduleLinks
         ]);
     }
     

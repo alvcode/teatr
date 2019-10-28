@@ -326,7 +326,7 @@ $this->params['breadcrumbs'][] = $this->title;
             if (z) {
                 for (var key in allEvents) {
                     var createEventItem = document.createElement('div');
-                    createEventItem.className = 'btn btn-sm ml-1 btn-outline-info f-s12 event-button';
+                    createEventItem.className = 'btn btn-sm ml-1 btn-outline-info f-s12 mrg-top5 event-button';
                     createEventItem.dataset.event = allEvents[key].id;
                     createEventItem.innerHTML = allEvents[key].name;
                     document.getElementById('all-events-buttons').append(createEventItem);
@@ -421,7 +421,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         }
                         renderSchedule(castsData.data.schedule);
                     }else if(castsData.result == 'error'){
-                        showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                        showNotifications(castsData.response, 7000, NOTIF_RED);
                     }
                     stopPreloader();
                     $('#lastCastModal').modal('hide');
@@ -505,8 +505,8 @@ $this->params['breadcrumbs'][] = $this->title;
                             }
                         }
                         $('#actorsListModal').modal('hide');
-                    }else {
-                        showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                    }else if(result.result == 'error'){
+                        showNotifications(result.response, 5000, NOTIF_RED);
                     }
                     stopPreloader();
                 },
@@ -555,11 +555,12 @@ $this->params['breadcrumbs'][] = $this->title;
                 url: '/schedule/two',
                 data: data,
                 success: function (data) {
-                    if (data == 1) {
+                    var result = JSON.parse(data);
+                    if (result.result == 'ok') {
                         deleteActor(deletedActorInCast, deletedActorCastId, deletedActorUnderstudy);
                         $('#actorDeleteModal').modal('hide');
-                    } else if (data == 0) {
-                        showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                    } else if (result.result == 'error') {
+                        showNotifications(result.response, 7000, NOTIF_RED);
                     }
                     stopPreloader();
                 },
@@ -637,6 +638,8 @@ $this->params['breadcrumbs'][] = $this->title;
                             }
                         }
                         showNotifications(textNotification, 7000, NOTIF_RED);
+                    }else if(result.result == 'permission'){
+                        showNotifications(result.response, 7000, NOTIF_RED);
                     }else{
                         showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
                     }
@@ -775,6 +778,8 @@ $this->params['breadcrumbs'][] = $this->title;
                             }
                         }
                         showNotifications(textNotification, 7000, NOTIF_RED);
+                    }else if(result.result = 'permission'){
+                        showNotifications(result.response, 4000, NOTIF_RED);
                     }
                     $('#magicModal').modal('hide');
                     stopPreloader();

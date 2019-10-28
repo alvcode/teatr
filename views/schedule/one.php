@@ -428,13 +428,13 @@ $this->params['breadcrumbs'][] = $this->title;
                 data: data,
                 success: function (data) {
                     var result = JSON.parse(data);
-                    if (result.response == 'ok') {
-                        scheduleData[scheduleData.length] = result.result;
-                        addEventInCalendar(generateCellData(result.result));
+                    if (result.result == 'ok') {
+                        scheduleData[scheduleData.length] = result.response;
+                        addEventInCalendar(generateCellData(result.response));
                         $('#addEventModal').modal('hide');
                         $('.clean-input').click();
-                    } else if (result.response == 'error'){
-                        showNotifications(result.result, 4000, NOTIF_RED);
+                    } else if (result.result == 'error'){
+                        showNotifications(result.response, 4000, NOTIF_RED);
                     }
                     stopPreloader();
                 },
@@ -770,11 +770,12 @@ $this->params['breadcrumbs'][] = $this->title;
                     url: '/schedule/one',
                     data: data,
                     success: function (data) {
-                        if (data == 1) {
+                        var result = JSON.parse(data);
+                        if (result.result == 'ok') {
                             deleteEventInCalendar(editEventId);
                             $('#editEventModal').modal('hide');
-                        } else if (data == 0) {
-                            showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                        } else if (result.result == 'error') {
+                            showNotifications(result.response, 4000, NOTIF_RED);
                         }
                         stopPreloader();
                     },
@@ -823,31 +824,32 @@ $this->params['breadcrumbs'][] = $this->title;
                                 url: '/schedule/one',
                                 data: data,
                                 success: function (data) {
-                                    if (JSON.parse(data) != 0) {
+                                    var result = JSON.parse(data);
+                                    if (result.result == 'ok') {
                                         var result = JSON.parse(data);
-                                        console.log(result);
-                                        scheduleData[scheduleData.length] = result.result;
-                                        var dateT = new Date(result.result.date);
+//                                        console.log(result);
+                                        scheduleData[scheduleData.length] = result.response;
+                                        var dateT = new Date(result.response.date);
                                         var cellData = {
-                                            id: result.result.id,
+                                            id: result.response.id,
                                             date: {
                                                 day: dateT.getDate(),
                                                 month: dateT.getMonth(),
                                                 year: dateT.getFullYear()
                                             },
-                                            room: result.result.room_id,
-                                            eventType: result.result.eventType.name,
-                                            eventTypeId: result.result.eventType.id,
-                                            eventName: (result.result.event !== null ? result.result.event.name : ''),
-                                            eventOtherName: (result.result.event !== null && result.result.event.other_name !== null ? result.result.event.other_name : ''),
-                                            timeFrom: result.result.time_from,
-                                            timeTo: (result.result.time_to !== null ? result.result.time_to : ''),
-                                            is_modified: result.result.is_modified
+                                            room: result.response.room_id,
+                                            eventType: result.response.eventType.name,
+                                            eventTypeId: result.response.eventType.id,
+                                            eventName: (result.response.event !== null ? result.response.event.name : ''),
+                                            eventOtherName: (result.response.event !== null && result.response.event.other_name !== null ? result.response.event.other_name : ''),
+                                            timeFrom: result.response.time_from,
+                                            timeTo: (result.response.time_to !== null ? result.response.time_to : ''),
+                                            is_modified: result.response.is_modified
                                         };
                                         addEventInCalendar(cellData);
                                         $('#addEventModal').modal('hide');
-                                    } else {
-                                        showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                                    }else if (result.result == 'error') {
+                                        showNotifications(result.response, 4000, NOTIF_RED);
                                     }
                                     stopPreloader();
                                 },

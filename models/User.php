@@ -19,6 +19,7 @@ use Yii;
  * @property string $date_register
  * @property string $last_login
  * @property int $is_active
+ * @property int $modified_password
  */
 class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
 {
@@ -55,6 +56,7 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
         return [
             [['email', 'name', 'surname', 'show_full_name'], 'required'],
             [['password'], 'trim'],
+            [['modified_password'], 'boolean'],
 //            [['date_register', 'last_login'], 'datetime'],
             [['email'], 'email'],
             [['name', 'surname', 'password_hash', 'auth_key', 'access_token'], 'string', 'max' => 255],
@@ -81,6 +83,7 @@ class User extends \yii\db\ActiveRecord implements \yii\web\IdentityInterface
                 $this->auth_key = \Yii::$app->getSecurity()->generateRandomString();
                  $this->date_register = date('Y-m-d H:i:s');
                  $this->is_active = 1;
+                 $this->modified_password = 0;
             }
         }
         return true;

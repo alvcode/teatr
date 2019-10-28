@@ -9,6 +9,7 @@ use app\models\Room;
 use app\models\Config;
 use app\models\EventType;
 use app\models\ProffCategories;
+use yii\filters\AccessControl;
 
 class SettingController extends AccessController
 {
@@ -25,6 +26,16 @@ class SettingController extends AccessController
                 'class' => VerbFilter::className(),
                 'actions' => [
                     'logout' => ['post'],
+                ],
+            ],
+            'access' => [
+                'class' => AccessControl::className(),
+                'rules' => [
+                    [
+                        'allow' => true,
+                        'actions' => ['index'],
+                        'roles' => ['visible_config'],
+                    ],
                 ],
             ],
         ];

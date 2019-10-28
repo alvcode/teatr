@@ -36,6 +36,31 @@ class UserController extends AccessController
                     'logout' => ['post'],
                 ],
             ],
+            'access' => [
+                'class' => AccessControl::className(),
+                'rules' => [
+                    [
+                        'allow' => true,
+                        'actions' => ['index', 'user-single'],
+                        'roles' => ['visible_users'],
+                    ],
+                    [
+                        'allow' => true,
+                        'actions' => ['rbac'],
+                        'roles' => ['visible_rbac_setting'],
+                    ],
+                    [
+                        'allow' => true,
+                        'actions' => ['profession'],
+                        'roles' => ['visible_profession'],
+                    ],
+                    [
+                        'allow' => true,
+                        'actions' => ['login-as'],
+                        'roles' => ['login_as'],
+                    ],
+                ],
+            ],
         ];
     }
 
@@ -165,6 +190,7 @@ class UserController extends AccessController
                     $countArr = count($categories);
                     $categories[$countArr]['id'] = $valueP['id'];
                     $categories[$countArr]['name'] = $valueP['name'] ." (".$value['name'] .")";
+                    $categories[$countArr]['prof_cat'] = $value['id'];
                 }
             }
         }
@@ -172,9 +198,34 @@ class UserController extends AccessController
         // Костыль на сортировку по профессии. Хотя не такой уж и костыль :)
         if(isset($sort['act']) && $sort['act'] == 'sortProf'){
             foreach ($users as $key => $value){
-                if(+$value['userProfession']['prof']['id'] != +$sort['val']){
+                if((int)$value['userProfession']['prof']['id'] != (int)$sort['val']){
                     unset($users[$key]);
                 }
+            }
+        }
+        // Делаем фильтр для служб (отображаем только своих сотрудников) +
+        // на создание отображаем только необходимые данные
+        if(!Yii::$app->user->can('crud_all_users') && Yii::$app->user->can('crud_profcat_users')){
+            $getProfCat = UserProfession::find()->select('profession.proff_cat_id')->where(['user_id' => Yii::$app->user->identity->id])
+                    ->leftJoin('profession', 'profession.id = user_profession.prof_id')->asArray()->one();
+            $thisUserProfCat = $getProfCat["proff_cat_id"];
+            foreach ($users as $key => $value){
+                if((int)$value['userProfession']['prof']["proff_cat_id"] != (int)$thisUserProfCat){
+                    unset($users[$key]);
+                }
+            }
+            foreach ($categories as $key => $value){
+                if((int)$thisUserProfCat != (int)$value["prof_cat"]){
+                    unset($categories[$key]);
+                }
+            }
+//            echo "<pre>";
+//            var_dump($categories); exit();
+        }
+        // Фильтруем список ролей в соответствии с правами
+        foreach ($rolesList as $key => $value){
+            if(!Yii::$app->user->can('create_priv_' .$value['name'])){
+                unset($rolesList[$key]);
             }
         }
         
@@ -251,7 +302,29 @@ class UserController extends AccessController
                     $countArr = count($categories);
                     $categories[$countArr]['id'] = $valueP['id'];
                     $categories[$countArr]['name'] = $valueP['name'] ." (".$value['name'] .")";
+                    $categories[$countArr]['prof_cat'] = $value['id'];
                 }
+            }
+        }
+        
+        // Делаем фильтр для служб (отображаем только своих сотрудников) +
+        // на создание отображаем только необходимые данные
+        if(!Yii::$app->user->can('crud_all_users') && Yii::$app->user->can('crud_profcat_users')){
+            $getProfCat = UserProfession::find()->select('profession.proff_cat_id')->where(['user_id' => Yii::$app->user->identity->id])
+                    ->leftJoin('profession', 'profession.id = user_profession.prof_id')->asArray()->one();
+            $thisUserProfCat = $getProfCat["proff_cat_id"];
+            foreach ($categories as $key => $value){
+                if((int)$thisUserProfCat != (int)$value["prof_cat"]){
+                    unset($categories[$key]);
+                }
+            }
+//            echo "<pre>";
+//            var_dump($categories); exit();
+        }
+        
+        foreach ($rolesList as $key => $value){
+            if(!Yii::$app->user->can('create_priv_' .$value['name'])){
+                unset($rolesList[$key]);
             }
         }
         
