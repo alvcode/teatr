@@ -23,18 +23,18 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
             <div>
                 Узнай, как разместить иконку этой страницы у себя в телефоне на главном экране: 
-                <span class="badge badge-pill badge-warning cursor-pointer" id="instr-android">Android</span> / 
-                <span class="badge badge-pill badge-warning cursor-pointer" id="instr-iphone">iPhone</span>
+                <span class="badge badge-pill badge-success cursor-pointer" id="instr-android">Android</span> / 
+                <span class="badge badge-pill badge-success cursor-pointer" id="instr-iphone">iPhone</span>
             </div>
 
             <?= $this->render('../templates/_flash') ?>
 
             <div>
                 <?php if (isset($scheduleLinks[0])): ?>
-                    <a href="<?= $scheduleLinks[0]['link'] ?>" class="btn btn-sm btn-success mrg-top15" target="_blank">Расписание на текущую неделю</a>
+                    <a href="<?= $scheduleLinks[0]['link'] ?>" class="btn btn-warning mrg-top15" target="_blank"><i class="far fa-hand-point-up"></i> Расписание на текущую неделю</a>
                 <?php endif; ?>
                 <?php if (isset($scheduleLinks[1])): ?>
-                    <a href="<?= $scheduleLinks[1]['link'] ?>" class="btn btn-sm btn-success mrg-top15" target="_blank">Расписание на следующую неделю</a>
+                    <a href="<?= $scheduleLinks[1]['link'] ?>" class="btn btn-warning mrg-top15" target="_blank"><i class="far fa-hand-point-up"></i> Расписание на следующую неделю</a>
                 <?php endif; ?>
             </div>
 
@@ -119,6 +119,10 @@ $this->params['breadcrumbs'][] = $this->title;
                 <p>
                     Для того, чтобы добавить страницу на главный экран, вам потребуется
                     войти через браузер Google Chrome
+                </p>
+                <p style="font-weight: 700;">
+                    ЕСЛИ ПО КАКОЙ-ЛИБО ПРИЧИНЕ У ВАС НЕТ БРАУЗЕРА CHROME, ТО
+                    ВЫ МОЖЕТЕ СКАЧАТЬ ЕГО ПО <a class="text-info" href="https://play.google.com/store/apps/details?id=com.android.chrome" target="_blank">ССЫЛКЕ</a>
                 </p>
                 <p>
                     Далее кликните в правом верхнем углу на иконку "Меню", как показано на скриншоте
