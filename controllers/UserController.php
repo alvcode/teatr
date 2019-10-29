@@ -101,7 +101,7 @@ class UserController extends AccessController
                 }
                 $userModel->name = Yii::$app->request->post('name');
                 $userModel->surname = Yii::$app->request->post('surname');
-                $userModel->email = Yii::$app->request->post('email');
+                $userModel->email = trim(Yii::$app->request->post('email'));
                 $userModel->number = $number;
                 $userModel->show_full_name = Yii::$app->request->post('showFullName');
                 $userModel->password = Yii::$app->request->post('password');
@@ -260,7 +260,7 @@ class UserController extends AccessController
 //                Yii::$app->session->setFlash('error', "Пользователь с таким номером телефона уже существует в программе");
 //                $checkUser = false;
 //            }
-            $findByEmail = User::find()->where(['email' => $getUser->email])
+            $findByEmail = User::find()->where(['email' => $getUser->email, 'is_active' => 1])
                     ->andWhere(['!=', 'id', $getUser->id])->all();
             if($findByEmail){
                 Yii::$app->session->setFlash('error', "Пользователь с таким E-mail уже есть в программе");
