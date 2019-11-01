@@ -1879,6 +1879,11 @@ $this->params['breadcrumbs'][] = $this->title;
             }else{
                 editWithoutEvent = 0;
             }
+            if($('#edit--is-all').prop('checked')){
+                isAll = 1;
+            }else{
+                isAll = 0;
+            }
             if (!newTimeFrom) {
                 showNotifications('Кажется вы не указали время начала мероприятия', 7000, NOTIF_RED);
                 return false;
