@@ -33,7 +33,7 @@ class CastUnderstudy extends \yii\db\ActiveRecord
     }
     
     public function getUser(){
-        return $this->hasOne(User::className(), ['id' => 'user_id'])->select('user.id, user.name, user.surname');
+        return $this->hasOne(User::className(), ['id' => 'user_id'])->select('user.id, user.name, user.surname, user.is_active');
     }
 
     /**

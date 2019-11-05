@@ -369,12 +369,13 @@ class ScheduleComponent extends Model{
      */
     public static function loadCastInSchedule($month, $year, $event){
         $data = [];
-        $data['cast'] = User::find()->select('user.id, user.name, user.surname, casts.event_id, casts.id cast_id')
+        $data['cast'] = User::find()->select('user.id, user.name, user.surname, user.is_active, casts.event_id, casts.id cast_id')
                 ->leftJoin('casts', 'casts.user_id = user.id')
                 ->where([
                     'casts.year' => $year, 
                     'casts.month' => $month, 
                     'casts.event_id' => $event,
+                    //'user.is_active' => 1,
                 ])
                 ->asArray()->all();
         $data['schedule'] = UserInSchedule::find()->select('user_in_schedule.*')

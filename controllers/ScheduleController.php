@@ -277,6 +277,19 @@ class ScheduleController extends AccessController
                 if(ScheduleComponent::copyLastCast($data['cast'], Yii::$app->request->post('month'), Yii::$app->request->post('year'), Yii::$app->request->post('event'))){
                     $addedData = ScheduleComponent::loadCastInSchedule(Yii::$app->request->post('month'), Yii::$app->request->post('year'), Yii::$app->request->post('event'));
                     $addedData['cast'] = ScheduleComponent::joinUnderstudy($addedData['cast']);
+                    // Фильтруем удаленных из системы юзеров
+                    foreach ($addedData['cast'] as $key => $value){
+                        if(isset($value['understudy'])){
+                            foreach ($value['understudy'] as $kU => $vU){
+                                if((int)$vU['is_active'] == 0){
+                                    unset($addedData['cast'][$key]['understudy'][$kU]);
+                                }
+                            }
+                        }
+                        if((int)$value['is_active'] == 0){
+                            unset($addedData['cast'][$key]);
+                        }
+                    }
                     return json_encode([
                         'result' => 'ok',
                         'data' => $addedData

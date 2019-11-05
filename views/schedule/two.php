@@ -369,10 +369,10 @@ $this->params['breadcrumbs'][] = $this->title;
                     console.log(castsData);
                     if(castsData.result == 'ok'){
                         for (var key in castsData.data.cast) {
-                            insertActor(castsData.data.cast[key].surname + " " + castsData.data.cast[key].name, castsData.data.cast[key].id, castsData.data.cast[key].cast_id, 0);
+                            insertActor(castsData.data.cast[key].surname + " " + castsData.data.cast[key].name, castsData.data.cast[key].id, castsData.data.cast[key].cast_id, 0, castsData.data.cast[key].is_active);
                             if (castsData.data.cast[key].understudy) {
                                 for (var keyU in castsData.data.cast[key].understudy) {
-                                    insertActor(castsData.data.cast[key].understudy[keyU].surname + " " + castsData.data.cast[key].understudy[keyU].name, castsData.data.cast[key].understudy[keyU].id, castsData.data.cast[key].cast_id, 1);
+                                    insertActor(castsData.data.cast[key].understudy[keyU].surname + " " + castsData.data.cast[key].understudy[keyU].name, castsData.data.cast[key].understudy[keyU].id, castsData.data.cast[key].cast_id, 1, castsData.data.cast[key].understudy[keyU].is_active);
                                 }
                             }
                         }
@@ -412,10 +412,10 @@ $this->params['breadcrumbs'][] = $this->title;
                     console.log(castsData);
                     if(castsData.result == 'ok'){
                         for (var key in castsData.data.cast) {
-                            insertActor(castsData.data.cast[key].name + " " + castsData.data.cast[key].surname, castsData.data.cast[key].id, castsData.data.cast[key].cast_id, 0);
+                            insertActor(castsData.data.cast[key].name + " " + castsData.data.cast[key].surname, castsData.data.cast[key].id, castsData.data.cast[key].cast_id, 0, castsData.data.cast[key].is_active);
                             if (castsData.data.cast[key].understudy) {
                                 for (var keyU in castsData.data.cast[key].understudy) {
-                                    insertActor(castsData.data.cast[key].understudy[keyU].name + " " + castsData.data.cast[key].understudy[keyU].surname, castsData.data.cast[key].understudy[keyU].id, castsData.data.cast[key].cast_id, 1);
+                                    insertActor(castsData.data.cast[key].understudy[keyU].name + " " + castsData.data.cast[key].understudy[keyU].surname, castsData.data.cast[key].understudy[keyU].id, castsData.data.cast[key].cast_id, 1, castsData.data.cast[key].understudy[keyU].is_active);
                                 }
                             }
                         }
@@ -792,8 +792,14 @@ $this->params['breadcrumbs'][] = $this->title;
         });
 
 
-        function insertActor(actorName, actorId, castId, understudyMode) {
+        function insertActor(actorName, actorId, castId, understudyMode, user_is_active) {
+            if(!user_is_active || user_is_active == null){
+                user_is_active = 1;
+            }
             var createTr = document.createElement('tr');
+            if(+user_is_active == 0){
+                createTr.style.color = 'red';
+            }
             if (understudyMode)
                 createTr.className = 'understudy';
             createTr.dataset.id = actorId;
