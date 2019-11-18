@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * Генерирование табеля
+ */
 namespace app\components\excel;
 
 use Yii;

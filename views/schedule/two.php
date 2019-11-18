@@ -43,6 +43,7 @@ $this->params['breadcrumbs'][] = $this->title;
     </div>
     <br>
     <button id="check-fill" class="btn btn-sm btn-info">Выполнить проверку на заполненность</button>
+    <a href="#" id="generate-pencil" class="btn btn-sm btn-info" target="_blank">Карандаши</a>
 
 </div>
 <br>
@@ -246,6 +247,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         document.getElementById('control-name').innerHTML = monthName[nowDate.getMonth()] + ", " + nowDate.getFullYear();
                         renderThead(scheduleData);
                         setHeadEventTop();
+                        $('#generate-pencil').attr('href', '/schedule/pencil?month=' +(nowDate.getMonth() + 1) +'&year=' +nowDate.getFullYear());
                     }
                     stopPreloader();
                 },

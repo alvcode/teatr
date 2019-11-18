@@ -33,7 +33,7 @@ class StatisticController extends AccessController
                 'rules' => [
                     [
                         'allow' => true,
-                        'actions' => ['index'],
+                        'actions' => ['index', 'timesheet'],
                         'roles' => ['visible_statistic_index'],
                     ],
                 ],

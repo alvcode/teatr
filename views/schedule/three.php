@@ -1161,7 +1161,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                         var textNotification = '';
                                         for(var key in result.data){
                                             textNotification += "Конфликт! "+ result.data[key].user_name +" " +result.data[key].surname +" стоит на \n\
-                                                "+ (result.data[key].name?result.data[key].name:"другом мероприятии") +" в это время";
+                                                "+ (result.data[key].name?result.data[key].name:"другом мероприятии") +" в это время<br><br>";
                                         }
                                         showNotifications(textNotification, 7000, NOTIF_RED);
                                     }else if(result.response == 'error'){

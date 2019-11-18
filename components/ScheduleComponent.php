@@ -237,7 +237,7 @@ class ScheduleComponent extends Model{
                             foreach ($findUsers as $keyList => $valueList){
                                 if(+$valueThis['user']['id'] == +$valueList['user']['id']){
                                     $valueThis['user']['user_name'] = $valueThis['user']['name'];
-                                    $result[] = array_merge($valueThis['user'], $value['event']);
+                                    $result[] = array_merge($valueThis['user'], $thisEvent);
                                 }
                             }
                         }
@@ -249,7 +249,7 @@ class ScheduleComponent extends Model{
                             foreach ($findUsers as $keyList => $valueList){
                                 if(+$valueThis['user']['id'] == +$valueList['user']['id']){
                                     $valueThis['user']['user_name'] = $valueThis['user']['name'];
-                                    $result[] = array_merge($valueThis['user'], $value['event']);
+                                    $result[] = array_merge($valueThis['user'], $thisEvent);
                                 }
                             }
                         }
@@ -261,7 +261,7 @@ class ScheduleComponent extends Model{
                             foreach ($findUsers as $keyList => $valueList){
                                 if(+$valueThis['user']['id'] == +$valueList['user']['id']){
                                     $valueThis['user']['user_name'] = $valueThis['user']['name'];
-                                    $result[] = array_merge($valueThis['user'], $value['event']);
+                                    $result[] = array_merge($valueThis['user'], $thisEvent);
                                 }
                             }
                         }

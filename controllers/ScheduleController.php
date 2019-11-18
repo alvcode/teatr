@@ -56,7 +56,7 @@ class ScheduleController extends AccessController
                     ],
                     [
                         'allow' => true,
-                        'actions' => ['two'],
+                        'actions' => ['two', 'pencil'],
                         'roles' => ['visible_s_two'],
                     ],
                     [
@@ -957,9 +957,15 @@ class ScheduleController extends AccessController
      * Action выгрузки в word
      */
     public function actionWord(){
-        
         WeekWord::wordWeekSchedule(Yii::$app->request->get('from'), Yii::$app->request->get('to'));
+    }
+    
+    public function actionPencil(){
+        $getCatId = Config::getConfig('actors_prof_cat');
         
+        $pencilExcel = new \app\components\excel\PencilsExcel(Yii::$app->request->get('month'), Yii::$app->request->get('year'), $getCatId);
+        $pencilExcel->run();
+//        var_dump(array('Hello'));
     }
     
 
