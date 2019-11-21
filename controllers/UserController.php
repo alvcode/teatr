@@ -95,7 +95,7 @@ class UserController extends AccessController
 //                if($findByNumber){
 //                    return json_encode(['result' => 'error', 'data' => 'Пользователь с таким номером телефона уже есть в программе']);
 //                }
-                $findByEmail = User::find()->where(['email' => Yii::$app->request->post('email')])->all();
+                $findByEmail = User::find()->where(['email' => Yii::$app->request->post('email'), 'is_active' => 1])->all();
                 if($findByEmail){
                     return json_encode(['result' => 'error', 'data' => 'Пользователь с таким E-mail уже есть в программе']);
                 }
