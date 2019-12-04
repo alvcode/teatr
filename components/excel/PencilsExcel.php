@@ -29,6 +29,12 @@ use app\models\ProffCategories;
  */
 
 class PencilsExcel extends Model{
+
+    public $colors = ['EC7063','A569BD','5DADE2','45B39D','58D68D','F4D03F',
+        'EB984E','DC7633','D7DBDD','B2BABB','808B96','0E6251','4A235A','7D6608','6E2C00',
+        'A9DFBF','FADBD8','FAD7A0','E6B0AA','EC7063','A569BD','5DADE2','45B39D','58D68D','F4D03F',
+        'EB984E','DC7633','D7DBDD','B2BABB','808B96','0E6251','4A235A','7D6608','6E2C00'
+    ];
     
     // Месяц
     public $month;
@@ -130,6 +136,9 @@ class PencilsExcel extends Model{
             $sheet->getStyleByColumnAndRow($i, $headRow)->applyFromArray(self::generateBorders(['top', 'right', 'bottom', 'left']));
             $sheet->getStyleByColumnAndRow($i, ($headRow +1))->applyFromArray(self::generateBorders(['top', 'right', 'bottom', 'left']));
         }
+        // $eventColors = [];
+        $eventsListIds = [];
+        $existsEvent = false;
         foreach ($this->schedule['schedule'] as $day => $eventId){
             $eventInDay = 0;
             $startColumnDate = $headColumn;
@@ -153,8 +162,13 @@ class PencilsExcel extends Model{
             
                     if($event['event']){
                         $eventName = $event['event']['name'];
+                        $existsEvent = true;
+                        if(!in_array($event['event']['id'], $eventsListIds)){
+                            $eventsListIds[] = $event['event']['id'];
+                        }
                     }else{
                         $eventName = $event['eventType']['name'];
+                        $existsEvent = false;
                     }
                     $eventDate = $event['date'];
                     $dateNumber = date('d', strtotime($event['date']));
@@ -168,6 +182,11 @@ class PencilsExcel extends Model{
                 $sheet->getStyleByColumnAndRow($startColumnEvent, ($headRow +1))->getAlignment()->setWrapText(true);
                 $sheet->mergeCellsByColumnAndRow($startColumnEvent, ($headRow +1), ($headColumn -1), ($headRow +1));
                 $sheet->getStyleByColumnAndRow($startColumnEvent, ($headRow +1))->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                if($existsEvent){
+                    $sheet->getStyleByColumnAndRow($startColumnEvent, ($headRow +1))->getFill()
+                        ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                        ->getStartColor()->setARGB($this->colors[array_search($event['event']['id'], $eventsListIds)]);
+                }
                 $sheet->getStyleByColumnAndRow($startColumnEvent, ($headRow +1))->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
                 $sheet->getStyleByColumnAndRow($startColumnEvent, ($headRow +1))->getFont()->setSize(9);
             }
@@ -177,6 +196,7 @@ class PencilsExcel extends Model{
             $sheet->getStyleByColumnAndRow($startColumnDate, $headRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
             $sheet->mergeCellsByColumnAndRow($startColumnDate, $headRow, ($headColumn -1), $headRow);
         }
+        // var_dump($eventsListIds); exit();
 //        $sheet->setCellValueByColumnAndRow($headColumn, ($headRow +1), 'ВСЕГО выходы');
 //        $sheet->setCellValueByColumnAndRow($headColumn +1, ($headRow +1), 'ВСЕГО часы');
         $sheet->getStyleByColumnAndRow($headColumn, ($headRow +1))->getAlignment()->setWrapText(true);
@@ -215,8 +235,13 @@ class PencilsExcel extends Model{
                         if($event['allUsersInEvent']){
                             foreach ($event['allUsersInEvent'] as $usKey => $usVal){
                                 if((int)$userValue['id'] == (int)$usVal['user_id']){
+                                    if($event['event']){
+                                        $sheet->getStyleByColumnAndRow($event['column'], $bodyRow)->getFill()
+                                        ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                                        ->getStartColor()->setARGB($this->colors[array_search($event['event']['id'], $eventsListIds)]);
+                                    }
                                     
-                                    $sheet->setCellValueByColumnAndRow($event['column'], $bodyRow, '+');
+                                    // $sheet->setCellValueByColumnAndRow($event['column'], $bodyRow, '+');
                                     $sheet->getStyleByColumnAndRow($event['column'], $bodyRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
                                     $sheet->getStyleByColumnAndRow($event['column'], $bodyRow)->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
                                     

@@ -249,8 +249,12 @@ class ScheduleController extends AccessController
             if(Yii::$app->request->post('trigger') == 'load-casts-in-schedule'){
 //                return json_encode(ScheduleComponent::searchLastCast(Yii::$app->request->post('month'), Yii::$app->request->post('year'), Yii::$app->request->post('event'), 12));
                 $data = [];
-                $data = ScheduleComponent::loadCastInSchedule(Yii::$app->request->post('month'), Yii::$app->request->post('year'), Yii::$app->request->post('event'));
-                $data['cast'] = ScheduleComponent::joinUnderstudy($data['cast']);
+                if((int)Yii::$app->request->post('event') == 0){
+                    $data = ScheduleComponent::loadAllDataTwoSchedule(Yii::$app->request->post('month'), Yii::$app->request->post('year'));
+                }else{
+                    $data = ScheduleComponent::loadCastInSchedule(Yii::$app->request->post('month'), Yii::$app->request->post('year'), Yii::$app->request->post('event'));
+                    $data['cast'] = ScheduleComponent::joinUnderstudy($data['cast']);
+                }
                 
                 if(!$data['cast']){
                     $searchCast = ScheduleComponent::searchLastCast(Yii::$app->request->post('month'), Yii::$app->request->post('year'), Yii::$app->request->post('event'), 12);

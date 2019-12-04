@@ -23,7 +23,9 @@ $this->params['breadcrumbs'][] = $this->title;
         </div>
     </div>
     
-    <div id="all-events-buttons"></div>
+    <div id="all-events-buttons">
+        <div class="btn btn-sm btn-outline-info">ВСЕ</div>
+    </div>
     <div class="schedule-controls">
         <div>
             <div id="control-name" class="name"></div>
@@ -326,6 +328,11 @@ $this->params['breadcrumbs'][] = $this->title;
             }
 
             if (z) {
+                var createEventItem = document.createElement('div');
+                createEventItem.className = 'btn btn-sm ml-1 btn-outline-info f-s12 mrg-top5 event-button';
+                createEventItem.dataset.event = 0;
+                createEventItem.innerHTML = "ВСЕ";
+                document.getElementById('all-events-buttons').append(createEventItem);
                 for (var key in allEvents) {
                     var createEventItem = document.createElement('div');
                     createEventItem.className = 'btn btn-sm ml-1 btn-outline-info f-s12 mrg-top5 event-button';
@@ -378,7 +385,11 @@ $this->params['breadcrumbs'][] = $this->title;
                                 }
                             }
                         }
-                        renderSchedule(castsData.data.schedule);
+                        if(+selectedEvent == 0){
+                            renderSchedule(castsData.data.schedule, false);
+                        }else{
+                            renderSchedule(castsData.data.schedule);
+                        }
                     }else if(castsData.result == 'last'){
                         $('#lastCastModal').modal('show');
                         lastCastDate = castsData.data;
@@ -439,6 +450,18 @@ $this->params['breadcrumbs'][] = $this->title;
             if (!selectedEvent) {
                 showNotifications('Не выбран спектакль', 3000, NOTIF_RED);
                 return false;
+            }
+            var allUsersList = document.getElementsByClassName('actor-list-item');
+            var addedUserList = document.getElementById('two--tbody').getElementsByTagName('tr');
+            for(var z = 0; z < allUsersList.length; z++){
+                allUsersList[z].classList.remove('set');
+            }
+            for(var i = 0; i < addedUserList.length; i++){
+                for(var z = 0; z < allUsersList.length; z++){
+                    if(+addedUserList[i].dataset.id == +allUsersList[z].dataset.id){
+                        allUsersList[z].classList.add('set');
+                    }
+                }
             }
             $('#actorsListModal').modal('show');
         });
@@ -866,18 +889,30 @@ $this->params['breadcrumbs'][] = $this->title;
             return true;
         }
 
-        function renderSchedule(schedule) {
+        function renderSchedule(schedule, checkCast = true) {
             var rows = document.getElementById('two--tbody').getElementsByTagName('tr');
             for (var key in schedule) {
                 for (var i = 0; i < rows.length; i++) {
-                    if (+rows[i].dataset.id == +schedule[key].user_id && +rows[i].dataset.cast == +schedule[key].cast_id) {
-                        var cells = rows[i].getElementsByTagName('td');
-                        for (var z = 0; z < cells.length; z++) {
-                            if (+cells[z].dataset.schedule == +schedule[key].schedule_event_id) {
-                                cells[z].innerHTML = '+';
+                    if(checkCast){
+                        if (+rows[i].dataset.id == +schedule[key].user_id && +rows[i].dataset.cast == +schedule[key].cast_id) {
+                            var cells = rows[i].getElementsByTagName('td');
+                            for (var z = 0; z < cells.length; z++) {
+                                if (+cells[z].dataset.schedule == +schedule[key].schedule_event_id) {
+                                    cells[z].innerHTML = '+';
+                                }
+                            }
+                        }
+                    }else{
+                        if (+rows[i].dataset.id == +schedule[key].user_id) {
+                            var cells = rows[i].getElementsByTagName('td');
+                            for (var z = 0; z < cells.length; z++) {
+                                if (+cells[z].dataset.schedule == +schedule[key].schedule_event_id) {
+                                    cells[z].innerHTML = '+';
+                                }
                             }
                         }
                     }
+
                 }
             }
         }

@@ -378,11 +378,46 @@ class ScheduleComponent extends Model{
                     //'user.is_active' => 1,
                 ])
                 ->asArray()->all();
+        $data['cast'] = self::sortFirstLetter($data['cast'], 'surname');
         $data['schedule'] = UserInSchedule::find()->select('user_in_schedule.*')
                 ->leftJoin('schedule_events', 'schedule_events.id = user_in_schedule.schedule_event_id')
                 ->where(['=', 'year(schedule_events.date)', $year])
                 ->andWhere(['=', 'month(schedule_events.date)', $month])
                 ->andWhere(['schedule_events.event_id' => $event])
+                ->asArray()->all();
+        return $data;
+    }
+
+
+    /**
+     * Загружает всех актеров и проставленные дни из user_in_schedule за месяц
+     * Внимание! Не загружает дубли
+     * 
+     * @param integer $month
+     * @param integer $year
+     * @param integer $event
+     * @return array
+     */
+    public static function loadAllDataTwoSchedule($month, $year){
+        $data = [];
+        $actorsCat = Config::getConfig('actors_prof_cat');
+
+        $data['cast'] = User::find()->select('user.id, user.name, user.surname, user.is_active')
+                ->leftJoin('user_profession', 'user_profession.user_id = user.id')
+                ->leftJoin('profession', 'profession.id = user_profession.prof_id')
+                ->where([
+                    'profession.proff_cat_id' => $actorsCat,
+                    // 'casts.year' => $year, 
+                    // 'casts.month' => $month, 
+                    'user.is_active' => 1,
+                ])
+                ->asArray()->all();
+        $data['cast'] = self::sortFirstLetter($data['cast'], 'surname');
+        $data['schedule'] = UserInSchedule::find()->select('user_in_schedule.*')
+                ->leftJoin('schedule_events', 'schedule_events.id = user_in_schedule.schedule_event_id')
+                ->where(['=', 'year(schedule_events.date)', $year])
+                ->andWhere(['=', 'month(schedule_events.date)', $month])
+                // ->andWhere(['schedule_events.event_id' => $event])
                 ->asArray()->all();
         return $data;
     }
