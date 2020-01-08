@@ -446,7 +446,6 @@ class TimesheetExcel extends Model{
                     $sheet->getStyleByColumnAndRow($headColumn +1, $v['row'])->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
                 }
             }
-            // Тут мы должны вписать итоговые значения на основе $userData
         }
         $filename = "Tabel_(" .$this->profName['name'] .")_" .$dateFrom ."-" .$dateTo .".xlsx";
         $writer = new Xlsx($spreadsheet);

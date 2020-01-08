@@ -202,7 +202,7 @@ class ScheduleController extends AccessController
                         ->andWhere(['=', 'month(date)', Yii::$app->request->post('month')])
                         ->andWhere(['event_type_id' => $configEventType])
                         ->andWhere(['events.category_id' => 1])
-                        ->with('eventType')->with('event')->asArray()->all();
+                        ->with('eventType')->with('event')->orderBy('schedule_events.time_from')->asArray()->all();
                 return json_encode(ScheduleComponent::transformEventsToTwo($schedule));
             }
             
