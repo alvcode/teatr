@@ -1,6 +1,7 @@
 <?php
 /**
  * Генерирование табеля
+ * Видит Бог, я не виноват в этом дерьме
  */
 namespace app\components\excel;
 
@@ -30,7 +31,7 @@ use app\models\ProffCategories;
 
 class TimesheetExcel extends Model{
     
-    // Конфиг. Хардкод. Расширить, если требуется задействовать новые помещения или типы мероприятий
+    // Конфиг. Хардкод, так как меняется что-то чуть ли не каждую неделю, сами не знают чего хотят
     public $roomIds = ['3' => 'Большая сцена', '4' => 'Малая сцена'];
     public $eventTypes = ['17' => 'Репетиция', '26' => 'Раус'];
     
@@ -109,7 +110,7 @@ class TimesheetExcel extends Model{
             ->leftJoin('events', 'schedule_events.event_id = events.id')
             ->where(['between', 'date', $from, $to])
             ->andWhere(['or', [
-                    'room_id' => array_keys($this->roomIds), 
+                    //'room_id' => array_keys($this->roomIds), 
                     'events.category_id' => 1,
                     'event_type_id' => $this->mainConfig
                 ], ['event_type_id' => array_keys($this->eventTypes), 'events.category_id' => 1]])
@@ -152,9 +153,6 @@ class TimesheetExcel extends Model{
     public function loadMainConfig(){
         $allConfig = Config::getAllConfig();
         foreach ($allConfig['spectacle_event'] as $value){
-            $this->mainConfig[count($this->mainConfig)] = $value;
-        }
-        foreach ($allConfig['repetition_event_type'] as $value){
             $this->mainConfig[count($this->mainConfig)] = $value;
         }
     }
@@ -347,8 +345,8 @@ class TimesheetExcel extends Model{
                 $userData[$c]['type'] = 'event';
                 $userData[$c]['id'] = $keyEventType;
                 $userData[$c]['row'] = $bodyRow;
-                $userData[$c]['work_time'] = 0;
-                $userData[$c]['work_day'] = 0;
+                $userData[$c]['work_time'] = 0; // часы
+                $userData[$c]['work_day'] = 0; // выходы
                 $sheet->setCellValueByColumnAndRow(2, $bodyRow, $valEventType);
                 $sheet->getStyleByColumnAndRow(2, $bodyRow)->getAlignment()->setWrapText(true);
                 $sheet->getStyleByColumnAndRow(2, $bodyRow)->getFont()->setSize(9);
@@ -391,8 +389,11 @@ class TimesheetExcel extends Model{
                                                 }
                                             }
                                         }else{
+                                            // Тут значитсяяяяяя, если $event['room_id'] != большой или малой сцене, то вхерачиваем все в малую сцену,
+                                            // но есть подозрение, что делать это нужно не в этом цикле, а уровнем выше, завтра трезвому нужно разобраться
                                             foreach ($userData as $keyUserData => $valUserData){
-                                                if($valUserData['type'] == 'room' && (int)$valUserData['id'] == (int)$event['room_id']){
+                                                if($valUserData['type'] == 'room' && ((int)$valUserData['id'] == (int)$event['room_id']
+                                                        || ((int)$valUserData['id'] == 4 && !in_array($event['room_id'], array_keys($this->roomIds))))){
                                                     $workTime = self::calculateTime($event['time_from'], $event['time_to']);
                                                     $userData[$keyUserData]['work_time'] += $workTime;
                                                     $sheet->setCellValueByColumnAndRow($event['column'], $valUserData['row'], $workTime);
@@ -413,7 +414,8 @@ class TimesheetExcel extends Model{
                                             }
                                         }else{
                                             foreach ($userData as $keyUserData => $valUserData){
-                                                if($valUserData['type'] == 'room' && (int)$valUserData['id'] == (int)$event['room_id']){
+                                                if($valUserData['type'] == 'room' && ((int)$valUserData['id'] == (int)$event['room_id']
+                                                    || ((int)$valUserData['id'] == 4 && !in_array($event['room_id'], array_keys($this->roomIds))))){
                                                     $userData[$keyUserData]['work_day'] += 1;
                                                     $sheet->setCellValueByColumnAndRow($event['column'], $valUserData['row'], '1');
                                                     $sheet->getStyleByColumnAndRow($event['column'], $valUserData['row'])->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
@@ -428,14 +430,18 @@ class TimesheetExcel extends Model{
                     }
                 }
             }
+            $endLiter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($headColumn - 1);
+
             foreach ($userData as $k => $v){
                 if($v['work_day']){
-                    $sheet->setCellValueByColumnAndRow($headColumn, $v['row'], $v['work_day']);
+                    $sheet->getCellByColumnAndRow($headColumn, $v['row'])->setValue('=SUMPRODUCT(C'. $v['row'] .':'. $endLiter . $v['row'] .')');
+//                    $sheet->setCellValueByColumnAndRow($headColumn, $v['row'], $v['work_day']);
                     $sheet->getStyleByColumnAndRow($headColumn, $v['row'])->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
                     $sheet->getStyleByColumnAndRow($headColumn, $v['row'])->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
                 }
                 if($v['work_time']){
-                    $sheet->setCellValueByColumnAndRow($headColumn +1, $v['row'], $v['work_time']);
+                    $sheet->getCellByColumnAndRow($headColumn +1, $v['row'])->setValue('=SUMPRODUCT(C'. $v['row'] .':'. $endLiter . $v['row'] .')');
+//                    $sheet->setCellValueByColumnAndRow($headColumn +1, $v['row'], $v['work_time']);
                     $sheet->getStyleByColumnAndRow($headColumn +1, $v['row'])->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
                     $sheet->getStyleByColumnAndRow($headColumn +1, $v['row'])->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
                 }

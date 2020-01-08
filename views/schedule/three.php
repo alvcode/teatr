@@ -1332,6 +1332,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     
                     if(scheduleData[key].event != null){
                         $('#select-edit-event-category').val(scheduleData[key].event.category_id);
+                        eventCatSort();
                         $('#select-edit-event').val(scheduleData[key].event.id);
                         $('#edit--without-event').prop('checked', false);
                         $('#select-edit-event-category').attr('disabled', false);
