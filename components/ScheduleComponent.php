@@ -124,21 +124,21 @@ class ScheduleComponent extends Model{
                 ->asArray()->all();
         if($getAllEvents){
             foreach ($getAllEvents as $key => $value){
-                if($value['time_to'] && $findSchedule->time_to && +$value['id'] != +$findSchedule->id){
+                if($value['time_to'] && $findSchedule->time_to /*&& +$value['id'] != +$findSchedule->id*/){
                     if(((+$value['time_from'] < +$findSchedule->time_to && +$value['time_from'] >= +$findSchedule->time_from))
                         || (+$value['time_to'] <= +$findSchedule->time_to && +$value['time_to'] > +$findSchedule->time_from) 
                         || (+$value['time_from'] <= +$findSchedule->time_from && +$value['time_to'] >= +$findSchedule->time_to)){
                         $result[] = $value;
                     }
-                }elseif($value['time_to'] && !$findSchedule->time_to && +$value['id'] != +$findSchedule->id){
+                }elseif($value['time_to'] && !$findSchedule->time_to /*&& +$value['id'] != +$findSchedule->id*/){
                     if(+$value['time_from'] <= +$findSchedule->time_from && +$value['time_to'] > +$findSchedule->time_from){
                         $result[] = $value;
                     }
-                }elseif(!$value['time_to'] && $findSchedule->time_to && +$value['id'] != +$findSchedule->id){
+                }elseif(!$value['time_to'] && $findSchedule->time_to /*&& +$value['id'] != +$findSchedule->id*/){
                     if(+$findSchedule->time_from <= +$value['time_from'] && +$findSchedule->time_to > +$value['time_from']){
                         $result[] = $value;
                     }
-                }elseif(!$value['time_to'] && !$findSchedule->time_to && +$value['id'] != +$findSchedule->id){
+                }elseif(!$value['time_to'] && !$findSchedule->time_to /*&& +$value['id'] != +$findSchedule->id*/){
                     if(+$findSchedule->time_from == +$value['time_from']){
                         $result[] = $value;
                     }
