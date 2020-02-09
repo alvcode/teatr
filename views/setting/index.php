@@ -144,6 +144,24 @@ $this->params['breadcrumbs'][] = $this->title;
                     <div id="add-config-7" class="btn btn-sm btn-outline-success mrg-top15"><i class="fas fa-plus"></i> Добавить</div>
                 </div>
             </div>
+
+            <div class="card border-info mt-2">
+                <div class="card-header"><h5 class="card-title">Службы, доступные для добавления в состав (актерское расписание)</h5></div>
+                <div class="card-body text-info">
+                    <div id="actors-prof-cat-container">
+                        <?php if (isset($allConfig['other_prof_cat_two_schedule']) && $actorsCat): ?>
+                            <?php foreach ($actorsCat as $key => $value): ?>
+                                <?php if (in_array($value['id'], $allConfig['other_prof_cat_two_schedule'])): ?>
+                                    <button data-id="<?= $value['id'] ?>" type="button" class="btn btn-sm btn-info mt-1">
+                                        <?= $value['name'] ?> <span data-name="other_prof_cat_two_schedule" class="badge badge-danger delete-config"><i class="fas fa-times"></i></span>
+                                    </button>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+                    <div id="add-config-8" class="btn btn-sm btn-outline-success mrg-top15"><i class="fas fa-plus"></i> Добавить</div>
+                </div>
+            </div>
             
         </div>
     </div>
@@ -299,7 +317,12 @@ $this->params['breadcrumbs'][] = $this->title;
             configName = 'repetition_event_type';
             $('#eventTypeModal').modal('show');
         });
-        
+
+        // Config 8
+        $('#add-config-8').click(function(){
+            configName = 'other_prof_cat_two_schedule';
+            $('#profCatModal').modal('show');
+        });
         
         // ROOMS
         $('#add-room').click(function(){

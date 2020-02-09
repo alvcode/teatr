@@ -36,6 +36,10 @@ class CastUnderstudy extends \yii\db\ActiveRecord
         return $this->hasOne(User::className(), ['id' => 'user_id'])->select('user.id, user.name, user.surname, user.is_active');
     }
 
+    public function getUserWithProf(){
+        return $this->hasOne(User::className(), ['id' => 'user_id'])->select('user.id, user.name, user.surname, user.is_active')->with('userProfessionJoinProf');
+    }
+
     /**
      * {@inheritdoc}
      */

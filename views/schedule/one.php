@@ -632,7 +632,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 data: data,
                 success: function (data) {
                     scheduleData = JSON.parse(data);
-                    console.log(scheduleData);
+                    // console.log(scheduleData);
                     for (var key in scheduleData) {
                         var dateT = new Date(scheduleData[key].date);
                         var cellData = {
@@ -730,7 +730,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 data: data,
                 success: function (data) {
                     var result = JSON.parse(data);
-                    console.log(result);
+                    // console.log(result);
                     if(result.response == 'ok'){
                         deleteEventInCalendar(editEventId);
                         scheduleData[scheduleData.length] = result.data;
@@ -787,82 +787,85 @@ $this->params['breadcrumbs'][] = $this->title;
             }
         });
 
-        $("#one--schedule-items").on("DOMNodeInserted", ".event-cell", function () {
-            $(this).draggable({helper: "clone", delay: 200, });
-        });
-        $("#one--schedule-items").on("DOMNodeInserted", ".room-cell", function () {
-            $('.room-cell').droppable({
-                classes: {
+        // Если это не мобильный телефон, то разрешаем перетаскивание
+        if($(window).width() > 500) {
+            $("#one--schedule-items").on("DOMNodeInserted", ".event-cell", function () {
+                $(this).draggable({helper: "clone", delay: 200,});
+            });
+            $("#one--schedule-items").on("DOMNodeInserted", ".room-cell", function () {
+                $('.room-cell').droppable({
+                    classes: {
 //            "ui-droppable-hover": "ui-state-hover"
-                },
-                drop: function (event, ui) {
-                    for (var key in scheduleData) {
-                        if (scheduleData[key].id == ui.draggable[0].dataset.id) {
-                            var dateObj = {
-                                day: event.target.parentNode.dataset.day,
-                                month: event.target.parentNode.dataset.month,
-                                year: event.target.parentNode.dataset.year
-                            };
-                            var data = {
-                                trigger: 'add-schedule',
-                                date: dateObj,
-                                room: event.target.dataset.room,
-                                timeFrom: normalizeTime(minuteToTime(scheduleData[key].time_from)),
-                                timeTo: (scheduleData[key].time_to !== null ? normalizeTime(minuteToTime(scheduleData[key].time_to)) : ''),
-                                eventType: scheduleData[key].eventType.id,
-                                event: (scheduleData[key].event !== null ? scheduleData[key].event.id : ""),
-                                modifiedEvent: scheduleData[key].is_modified
-                            };
-                            if (!checkTimesInterval(scheduleData[key].time_from, scheduleData[key].time_to, dateObj, event.target.dataset.room)) {
-                                showNotifications("Добавляемое мероприятие пересекается с другими в этот день", 3000, NOTIF_RED);
-                                return false;
-                            }
-                            data[csrfParam] = csrfToken;
-                            goPreloader();
-                            $.ajax({
-                                type: "POST",
-                                url: '/schedule/one',
-                                data: data,
-                                success: function (data) {
-                                    var result = JSON.parse(data);
-                                    if (result.result == 'ok') {
-                                        var result = JSON.parse(data);
-//                                        console.log(result);
-                                        scheduleData[scheduleData.length] = result.response;
-                                        var dateT = new Date(result.response.date);
-                                        var cellData = {
-                                            id: result.response.id,
-                                            date: {
-                                                day: dateT.getDate(),
-                                                month: dateT.getMonth(),
-                                                year: dateT.getFullYear()
-                                            },
-                                            room: result.response.room_id,
-                                            eventType: result.response.eventType.name,
-                                            eventTypeId: result.response.eventType.id,
-                                            eventName: (result.response.event !== null ? result.response.event.name : ''),
-                                            eventOtherName: (result.response.event !== null && result.response.event.other_name !== null ? result.response.event.other_name : ''),
-                                            timeFrom: result.response.time_from,
-                                            timeTo: (result.response.time_to !== null ? result.response.time_to : ''),
-                                            is_modified: result.response.is_modified
-                                        };
-                                        addEventInCalendar(cellData);
-                                        $('#addEventModal').modal('hide');
-                                    }else if (result.result == 'error') {
-                                        showNotifications(result.response, 4000, NOTIF_RED);
-                                    }
-                                    stopPreloader();
-                                },
-                                error: function () {
-                                    showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
-                                    stopPreloader();
+                    },
+                    drop: function (event, ui) {
+                        for (var key in scheduleData) {
+                            if (scheduleData[key].id == ui.draggable[0].dataset.id) {
+                                var dateObj = {
+                                    day: event.target.parentNode.dataset.day,
+                                    month: event.target.parentNode.dataset.month,
+                                    year: event.target.parentNode.dataset.year
+                                };
+                                var data = {
+                                    trigger: 'add-schedule',
+                                    date: dateObj,
+                                    room: event.target.dataset.room,
+                                    timeFrom: normalizeTime(minuteToTime(scheduleData[key].time_from)),
+                                    timeTo: (scheduleData[key].time_to !== null ? normalizeTime(minuteToTime(scheduleData[key].time_to)) : ''),
+                                    eventType: scheduleData[key].eventType.id,
+                                    event: (scheduleData[key].event !== null ? scheduleData[key].event.id : ""),
+                                    modifiedEvent: scheduleData[key].is_modified
+                                };
+                                if (!checkTimesInterval(scheduleData[key].time_from, scheduleData[key].time_to, dateObj, event.target.dataset.room)) {
+                                    showNotifications("Добавляемое мероприятие пересекается с другими в этот день", 3000, NOTIF_RED);
+                                    return false;
                                 }
-                            });
+                                data[csrfParam] = csrfToken;
+                                goPreloader();
+                                $.ajax({
+                                    type: "POST",
+                                    url: '/schedule/one',
+                                    data: data,
+                                    success: function (data) {
+                                        var result = JSON.parse(data);
+                                        if (result.result == 'ok') {
+                                            var result = JSON.parse(data);
+//                                        console.log(result);
+                                            scheduleData[scheduleData.length] = result.response;
+                                            var dateT = new Date(result.response.date);
+                                            var cellData = {
+                                                id: result.response.id,
+                                                date: {
+                                                    day: dateT.getDate(),
+                                                    month: dateT.getMonth(),
+                                                    year: dateT.getFullYear()
+                                                },
+                                                room: result.response.room_id,
+                                                eventType: result.response.eventType.name,
+                                                eventTypeId: result.response.eventType.id,
+                                                eventName: (result.response.event !== null ? result.response.event.name : ''),
+                                                eventOtherName: (result.response.event !== null && result.response.event.other_name !== null ? result.response.event.other_name : ''),
+                                                timeFrom: result.response.time_from,
+                                                timeTo: (result.response.time_to !== null ? result.response.time_to : ''),
+                                                is_modified: result.response.is_modified
+                                            };
+                                            addEventInCalendar(cellData);
+                                            $('#addEventModal').modal('hide');
+                                        } else if (result.result == 'error') {
+                                            showNotifications(result.response, 4000, NOTIF_RED);
+                                        }
+                                        stopPreloader();
+                                    },
+                                    error: function () {
+                                        showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                                        stopPreloader();
+                                    }
+                                });
+                            }
                         }
                     }
-                }
+                });
             });
-        });
+        }
         
         $('.clean-input').click(function () {
             this.parentNode.parentNode.querySelector('input').value = '';

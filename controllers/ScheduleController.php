@@ -4,6 +4,7 @@ namespace app\controllers;
 
 use Yii;
 use yii\filters\AccessControl;
+use yii\helpers\VarDumper;
 use yii\web\Controller;
 use yii\web\Response;
 use yii\filters\VerbFilter;
@@ -203,7 +204,10 @@ class ScheduleController extends AccessController
                         ->andWhere(['event_type_id' => $configEventType])
                         ->andWhere(['events.category_id' => 1])
                         ->with('eventType')->with('event')->orderBy('schedule_events.time_from')->asArray()->all();
-                return json_encode(ScheduleComponent::transformEventsToTwo($schedule));
+                $result = ScheduleComponent::transformEventsToTwo($schedule);
+                $result['config'] = Config::getAllConfig();
+                $result['profCatList'] = ProffCategories::find()->asArray()->all();
+                return json_encode($result);
             }
             
             if(Yii::$app->request->post('trigger') == 'add-in-cast'){
@@ -489,18 +493,40 @@ class ScheduleController extends AccessController
             
             return 0;
         }
+        // Для вывода списка актеров
         $configActorsProf = Config::getConfig('actors_prof_cat');
-        $actors = User::find()->select('user.id, user.name, user.surname')
+        $actors = User::find()->select('user.id, user.name, user.surname, profession.proff_cat_id')
                 ->leftJoin('user_profession', 'user.id = user_profession.user_id')
                 ->leftJoin('profession', 'user_profession.prof_id = profession.id')
                 ->where(['profession.proff_cat_id' => $configActorsProf])
                 ->andWhere(['user.is_active' => 1])
                 ->asArray()->all();
-        
         $actors = ScheduleComponent::sortFirstLetter($actors, 'surname', true);
+
+        // Для вывода списка сотрудников из других служб, помимо актров
+        $configOtherProf = Config::getConfig('other_prof_cat_two_schedule');
+        $otherUsers = User::find()->select('user.id, user.name, user.surname, profession.proff_cat_id, proff_categories.name as prof_cat_name')
+            ->leftJoin('user_profession', 'user.id = user_profession.user_id')
+            ->leftJoin('profession', 'user_profession.prof_id = profession.id')
+            ->leftJoin('proff_categories', 'profession.proff_cat_id = proff_categories.id')
+            ->where(['profession.proff_cat_id' => $configOtherProf])
+            ->andWhere(['user.is_active' => 1])
+            ->asArray()->all();
+        $otherUsersSort = [];
+
+        foreach ($otherUsers as $key => $value) {
+            $otherUsersSort[$value['proff_cat_id']]['name'] = $value['prof_cat_name'];
+            $otherUsersSort[$value['proff_cat_id']]['data'][] = $value;
+        }
+        foreach ($otherUsersSort as $key => $value){
+            $otherUsersSort[$key]['data'] = ScheduleComponent::sortFirstLetter($otherUsersSort[$key]['data'], 'surname', false);
+        }
+
+//        echo VarDumper::dumpAsString($otherUsersSort, 10, true);
         
         return $this->render('two', [
             'actors' => $actors,
+            'otherUsers' => $otherUsersSort
         ]);
     }
     

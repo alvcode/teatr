@@ -62,12 +62,12 @@ class ScheduleComponent extends Model{
      */
     public static function joinUnderstudy($users){
         $findUnderstudy = CastUnderstudy::find()->select('*')
-                ->where(['cast_id' => \yii\helpers\ArrayHelper::getColumn($users, 'cast_id')])->with('user')->asArray()->all();
+                ->where(['cast_id' => \yii\helpers\ArrayHelper::getColumn($users, 'cast_id')])->with('userWithProf')->asArray()->all();
         
         foreach ($users as $keyU => $valueU){
             foreach($findUnderstudy as $key => $value){
                 if($valueU['cast_id'] == $value['cast_id']){
-                    $users[$keyU]['understudy'][] = $value['user'];
+                    $users[$keyU]['understudy'][] = $value['userWithProf'];
                 }
             }
         }
@@ -369,8 +369,10 @@ class ScheduleComponent extends Model{
      */
     public static function loadCastInSchedule($month, $year, $event){
         $data = [];
-        $data['cast'] = User::find()->select('user.id, user.name, user.surname, user.is_active, casts.event_id, casts.id cast_id')
+        $data['cast'] = User::find()->select('user.id, user.name, user.surname, user.is_active, casts.event_id, casts.id cast_id, profession.proff_cat_id')
                 ->leftJoin('casts', 'casts.user_id = user.id')
+                ->leftJoin('user_profession', 'user_profession.user_id = user.id')
+                ->leftJoin('profession', 'profession.id = user_profession.prof_id')
                 ->where([
                     'casts.year' => $year, 
                     'casts.month' => $month, 
@@ -401,12 +403,13 @@ class ScheduleComponent extends Model{
     public static function loadAllDataTwoSchedule($month, $year){
         $data = [];
         $actorsCat = Config::getConfig('actors_prof_cat');
+        $configOtherProf = Config::getConfig('other_prof_cat_two_schedule');
 
-        $data['cast'] = User::find()->select('user.id, user.name, user.surname, user.is_active')
+        $data['cast'] = User::find()->select('user.id, user.name, user.surname, user.is_active, profession.proff_cat_id')
                 ->leftJoin('user_profession', 'user_profession.user_id = user.id')
                 ->leftJoin('profession', 'profession.id = user_profession.prof_id')
                 ->where([
-                    'profession.proff_cat_id' => $actorsCat,
+                    'profession.proff_cat_id' => array_merge($actorsCat, $configOtherProf),
                     // 'casts.year' => $year, 
                     // 'casts.month' => $month, 
                     'user.is_active' => 1,

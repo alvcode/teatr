@@ -332,7 +332,7 @@ $this->params['breadcrumbs'][] = $this->title;
             <div class="three--right-save-button mrg-top15">
                 <div id="save--event-time" class="btn btn-sm btn-success">Сохранить</div>
                 <div id="copy--event" class="btn btn-sm btn-info">Копировать</div>
-                <div id="delete--event" class="btn btn-sm btn-danger">Удалить мероприятие</div>
+                <div id="delete--event" class="btn btn-sm btn-danger mt-1">Удалить мероприятие</div>
             </div>
             <hr>
             <div class="mrg-top15">
@@ -572,26 +572,42 @@ $this->params['breadcrumbs'][] = $this->title;
 
         var csrfParam = $('meta[name="csrf-param"]').attr("content");
         var csrfToken = $('meta[name="csrf-token"]').attr("content");
-        
-        if($(window).width() > 1150){
-            var fixedTop = $('.three--title-row').clone();
-            fixedTop.appendTo('#three--schedule-content');
-            fixedTop.css({'width': fixedTop.width(), 'display': 'none'});
-            fixedTop.addClass('three--fixed-top');
 
-            $( window ).scroll(function() {
-                if($(window).scrollTop() > 300){
-                    $('.three--fixed-top').slideDown(200);
-                }else{
-                    $('.three--fixed-top').slideUp(200);
-                }
+        // Создаем и двигаем верхний прилипающий сайдбар с названиями залов
+        var fixedTop = $('.three--title-row').clone();
+        var widthContent = document.getElementsByClassName('three--title-row')[0].scrollWidth;
+
+        fixedTop.appendTo('#three--schedule-content');
+        fixedTop.css({'width': widthContent, 'display': 'none'});
+
+        fixedTop.addClass('three--fixed-top');
+
+        $( window ).scroll(function() {
+            if($(window).scrollTop() > 100){
+                $('.three--fixed-top').slideDown(200);
+            }else{
+                $('.three--fixed-top').slideUp(200);
+            }
+        });
+
+        $(window).resize(function() {
+            widthContent = document.getElementsByClassName('three--title-row')[0].scrollWidth;
+            $('.three--fixed-top').css({'width': widthContent});
+        });
+
+        if($(window).width() < 500) {
+            var fixedLeftPos = 15;
+            var scrollLeft = 0;
+            $('#three--schedule-content').scroll(function() {
+                scrollLeft = $('#three--schedule-content').scrollLeft();
+                $('.three--fixed-top').offset({left: -(scrollLeft - fixedLeftPos)});
+            });
+            $(window).scroll(function() {
+                scrollLeft = $('#three--schedule-content').scrollLeft();
+                $('.three--fixed-top').offset({left: -(scrollLeft - fixedLeftPos)});
             });
 
-            $(window).resize(function() {
-                $('.three--fixed-top').css({'width': $('.three--title-row:not(.three--fixed-top)').width()});
-            });
         }
-        
         var config = false; // Храним все настройки приложения
         var roomSetting = false; // Храним настройки отображения залов
 
@@ -997,7 +1013,7 @@ $this->params['breadcrumbs'][] = $this->title;
                     for (var z = 0; z < roomsCell.length; z++) {
                         if (roomsCell[z].dataset.room == params.room) {
                             var createContainer = document.createElement('div');
-                            createContainer.className = 'event-cell noselect ui-draggable ui-draggable-handle';
+                            createContainer.className = 'event-cell noselect';
                             if(+params.is_modified > 0){
                                 createContainer.classList.add('text-danger', 'font-weight-bold');
                             }
@@ -1113,74 +1129,80 @@ $this->params['breadcrumbs'][] = $this->title;
                 }
             }
         }
-        
-        $("#three--schedule-items").on("DOMNodeInserted", ".event-cell", function () {
-            $(this).draggable({helper: "clone", delay: 400, start: function(e, ui){$(ui.helper).css({'width': '160px'})} }); 
-        });
-        $("#three--schedule-items").on("DOMNodeInserted", ".room-cell", function () {
-            $('.room-cell').droppable({
-                classes: {
-//            "ui-droppable-hover": "ui-state-hover"
-                },
-                drop: function (event, ui) {
-                    for (var key in scheduleData) {
-                        if (scheduleData[key].id == ui.draggable[0].dataset.id) {
-                            var dateObj = {
-                                day: event.target.parentNode.dataset.day,
-                                month: event.target.parentNode.dataset.month,
-                                year: event.target.parentNode.dataset.year
-                            };
-                            var data = {
-                                trigger: 'copy-event',
-                                id: scheduleData[key].id,
-                                date: dateObj,
-                                room: event.target.dataset.room,
-                                addInfo: scheduleData[key].add_info,
-                                eventType: scheduleData[key].eventType.id,
-                                eventId: (scheduleData[key].event == null?'':scheduleData[key].event.id),
-                                withoutEvent: (scheduleData[key].event == null?'1':'0'),
-                                timeFrom: minuteToTime(scheduleData[key].time_from),
-                                timeTo: (scheduleData[key].time_to == null?'':minuteToTime(scheduleData[key].time_to)),
-                                moveUsers: '1',
-                                modifiedEvent: (+scheduleData[key].is_modified == 0?'0':'1'),
-                                isAll: (+scheduleData[key].is_all == 0?'0':'1'),
-                                withoutIntersect: '0'
-                            };
-                            data[csrfParam] = csrfToken;
-                            goPreloader();
-                            $.ajax({
-                                type: "POST",
-                                url: '/schedule/three',
-                                data: data,
-                                success: function (data) {
-                                    var result = JSON.parse(data);
-                                    if(result.response == 'ok'){
-                                        scheduleData[scheduleData.length] = result.result;
-                                        addEventInCalendar(generateCellData(result.result));
-                                    }else if(result.response == 'intersect'){
-                                        var textNotification = '';
-                                        for(var key in result.data){
-                                            textNotification += "Конфликт! "+ result.data[key].user_name +" " +result.data[key].surname +" стоит на \n\
-                                                "+ (result.data[key].name?result.data[key].name:"другом мероприятии") +" в это время<br><br>";
-                                        }
-                                        showNotifications(textNotification, 7000, NOTIF_RED);
-                                    }else if(result.response == 'error'){
-                                        showNotifications(result.result, 4000, NOTIF_RED);
-                                    }
 
-                                    stopPreloader();
-                                },
-                                error: function () {
-                                    showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
-                                    stopPreloader();
-                                }
-                            });
-                        }
+        if($(window).width() > 500) {
+            $("#three--schedule-items").on("DOMNodeInserted", ".event-cell", function () {
+                $(this).draggable({
+                    helper: "clone", delay: 400, start: function (e, ui) {
+                        $(ui.helper).css({'width': '160px'})
                     }
-                    // end for
-                }
+                });
             });
-        });
+            $("#three--schedule-items").on("DOMNodeInserted", ".room-cell", function () {
+                $('.room-cell').droppable({
+                    classes: {
+//            "ui-droppable-hover": "ui-state-hover"
+                    },
+                    drop: function (event, ui) {
+                        for (var key in scheduleData) {
+                            if (scheduleData[key].id == ui.draggable[0].dataset.id) {
+                                var dateObj = {
+                                    day: event.target.parentNode.dataset.day,
+                                    month: event.target.parentNode.dataset.month,
+                                    year: event.target.parentNode.dataset.year
+                                };
+                                var data = {
+                                    trigger: 'copy-event',
+                                    id: scheduleData[key].id,
+                                    date: dateObj,
+                                    room: event.target.dataset.room,
+                                    addInfo: scheduleData[key].add_info,
+                                    eventType: scheduleData[key].eventType.id,
+                                    eventId: (scheduleData[key].event == null ? '' : scheduleData[key].event.id),
+                                    withoutEvent: (scheduleData[key].event == null ? '1' : '0'),
+                                    timeFrom: minuteToTime(scheduleData[key].time_from),
+                                    timeTo: (scheduleData[key].time_to == null ? '' : minuteToTime(scheduleData[key].time_to)),
+                                    moveUsers: '1',
+                                    modifiedEvent: (+scheduleData[key].is_modified == 0 ? '0' : '1'),
+                                    isAll: (+scheduleData[key].is_all == 0 ? '0' : '1'),
+                                    withoutIntersect: '0'
+                                };
+                                data[csrfParam] = csrfToken;
+                                goPreloader();
+                                $.ajax({
+                                    type: "POST",
+                                    url: '/schedule/three',
+                                    data: data,
+                                    success: function (data) {
+                                        var result = JSON.parse(data);
+                                        if (result.response == 'ok') {
+                                            scheduleData[scheduleData.length] = result.result;
+                                            addEventInCalendar(generateCellData(result.result));
+                                        } else if (result.response == 'intersect') {
+                                            var textNotification = '';
+                                            for (var key in result.data) {
+                                                textNotification += "Конфликт! " + result.data[key].user_name + " " + result.data[key].surname + " стоит на \n\
+                                                " + (result.data[key].name ? result.data[key].name : "другом мероприятии") + " в это время<br><br>";
+                                            }
+                                            showNotifications(textNotification, 7000, NOTIF_RED);
+                                        } else if (result.response == 'error') {
+                                            showNotifications(result.result, 4000, NOTIF_RED);
+                                        }
+
+                                        stopPreloader();
+                                    },
+                                    error: function () {
+                                        showNotifications(NOTIF_TEXT_ERROR, 7000, NOTIF_RED);
+                                        stopPreloader();
+                                    }
+                                });
+                            }
+                        }
+                        // end for
+                    }
+                });
+            });
+        }
         
         function updateUserListInEvent(users, eventId){
             var eventCells = document.getElementsByClassName('event-cell');
@@ -1955,7 +1977,7 @@ $this->params['breadcrumbs'][] = $this->title;
             var firstDate = new Date(datePeriod[0].year +"-" +datePeriod[0].month +"-" +datePeriod[0].day);
             var lastDate = new Date(datePeriod[1].year +"-" +datePeriod[1].month +"-" +datePeriod[1].day);
             $('#copy--select-date').empty();
-            for(var i = 0; i < 14; i++){
+            for(var i = 0; i < 30; i++){
                 var createOption = document.createElement('option');
                 createOption.dataset.day = firstDate.getDate();
                 createOption.dataset.month = (firstDate.getMonth() +1);
@@ -2053,7 +2075,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 data: data,
                 success: function (data) {
                     var result = JSON.parse(data);
-                    console.log(result);
+                    // console.log(result);
                     if(result.response == 'ok'){
                         scheduleData[scheduleData.length] = result.result;
                         addEventInCalendar(generateCellData(result.result));
@@ -2095,7 +2117,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 data: data,
                 success: function (data) {
                     var result = JSON.parse(data);
-                    console.log(result);
+                    // console.log(result);
                     if(result.response == 'ok'){
                         deleteEventInCalendar(editEventId);
                         $('#deleteEventModal').modal('hide');
@@ -2132,7 +2154,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 data: data,
                 success: function (data) {
                     var result = JSON.parse(data);
-                    console.log(result);
+                    // console.log(result);
                     if(result.response == 'ok'){
                         $('#generate-link-container').html(result.result.link);
                         $('#generate-link-container').attr('href', result.result.link);
@@ -2254,7 +2276,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 data: data,
                 success: function (data) {
                     var result = JSON.parse(data);
-                    console.log(result);
+                    // console.log(result);
                     if(result.response == 'ok'){
                         roomSetting = result.result;
                         applyRoomSetting(roomSetting);
@@ -2437,7 +2459,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         // +1 комната, это Дата, тут она нам уже нужна
                         persentPlus = Math.floor(freePersent / ((allRooms +1) - roomSetting.length));
                     }
-                    console.log(freePersent);
+                    // console.log(freePersent);
                 }
                 for(var key in config){
                     counter += config[key];

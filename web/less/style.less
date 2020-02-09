@@ -307,7 +307,7 @@
 #all-events-buttons{
     text-align: right;
 }
-.actor-modal-container{
+.modal-users-style{
     padding-left: 70px;
     box-sizing: border-box;
     &>div{
@@ -340,6 +340,7 @@
 
 #three--schedule-content{
     overflow: auto;
+    position: relative;
 }
 .three--fixed-top{
     position: fixed;
@@ -556,8 +557,110 @@ display: none;
 .room-setting-item.selected{
     color: @orange;
 }
-.actor-list-item.set:after{
+.actor-list-item.set:after, .other-users-list-item.set:after{
     content: " \f058";
     font-family: 'Font Awesome 5 Free';
     color: #F00;
+}
+.lock-button{
+    display: none;
+}
+
+@media (max-width: 768px) {
+
+    .two--table-container{
+        
+        .two--thead-date th{
+            font-size: 11px;
+        }
+        .two--thead-event th{
+            font-size: 11px;
+        }
+        .two--thead-time th{
+            font-size: 11px;
+        }
+    
+        thead th:first-child {
+            min-width: 100px;
+        }
+
+        tbody{
+            th {
+                font-size: 9px;
+            }
+        }
+    }
+
+    .lock-button{
+        display: block;
+        position: fixed;
+        top: 40px;
+        left: 0;
+        z-index: 99999;
+    }
+
+    .three--title-row{
+        width: auto;
+
+        .date{
+            //width: 250px;
+            min-width: 150px;
+        }
+        .room{
+            //width: 250px;
+            min-width: 250px;
+        }
+    }
+    .three--date-row{
+        width: 100%;
+
+        .date{
+            //width: 250px;
+            min-width: 150px;
+        }
+        .room{
+            //width: 250px;
+            min-width: 250px;
+        }
+    }
+
+    .three--fixed-top{
+        .date{
+            width: 150px;
+        }
+    }
+
+    .schedule-controls{
+        width: 100%;
+        font-size: 20px;
+        .flex(column-reverse, wrap, flex-around);
+
+        &>div{
+            width: 100%;
+            margin-top: 20px;
+        }
+        &>div:nth-of-type(1){
+            .flex(row, nowrap, flex-start);
+        }
+        &>div:nth-of-type(2){
+            .flex(row, nowrap, flex-end);
+        }
+
+        .name{
+            width: 90%;
+            font-weight: 700;
+            color: @orange;
+            text-decoration: underline;
+        }
+    }
+
+    .three--right-more{
+        width: 100%;
+    }
+
+    #width-setting{
+        display: none;
+    }
+
+
 }
