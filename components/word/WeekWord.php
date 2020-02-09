@@ -188,13 +188,15 @@ class WeekWord extends Model {
                                     }
                                 }
 
-                                if ($eventData['allUsersInEvent'] && !in_array($eventData['eventType']['id'], $spectacleEventConfig)) {
+                                // Вписываем фамилии из служб. Список фамилий фильтруется функцией removeNeedUsers
+                                if ($eventData['allUsersInEvent']) {
                                     $allUsersArr = [];
                                     // Сортируем по алфавиту
                                     foreach ($eventData['allUsersInEvent'] as $keyUser => $valUser){
                                         $eventData['allUsersInEvent'][$keyUser]['userSurname'] = $valUser['userWithProf']['surname'];
                                     }
                                     $eventData['allUsersInEvent'] = \app\components\ScheduleComponent::sortFirstLetter($eventData['allUsersInEvent'], 'userSurname');
+
                                     foreach ($eventData['allUsersInEvent'] as $keyUser => $valUser) {
                                         if (!in_array($valUser['userWithProf']['userProfession']['prof']['proff_cat_id'], $actorsProfCat)) {
                                             $allUsersArr[] = $valUser['userWithProf']['surname'] .(+$valUser['userWithProf']['show_full_name'] == 1?" " .$valUser['userWithProf']['name']:"");
@@ -216,13 +218,14 @@ class WeekWord extends Model {
                                         $roomObjects[$col]->addText(" (" . $eventData['add_info'] . ")");
                                     }
                                 }
-                                
+
+                                // Вписываем фамилии актеров. Список фамилий фильтруется функцией removeNeedUsers
                                 // Если is_all > 0, то отображаем слово ВСЕ, иначе- фамилии
                                 $allUsersArr = [];
                                 if((int)$eventData['is_all'] > 0){
                                     $allUsersArr[] = '(ВСЕ)';
                                 }else{
-                                    if ($eventData['allUsersInEvent'] && !in_array($eventData['eventType']['id'], $spectacleEventConfig)) {
+                                    if ($eventData['allUsersInEvent']) {
                                         $allUsersArr = [];
                                         // Сортируем по алфавиту
                                         foreach ($eventData['allUsersInEvent'] as $keyUser => $valUser){
