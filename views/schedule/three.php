@@ -1042,7 +1042,8 @@ $this->params['breadcrumbs'][] = $this->title;
                             createContainer.append(createBudgie);
                             createContainer.append(createEventType);
                             createContainer.append(createEventName);
-                            
+
+                            // Выписываем фамилии не актров
                             var adminListArr = [];
                             var createAdminList = document.createElement('div');
                             createAdminList.className = 'three--user-admin-list';
@@ -1063,7 +1064,7 @@ $this->params['breadcrumbs'][] = $this->title;
                                 createContainer.append(createAddInfo);
                             }
                             
-                            // Если стоит флаг is_all, то отображаем слово ВСЕ, иначе- фамилии
+                            // Если стоит флаг is_all, то отображаем слово ВСЕ, иначе- фамилии актеров
                             var userListArr = [];
                             var createUserList = document.createElement('div');
                             createUserList.className = 'three--user-actors-list';

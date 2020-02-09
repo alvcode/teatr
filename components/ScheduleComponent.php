@@ -625,6 +625,7 @@ class ScheduleComponent extends Model{
     public static function removeNeedUsers($schedule){
         $spectacleEventConfig = Config::getConfig('spectacle_event');
         $profCatLeave = Config::getConfig('show_in_schedule_prof_cat');
+        $profCatLeaveSpectacle = Config::getConfig('show_in_schedule_prof_cat_spectacle');
 
         foreach ($schedule as $key => $value){
             if(!in_array($value['event_type_id'], $spectacleEventConfig)){
@@ -634,7 +635,11 @@ class ScheduleComponent extends Model{
                     }
                 }
             }else{
-                $schedule[$key]['allUsersInEvent'] = [];
+                foreach ($value['allUsersInEvent'] as $allKey => $allVal){
+                    if(!in_array($allVal['userWithProf']['userProfession']['prof']['proff_cat_id'], $profCatLeaveSpectacle)){
+                        unset($schedule[$key]['allUsersInEvent'][$allKey]);
+                    }
+                }
             }
         }
         return $schedule;
@@ -642,7 +647,6 @@ class ScheduleComponent extends Model{
     
     /**
      * Загрузка данных для недельного расписания. Используется в генерации расписания по ссылке для сотрудников,
-     * поэтому вынесено в метод
      */
     public static function loadThreeSchedule($period){
         $startDate = date('Y-m-d', strtotime($period[0]['year'] ."-" .$period[0]['month'] ."-" .$period[0]['day']));
@@ -661,7 +665,6 @@ class ScheduleComponent extends Model{
                 $schedule[$key]['profCat'][$keyProf]['alias'] = $valProf['profCat']['alias'];
             }
         }
-//                $value['allUsersInEvent'][$allKey]['userSurname'] = $allVal['userWithProf']['surname'];
         foreach ($schedule as $key => $value){
             $schedule[$key]['allUsersInEvent'] = ScheduleComponent::sortFirstLetter($schedule[$key]['allUsersInEvent'], 'userSurname');
             $schedule[$key]['profCat'] = ScheduleComponent::sortFirstLetter($schedule[$key]['profCat'], 'alias');

@@ -110,7 +110,12 @@ $this->params['breadcrumbs'][] = $this->title;
             </div>
             
             <div class="card border-info mt-2">
-                <div class="card-header"><h5 class="card-title">Службы, чьи фамилии требуется отображать в расписании</h5></div>
+                <div class="card-header">
+                    <h5 class="card-title">
+                        Службы, чьи фамилии требуется отображать в расписании
+                        (настройка для всех, кроме спектаклей)
+                    </h5>
+                </div>
                 <div class="card-body text-info">
                     <div id="actors-prof-cat-container">
                         <?php if (isset($allConfig['show_in_schedule_prof_cat']) && $actorsCat): ?>
@@ -160,6 +165,29 @@ $this->params['breadcrumbs'][] = $this->title;
                         <?php endif; ?>
                     </div>
                     <div id="add-config-8" class="btn btn-sm btn-outline-success mrg-top15"><i class="fas fa-plus"></i> Добавить</div>
+                </div>
+            </div>
+
+            <div class="card border-info mt-2">
+                <div class="card-header">
+                    <h5 class="card-title">
+                        Службы, чьи фамилии требуется отображать в расписании
+                        (настройка только для спектаклей)
+                    </h5>
+                </div>
+                <div class="card-body text-info">
+                    <div id="actors-prof-cat-container">
+                        <?php if (isset($allConfig['show_in_schedule_prof_cat_spectacle']) && $actorsCat): ?>
+                            <?php foreach ($actorsCat as $key => $value): ?>
+                                <?php if (in_array($value['id'], $allConfig['show_in_schedule_prof_cat_spectacle'])): ?>
+                                    <button data-id="<?= $value['id'] ?>" type="button" class="btn btn-sm btn-info mt-1">
+                                        <?= $value['name'] ?> <span data-name="show_in_schedule_prof_cat_spectacle" class="badge badge-danger delete-config"><i class="fas fa-times"></i></span>
+                                    </button>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+                    <div id="add-config-9" class="btn btn-sm btn-outline-success mrg-top15"><i class="fas fa-plus"></i> Добавить</div>
                 </div>
             </div>
             
@@ -321,6 +349,12 @@ $this->params['breadcrumbs'][] = $this->title;
         // Config 8
         $('#add-config-8').click(function(){
             configName = 'other_prof_cat_two_schedule';
+            $('#profCatModal').modal('show');
+        });
+
+        // Config 9
+        $('#add-config-9').click(function(){
+            configName = 'show_in_schedule_prof_cat_spectacle';
             $('#profCatModal').modal('show');
         });
         
