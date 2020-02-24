@@ -1712,6 +1712,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 showNotifications('Не выбран ни один сотрудник', 3500, NOTIF_RED);
                 return false;
             }
+           
             for(var i = 0; i < usersInEvent.length; i++){
                 if(selectedUsers.includes(usersInEvent[i].userWithProf.id)){
                     showNotifications('Похоже, что один из добавляемых сотрудников уже стоит в этом мероприятии', 3500, NOTIF_RED);
@@ -1800,9 +1801,11 @@ $this->params['breadcrumbs'][] = $this->title;
                         for(var i = 0; i < usersList.length; i++){
                             usersList[i].classList.remove('selected');
                         }
+
                         for(var i = 0; i < result.data.length; i++){
                             for(var z = 0; z < usersList.length; z++){
-                                if(+usersList[z].dataset.id == +result.data[i]){
+                                // Пока что функция "Найти состав" работает только для актеров. Поэтому ограничим список конфигом "actors_prof_cat". Дальше что-нибудь придумаем
+                                if(+usersList[z].dataset.id == +result.data[i] && config.actors_prof_cat.includes(usersList[z].dataset.profCat)){
                                     usersList[z].classList.add('selected');
                                     selectedUsers[selectedUsers.length] = result.data[i];
                                 }
