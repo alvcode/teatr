@@ -1712,7 +1712,7 @@ $this->params['breadcrumbs'][] = $this->title;
                 showNotifications('Не выбран ни один сотрудник', 3500, NOTIF_RED);
                 return false;
             }
-           
+
             for(var i = 0; i < usersInEvent.length; i++){
                 if(selectedUsers.includes(usersInEvent[i].userWithProf.id)){
                     showNotifications('Похоже, что один из добавляемых сотрудников уже стоит в этом мероприятии', 3500, NOTIF_RED);
@@ -2126,6 +2126,7 @@ $this->params['breadcrumbs'][] = $this->title;
                         deleteEventInCalendar(editEventId);
                         $('#deleteEventModal').modal('hide');
                         $('.three--right-more').removeClass('zoomInRight').addClass('zoomOutRight');
+                        $('body').css({'overflow': 'auto'});
                         $('#prof-cat-right-button-container').empty();
                         $('#add-user-in-schedule-container').css({'display': 'none'});
                         $('#user-in-event-right-button-container').empty();

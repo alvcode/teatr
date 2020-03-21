@@ -833,7 +833,11 @@ class ScheduleController extends AccessController
                     }
                 }
                 if(+Yii::$app->request->post('moveUsers') > 0){
-                    $checkIntersect = ScheduleComponent::checkIntersectEdit('copy', $getEvent['id'], date('Y-m-d', mktime(0, 0, 0, Yii::$app->request->post('date')['month'] + 1, Yii::$app->request->post('date')['day'], Yii::$app->request->post('date')['year'])), $timeFrom, $timeTo);
+                    $checkIntersect = ScheduleComponent::checkIntersectEdit(
+                        'copy',
+                        $getEvent['id'],
+                        date('Y-m-d', mktime(0, 0, 0, Yii::$app->request->post('date')['month'] + 1, Yii::$app->request->post('date')['day'], Yii::$app->request->post('date')['year'])),
+                        $timeFrom, $timeTo);
                     if($checkIntersect){
                         return json_encode(['response' => 'intersect', 'data' => $checkIntersect]);
                     }
