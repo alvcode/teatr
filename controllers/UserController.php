@@ -41,8 +41,13 @@ class UserController extends AccessController
                 'rules' => [
                     [
                         'allow' => true,
-                        'actions' => ['index', 'user-single'],
+                        'actions' => ['index'],
                         'roles' => ['visible_users'],
+                    ],
+                    [
+                        'allow' => true,
+                        'actions' => ['user-single'],
+                        'roles' => ['crud_all_users'],
                     ],
                     [
                         'allow' => true,
@@ -129,10 +134,14 @@ class UserController extends AccessController
             
             if(Yii::$app->request->post('trigger') == 'delete-user'){
                 $findUser = User::findOne(Yii::$app->request->post('id'));
-                if(Yii::$app->db->createCommand()->update('user', ['is_active' => 0], [
-                    'id' => $findUser->id,
-                ])->execute()){
-                    return 1;
+                if(Yii::$app->user->can('crud_all_users')){
+                    if(Yii::$app->db->createCommand()->update('user', ['is_active' => 0], [
+                        'id' => $findUser->id,
+                    ])->execute()){
+                        return 1;
+                    }else{
+                        return 0;
+                    }
                 }else{
                     return 0;
                 }
