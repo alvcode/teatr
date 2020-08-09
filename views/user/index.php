@@ -69,7 +69,9 @@ $this->params['breadcrumbs'][] = $this->title;
             ?>
 
             <div class="new-user-container">
-                <button type="button" class="btn btn-outline-success btn-sm" data-toggle="modal" data-target="#newUserModal"><i class="fas fa-plus"></i> Новый пользователь</button>
+                <?php if(Yii::$app->user->can('crud_all_users')): ?>
+                    <button type="button" class="btn btn-outline-success btn-sm" data-toggle="modal" data-target="#newUserModal"><i class="fas fa-plus"></i> Новый пользователь</button>
+                <?php endif; ?>
             </div>
 
             <form class="my-2" id="search-form">
